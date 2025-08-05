@@ -1,22 +1,17 @@
-port module Main exposing (main)
-
-import Projects exposing (viewProjects, cssStyles)
+module Main exposing (main)
 
 import Browser
-import Browser.Dom as Dom
-import Browser.Events
 import Browser.Navigation exposing (Key)
 import Html exposing (Html, a, button, div, footer, h1, h2, img, p, span, text)
 import Html.Attributes exposing (alt, class, href, src, style)
-import Html.Events exposing (onClick, stopPropagationOn)
-import Json.Decode as Json
-import Task
+import Html.Events exposing (onClick)
 import Url
 import Url.Parser as Parser exposing (Parser, map, oneOf, s, top)
 import VirtualDom
+import Projects exposing (viewProjects, cssStyles)
 
 
-main : Program Flags Model Msg
+main : Program () Model Msg
 main =
     Browser.application
         { init = init
@@ -34,7 +29,6 @@ main =
 type ColorMode
     = LightMode
     | DarkMode
-    | SystemMode
 
 
 type Page
@@ -49,24 +43,16 @@ type alias Model =
     , colorMode : ColorMode
     , commitHash : String
     , mobileMenuOpen : Bool
-    , explicitMode : Maybe ColorMode
-    , systemPrefersDark : Bool
     }
 
 
-type alias Flags =
-    { prefersDark : Bool }
-
-
-init : Flags -> Url.Url -> Key -> ( Model, Cmd Msg )
-init flags url key =
+init : () -> Url.Url -> Key -> ( Model, Cmd Msg )
+init _ url key =
     ( { key = key
       , url = url
-      , colorMode = SystemMode
-      , explicitMode = Nothing
+      , colorMode = DarkMode
       , commitHash = "GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER"
       , mobileMenuOpen = False
-      , systemPrefersDark = flags.prefersDark
       }
     , Cmd.none
     )
@@ -80,9 +66,6 @@ type Msg
     | UrlChanged Url.Url
     | ToggleColorMode
     | ToggleMobileMenu
-    | NoOp
-    | SystemThemeChanged Bool
-    | WindowResized
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -102,101 +85,20 @@ update msg model =
         ToggleColorMode ->
             let
                 newMode =
-                    case model.explicitMode of
-                        Just LightMode ->
-                            DarkMode
-
-                        Just DarkMode ->
-                            LightMode
-
-                        Just SystemMode ->
-                            -- Toggle between LightMode and DarkMode while keeping SystemMode as explicit
-                            if model.colorMode == LightMode then
-                                DarkMode
-                            else
-                                LightMode
-
-                        Nothing ->
-                            case model.colorMode of
-                                LightMode ->
-                                    DarkMode
-
-                                DarkMode ->
-                                    LightMode
-
-                                SystemMode ->
-                                    if model.systemPrefersDark then
-                                        LightMode
-                                    else
-                                        DarkMode
-
-                newExplicitMode =
-                    case model.explicitMode of
-                        Just LightMode ->
-                            Just DarkMode
-
-                        Just DarkMode ->
-                            Just LightMode
-
-                        Just SystemMode ->
-                            -- Stay in SystemMode but toggle the current mode
-                            Just SystemMode
-
-                        Nothing ->
-                            Just newMode
+                    if model.colorMode == DarkMode then
+                        LightMode
+                    else
+                        DarkMode
             in
-            ( { model
-                | colorMode = newMode
-                , explicitMode = newExplicitMode
-              }
-            , Cmd.none
-            )
+            ( { model | colorMode = newMode }, Cmd.none )
 
         ToggleMobileMenu ->
             ( { model | mobileMenuOpen = not model.mobileMenuOpen }, Cmd.none )
 
-        NoOp ->
-            ( model, Cmd.none )
-
-        SystemThemeChanged prefersDark ->
-            let
-                newMode =
-                    if prefersDark then
-                        DarkMode
-                    else
-                        LightMode
-            in
-            ( { model
-                | systemPrefersDark = prefersDark
-                , colorMode =
-                    case model.explicitMode of
-                        Just _ ->
-                            model.colorMode
-
-                        Nothing ->
-                            newMode
-              }
-            , Cmd.none
-            )
-
-        WindowResized ->
-            ( model, Cmd.none )
-
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ Browser.Events.onResize (\_ _ -> WindowResized)
-        , systemThemeListener
-        ]
-
-
--- SYSTEM THEME DETECTION
-port systemThemeChanged : (Bool -> msg) -> Sub msg
-
-systemThemeListener : Sub Msg
-systemThemeListener =
-    systemThemeChanged SystemThemeChanged
+    Sub.none
 
 
 -- VIEW
@@ -248,30 +150,9 @@ view model =
                             ]
                         , div [ class "mode-toggle-container" ]
                             [ button [ class "mode-toggle", onClick ToggleColorMode ]
-                                [ text
-                                    (case model.explicitMode of
-                                        Just LightMode ->
-                                            "Dark Mode (system)"
-
-                                        Just DarkMode ->
-                                            "Light Mode (system)"
-
-                                        Just SystemMode ->
-                                            "System Mode (toggled)"
-
-                                        Nothing ->
-                                            case model.colorMode of
-                                                LightMode ->
-                                                    "Dark Mode (system)"
-
-                                                DarkMode ->
-                                                    "Light Mode (system)"
-
-                                                SystemMode ->
-                                                    "Toggle Theme"
-                                    )
+                                [ text (if model.colorMode == DarkMode then "Light Mode" else "Dark Mode")
                                 , span [ class "toggle-icon" ]
-                                    [ if (model.explicitMode |> Maybe.withDefault model.colorMode) == DarkMode then
+                                    [ if model.colorMode == DarkMode then
                                         VirtualDom.node "svg"
                                             [ Html.Attributes.attribute "viewBox" "0 0 24 24"
                                             , Html.Attributes.attribute "width" "16"
@@ -299,7 +180,7 @@ view model =
 
                   else
                     div [ class "mobile-menu-overlay", onClick ToggleMobileMenu ]
-                        [ div [ class "mobile-menu", stopPropagationOn "click" (Json.succeed (NoOp, True)) ]
+                        [ div [ class "mobile-menu" ]
                             [ div [ class "mobile-menu-header" ]
                                 [ h2 [] [ text "Menu" ]
                                 , button [ class "close-mobile-menu", onClick ToggleMobileMenu ] [ text "Close" ]
@@ -390,57 +271,45 @@ routeParser =
 buildCss : Model -> String
 buildCss model =
     let
-        -- Get the effective color mode (respects system preference)
-        effectiveMode =
-            case model.explicitMode of
-                Just mode ->
-                    mode
-
-                Nothing ->
-                    if model.systemPrefersDark then
-                        DarkMode
-                    else
-                        LightMode
-
         -- Direct color values based on current mode
         bg =
-            if effectiveMode == DarkMode then
+            if model.colorMode == DarkMode then
                 "#3d3653"
             else
                 "#c5c2d6"
 
         text =
-            if effectiveMode == DarkMode then
+            if model.colorMode == DarkMode then
                 "#c5c2d6"
             else
                 "#3d3653"
 
         brandingBg =
-            if effectiveMode == DarkMode then
+            if model.colorMode == DarkMode then
                 "#4e4864"
             else
                 "#a39fb6"
 
         sidebarBorder =
-            if effectiveMode == DarkMode then
+            if model.colorMode == DarkMode then
                 "#5f5974"
             else
                 "#817c95"
 
         buttonBg =
-            if effectiveMode == DarkMode then
+            if model.colorMode == DarkMode then
                 "#5f5974"
             else
                 "#817c95"
 
         buttonText =
-            if effectiveMode == DarkMode then
+            if model.colorMode == DarkMode then
                 "#c5c2d6"
             else
                 "#3d3653"
 
         linkColor =
-            if effectiveMode == DarkMode then
+            if model.colorMode == DarkMode then
                 "#a39fb6"
             else
                 "#5f5974"
