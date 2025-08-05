@@ -1,20 +1,20 @@
-name: Deploy Website
+name: Deploy to Vercel
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Necessary to get the full commit history
+          fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18.x'
 
@@ -25,15 +25,48 @@ jobs:
         id: commit
         run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - name: Replace commit placeholder in Elm code
+      - name: Replace commit placeholder
         run: |
           find . -name '*.elm' -type f -exec sed -i 's/"GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER"/"${{ env.COMMIT_HASH }}"/g' {} \;
 
       - name: Build Elm application
         run: elm make src/Main.elm --output=dist/bundle.js
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Create index.html
+        run: |
+          echo '<!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>KaitoTLex.Systems</title>
+            </head>
+            <body>
+              <div id="root"></div>
+              <script src="bundle.js"></script>
+            </body>
+          </html>' > index.html
+
+      - name: Create 404.html for client-side routing
+        run: |
+          echo '<!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta http-equiv="refresh" content="0; url=/">
+              <script>
+                sessionStorage.redirect = location.pathname;
+                location.replace("/");
+              </script>
+            </head>
+          </html>' > 404.html
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v30
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: .
+          build-command: 'echo "Build command not needed for static sites"'
+          output-directory: .
