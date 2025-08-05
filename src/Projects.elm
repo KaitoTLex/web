@@ -31,7 +31,7 @@ kaitoRepositories =
       , url = "https://github.com/KaitoTLex/KaitoianOS"
       , description = "KaitoTLex's Mafuyu themed Hyprland on NixOS"
       , language = "Nix"
-      , languageColor = "#817c95"  -- Fixed: Using Cool Gray from palette
+      , languageColor = "#817c95"  -- Fixed: Added valid color from palette
       , readmeExcerpt = "Fully customizable container-based operating system based on NixOS running Hyprland && Hyprscroller."
       }
     ]
@@ -52,7 +52,7 @@ viewRepository repo =
             ]
         , div [ class "repository-content" ]
             [ p [] [ text repo.readmeExcerpt ]
-            , a [ href (repo.url ++ "/blob/main/README.md"), class "read-more" ] [ text "Read more →" ]
+            , a [ href (repo.url ++ "/blob/main/README.md"), class "read-more" ] [ text "Read more →" ]  -- Fixed: Added parentheses for string concatenation
             ]
         ]
 
@@ -69,10 +69,12 @@ css =
     .projects-header {
       font-size: 2.5rem;
       margin-bottom: 0.5rem;
+      color: var(--text-color);
     }
     
     .projects-subheader {
       font-size: 1.2rem;
+      color: var(--text-secondary);
       margin-bottom: 2rem;
     }
     
@@ -83,6 +85,7 @@ css =
     }
     
     .repository-card {
+      background-color: var(--card-bg);
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -96,10 +99,11 @@ css =
     
     .repository-header {
       padding: 1.5rem;
-      border-bottom: 1px solid var(--sidebar-border);
+      border-bottom: 1px solid var(--border-color);
     }
     
     .repo-title {
+      color: var(--link-color);
       text-decoration: none;
       font-size: 1.5rem;
       display: inline-block;
@@ -119,6 +123,7 @@ css =
     }
     
     .repo-description {
+      color: var(--text-secondary);
       font-size: 0.95rem;
       flex: 1;
       margin-right: 1rem;
@@ -127,6 +132,7 @@ css =
     .language-badge {
       display: flex;
       align-items: center;
+      background-color: var(--language-bg);
       border-radius: 20px;
       padding: 0.25rem 0.75rem;
       font-size: 0.85rem;
@@ -146,6 +152,7 @@ css =
     
     .read-more {
       display: inline-block;
+      color: var(--link-color);
       text-decoration: none;
       margin-top: 0.5rem;
       font-weight: 500;
@@ -169,4 +176,46 @@ css =
 
 cssStyles : Html msg
 cssStyles =
-    VirtualDom.node "style" [] [ text css ]
+    VirtualDom.node "style" [] [ text <| buildCss css ]
+
+
+buildCss : String -> String
+buildCss baseCss =
+    """
+    :root {
+      --english-violet: #3d3653;
+      --english-violet-2: #423b58;
+      --english-violet-3: #463f5c;
+      --english-violet-4: #4e4864;
+      --ultra-violet: #5f5974;
+      --cool-gray: #817c95;
+      --rose-quartz: #a39fb6;
+      --french-gray: #c5c2d6;
+    }
+    
+    body.dark-mode {
+      --background: var(--english-violet);
+      --text-color: var(--french-gray);
+      --text-secondary: var(--rose-quartz);
+      --card-bg: var(--english-violet-4);
+      --border-color: var(--ultra-violet);
+      --link-color: var(--cool-gray);
+      --language-bg: rgba(255, 255, 255, 0.08);
+    }
+    
+    body.light-mode {
+      --background: var(--french-gray);
+      --text-color: var(--english-violet);
+      --text-secondary: var(--ultra-violet);
+      --card-bg: white;
+      --border-color: var(--cool-gray);
+      --link-color: var(--ultra-violet);
+      --language-bg: rgba(0, 0, 0, 0.04);
+    }
+    
+    body {
+      background-color: var(--background);
+      color: var(--text-color);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    """ ++ baseCss

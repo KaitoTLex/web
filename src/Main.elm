@@ -8,8 +8,7 @@ import Html.Events exposing (onClick)
 import Url
 import Url.Parser as Parser exposing (Parser, map, oneOf, s, top)
 import VirtualDom
-import Projects
-
+import Projects exposing (viewProjects, cssStyles)
 
 main : Program () Model Msg
 main =
@@ -127,7 +126,8 @@ view model =
                 , h1 [] [ text "Ren Lin" ]
                 , p [] [ text "kaitotlex.systems" ]
                 , button [ class "mobile-menu-toggle", onClick ToggleMobileMenu ]
-                    [ text (if model.mobileMenuOpen then "✕" else "☰") ]
+                    [ text (if model.mobileMenuOpen then "✕" else "☰")
+                    , span [ class "sr-only" ] [ text "Menu" ]
                 ]
             , div [ class "content-wrapper" ]
                 [ if not model.mobileMenuOpen then
@@ -136,10 +136,10 @@ view model =
                         , div [ class "nav-links" ]
                             [ a [ href "/", onClick (LinkClicked (Browser.Internal (Url.fromString "/" |> Maybe.withDefault model.url))) ] [ text "home" ]
                             , a [ href "/about", onClick (LinkClicked (Browser.Internal (Url.fromString "/about" |> Maybe.withDefault model.url))) ] [ text "about" ]
-                            , a [ href "/projects", onClick (LinkClicked (Browser.Internal (Url.fromString "/projects" |> Maybe.withDefault model.url))) ] [ text "projects" ]
+                           , a [ href "/projects", onClick (LinkClicked (Browser.Internal (Url.fromString "/projects" |> Maybe.withDefault model.url))) ] [ text "projects" ] 
                             , a [ href "https://eexiv.functor.systems/author/wlin" ] [ text "personal research" ]
                             , a [ href "https://yap.kaitotlex.systems" ] [ text "log" ]
-                            , a [ href "https://cdn.example.com/resume.pdf" ] [ text "download CV" ]
+                            , a [ href "/cont/cv.pdf" ] [ text "download CV" ]
                             ]
                         , h2 [] [ text "orgs" ]
                         , div [ class "org-links" ]
@@ -179,6 +179,7 @@ view model =
                   else
                     div [ class "mobile-menu-overlay" ]
                         [ div [ class "mobile-menu" ]
+                            [ div [ class "mobile-menu-header" ]
                             [ h2 [] [ text "Menu" ]
                             , div [ class "mobile-nav-links" ]
                                 [ a [ href "/", onClick (LinkClicked (Browser.Internal (Url.fromString "/" |> Maybe.withDefault model.url))), class "mobile-nav-item" ] [ text "home" ]
@@ -193,28 +194,32 @@ view model =
                                 [ a [ href "https://functor.systems/", class "mobile-nav-item" ] [ text "functor.systems" ]
                                 , a [ href "https://inlabs.kaitotlex.systems", class "mobile-nav-item" ] [ text "InLabs" ]
                                 ]
-                            , button [ class "close-mobile-menu", onClick ToggleMobileMenu ] [ text "Close Menu" ]
+                            , button [ class "close-mobile-menu", onClick ToggleMobileMenu ] [ text "Close" ]
                             ]
                         ]
+                    ]
+                ]
                 , div [ class "main-content" ]
                     [ case parseUrl model.url of
                         Home ->
                             div []
                                 [ h1 [] [ text "oh Hi!" ]
                                 , p [] [ text "I am Ren or Warren, I am a High School student studying Nuclear Theory and Electrical Engineering" ]
-                                , img [ src "https://web.kaitotlex.systems/cont/bike.jpg", alt "Bike" ] []
+                                , img [ src "https://web.kaitotlex.systems/cont/bike.jpeg", alt "Bike" ] []
                                 , p [] [ text "I am interested in semi-conductor manufacturing, SOCs, and low power hardware. I work on projects that involves low power hardware -- anything RISC. I can't code. I like FOSS and FOSH, including RISC-V." ]
                                 , p [] [ text "I like cycling and sim-racing. I watch MLB, NPB, F1, WEC, and WRC as a sport. I play the piano, bass and saxophone (Tenor && Alto). I do RE and hardware hacking in my freetime" ]
                                 , p [] [ text "I play too much rythm games" ]
                                 , p [] [ text "If you would like to learn more about me, send a Matrix message or read my logs." ]
                                 , h2 [] [ text "contact" ]
-                                , a [ href "https://web.kaitotlex.systems" ] [ text "kaitotlex.systems" ]
-                                , a [ href "mailto:rlin@kaitotlex.systems" ] [ text "send a email (please sign with pgp)" ]
-                                , a [ href "https://bsky.app/profile/kaitotlex.systems" ] [ text "bluesky" ]
-                                , a [ href "https://x.com/Kaito_Malfoy" ] [ text "X (formerly twitter)" ]
-                                , a [ href "https://github.com/kaitotlex" ] [ text "github" ]
-                                , a [ href "https://osu.ppy.sh/users/26069038" ] [ text "osu" ]
-                                , a [ href "https://arxiv.org/abs/2204.04549" ] [ text "send ripples through the maxwell matter wave" ]
+                                    , div [ class "contact-links" ]
+                                    [ a [ href "https://web.kaitotlex.systems", class "contact-item" ] [ text "kaitotlex.systems" ]
+                                    , a [ href "mailto:rlin@kaitotlex.systems", class "contact-item" ] [ text "send a email (please sign with pgp)" ]
+                                    , a [ href "https://bsky.app/profile/kaitotlex.systems", class "contact-item" ] [ text "bluesky" ]
+                                    , a [ href "https://x.com/Kaito_Malfoy", class "contact-item" ] [ text "X (formerly twitter)" ]
+                                    , a [ href "https://github.com/kaitotlex", class "contact-item" ] [ text "github" ]
+                                    , a [ href "https://osu.ppy.sh/users/26069038", class "contact-item" ] [ text "osu" ]
+                                    , a [ href "https://arxiv.org/abs/2204.04549", class "contact-item" ] [ text "send ripples through the maxwell matter wave" ]
+                                ]
                                 ]
 
                         ProjectsPage ->
@@ -311,6 +316,7 @@ buildCss model =
         linkHover =
             "#817c95"
     in
+    -- Add this to your buildCss function (around line 265)
     """
     @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
     
@@ -394,57 +400,110 @@ buildCss model =
       padding: 0.75rem 0;
     }
     
-    .mobile-menu-toggle {
-      display: none;
-      background: none;
-      border: none;
-      color: currentColor;
-      font-size: 1.5rem;
-      cursor: pointer;
-      margin-left: auto;
+    .contact-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
     }
-    
-    .mobile-menu-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 999;
-      display: flex;
-      align-items: center;
-    }
-    
-    .mobile-menu {
-      background-color: """ ++ bg ++ """;
-      width: 80%;
-      max-width: 400px;
-      height: 100%;
-      padding: 2rem;
-      overflow-y: auto;
-    }
-    
-    .mobile-nav-links, .mobile-org-links {
-      display: flex;
-      flex-direction: column;
-      margin-top: 1rem;
-    }
-    
-    .mobile-nav-item {
-      padding: 1rem 0;
-      border-bottom: 1px solid """ ++ sidebarBorder ++ """;
-    }
-    
-    .close-mobile-menu {
-      background: none;
-      border: none;
-      color: currentColor;
-      font-size: 1.5rem;
-      cursor: pointer;
-      margin-top: 1rem;
-      width: 100%;
-    }
+    .contact-item {
+    display: block;
+    } 
+ 
+ 
+   @media (max-width: 768px) {
+  :root {
+    --font-size-base: 16px;
+    --font-size-h1: 1.8rem;
+    --font-size-h2: 1.4rem;
+    --font-size-body: 1.1rem;
+    --spacing-unit: 1rem;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  .branding {
+    padding: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mobile-menu-toggle {
+    display: block;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    z-index: 1001;
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .content-wrapper {
+    grid-template-columns: 1fr;
+    margin-top: 1rem;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .mobile-menu-overlay {
+    display: flex;
+  }
+
+  .mobile-menu {
+    width: 90%;
+    padding: 1.5rem;
+  }
+
+  .mobile-nav-links, .mobile-org-links {
+    gap: 1rem;
+  }
+
+  .mobile-nav-item {
+    padding: 1.25rem 0;
+    font-size: 1.2rem;
+    line-height: 1.4;
+  }
+
+  .main-content {
+    padding: 1rem 0.5rem;
+  }
+
+  h1 {
+    font-size: var(--font-size-h1);
+  }
+
+  h2 {
+    font-size: var(--font-size-h2);
+    margin-top: 1.5rem;
+  }
+
+  p {
+    font-size: var(--font-size-body);
+    line-height: 1.6;
+  }
+
+  .nav-links a, .org-links a {
+    padding: 1rem 0;
+    font-size: 1.1rem;
+  }
+
+  .mode-toggle {
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .copyright-footer {
+    padding: 1.25rem 0;
+    font-size: 0.95rem;
+  }
+} 
     
     .copyright-footer {
       text-align: center;
