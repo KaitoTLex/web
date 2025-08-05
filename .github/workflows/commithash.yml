@@ -1,0 +1,39 @@
+name: Deploy Website
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necessary to get the full commit history
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install Elm
+        run: npm install -g elm@0.19.1
+
+      - name: Get commit hash
+        id: commit
+        run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Replace commit placeholder in Elm code
+        run: |
+          find . -name '*.elm' -type f -exec sed -i 's/"GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER"/"${{ env.COMMIT_HASH }}"/g' {} \;
+
+      - name: Build Elm application
+        run: elm make src/Main.elm --output=dist/bundle.js
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
