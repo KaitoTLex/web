@@ -1,43 +1,91 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Deploy Website
 
 on:
-  # Runs on pushes targeting the default branch
   push:
-    branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+    branches: [ main ]
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          fetch-depth: 0  # Necessary to get full commit history
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+
+      - name: Install Elm
+        run: npm install -g elm@0.19.1
+
+      - name: Get commit hash
+        id: commit
+        run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Replace commit placeholder
+        run: |
+          find . -name '*.elm' -type f -exec sed -i 's/"GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER"/"${{ env.COMMIT_HASH }}"/g' {} \;
+
+      - name: Create JS directory
+        run: mkdir -p dist/js
+
+      - name: Create systemTheme.js
+        run: |
+          echo 'document.addEventListener("DOMContentLoaded", function() {
+            if (window.elmApp && window.elmApp.ports && window.elmApp.ports.systemThemeChanged) {
+              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+              window.elmApp.ports.systemThemeChanged.send(prefersDark);
+              
+              const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+              mediaQuery.addEventListener("change", function(e) {
+                window.elmApp.ports.systemThemeChanged.send(e.matches);
+              });
+            }
+          });' > dist/js/systemTheme.js
+
+      - name: Build Elm application
+        run: elm make src/Main.elm --output=dist/bundle.js
+
+      - name: Create index.html
+        run: |
+          echo '<!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>KaitoTLex.Systems</title>
+            </head>
+            <body>
+              <div id="root"></div>
+              <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                  window.elmApp = Elm.Main.init({
+                    node: document.getElementById("root"),
+                    flags: {
+                      prefersDark: prefersDark
+                    }
+                  });
+                });
+              </script>
+              <script src="js/systemTheme.js"></script>
+              <script src="bundle.js"></script>
+            </body>
+          </html>' > dist/index.html
+
+      - name: Create 404.html for client-side routing
+        run: |
+          echo '<!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta http-equiv="refresh" content="0; url=/">
+              <script>
+                sessionStorage.redirect = location.pathname;
+                location.replace("/");
+              </script>
+            </head>
+          </html>' > dist/404.html

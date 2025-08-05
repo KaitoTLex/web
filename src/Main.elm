@@ -1,17 +1,22 @@
-module Main exposing (main)
+port module Main exposing (main)
+
+import Projects exposing (viewProjects, cssStyles)
 
 import Browser
+import Browser.Dom as Dom
+import Browser.Events
 import Browser.Navigation exposing (Key)
 import Html exposing (Html, a, button, div, footer, h1, h2, img, p, span, text)
 import Html.Attributes exposing (alt, class, href, src, style)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, stopPropagationOn)
+import Json.Decode as Json
+import Task
 import Url
 import Url.Parser as Parser exposing (Parser, map, oneOf, s, top)
 import VirtualDom
-import Projects exposing (viewProjects, cssStyles)
 
 
-main : Program () Model Msg
+main : Program Flags Model Msg
 main =
     Browser.application
         { init = init
@@ -29,6 +34,7 @@ main =
 type ColorMode
     = LightMode
     | DarkMode
+    | SystemMode
 
 
 type Page
@@ -43,16 +49,24 @@ type alias Model =
     , colorMode : ColorMode
     , commitHash : String
     , mobileMenuOpen : Bool
+    , explicitMode : Maybe ColorMode
+    , systemPrefersDark : Bool
     }
 
 
-init : () -> Url.Url -> Key -> ( Model, Cmd Msg )
-init _ url key =
+type alias Flags =
+    { prefersDark : Bool }
+
+
+init : Flags -> Url.Url -> Key -> ( Model, Cmd Msg )
+init flags url key =
     ( { key = key
       , url = url
-      , colorMode = DarkMode
+      , colorMode = SystemMode
+      , explicitMode = Nothing
       , commitHash = "GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER"
       , mobileMenuOpen = False
+      , systemPrefersDark = flags.prefersDark
       }
     , Cmd.none
     )
@@ -66,6 +80,9 @@ type Msg
     | UrlChanged Url.Url
     | ToggleColorMode
     | ToggleMobileMenu
+    | NoOp
+    | SystemThemeChanged Bool
+    | WindowResized
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -85,20 +102,101 @@ update msg model =
         ToggleColorMode ->
             let
                 newMode =
-                    if model.colorMode == DarkMode then
-                        LightMode
-                    else
-                        DarkMode
+                    case model.explicitMode of
+                        Just LightMode ->
+                            DarkMode
+
+                        Just DarkMode ->
+                            LightMode
+
+                        Just SystemMode ->
+                            -- Toggle between LightMode and DarkMode while keeping SystemMode as explicit
+                            if model.colorMode == LightMode then
+                                DarkMode
+                            else
+                                LightMode
+
+                        Nothing ->
+                            case model.colorMode of
+                                LightMode ->
+                                    DarkMode
+
+                                DarkMode ->
+                                    LightMode
+
+                                SystemMode ->
+                                    if model.systemPrefersDark then
+                                        LightMode
+                                    else
+                                        DarkMode
+
+                newExplicitMode =
+                    case model.explicitMode of
+                        Just LightMode ->
+                            Just DarkMode
+
+                        Just DarkMode ->
+                            Just LightMode
+
+                        Just SystemMode ->
+                            -- Stay in SystemMode but toggle the current mode
+                            Just SystemMode
+
+                        Nothing ->
+                            Just newMode
             in
-            ( { model | colorMode = newMode }, Cmd.none )
+            ( { model
+                | colorMode = newMode
+                , explicitMode = newExplicitMode
+              }
+            , Cmd.none
+            )
 
         ToggleMobileMenu ->
             ( { model | mobileMenuOpen = not model.mobileMenuOpen }, Cmd.none )
 
+        NoOp ->
+            ( model, Cmd.none )
+
+        SystemThemeChanged prefersDark ->
+            let
+                newMode =
+                    if prefersDark then
+                        DarkMode
+                    else
+                        LightMode
+            in
+            ( { model
+                | systemPrefersDark = prefersDark
+                , colorMode =
+                    case model.explicitMode of
+                        Just _ ->
+                            model.colorMode
+
+                        Nothing ->
+                            newMode
+              }
+            , Cmd.none
+            )
+
+        WindowResized ->
+            ( model, Cmd.none )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Sub.batch
+        [ Browser.Events.onResize (\_ _ -> WindowResized)
+        , systemThemeListener
+        ]
+
+
+-- SYSTEM THEME DETECTION
+port systemThemeChanged : (Bool -> msg) -> Sub msg
+
+systemThemeListener : Sub Msg
+systemThemeListener =
+    systemThemeChanged SystemThemeChanged
 
 
 -- VIEW
@@ -150,9 +248,30 @@ view model =
                             ]
                         , div [ class "mode-toggle-container" ]
                             [ button [ class "mode-toggle", onClick ToggleColorMode ]
-                                [ text (if model.colorMode == DarkMode then "Light Mode" else "Dark Mode")
+                                [ text
+                                    (case model.explicitMode of
+                                        Just LightMode ->
+                                            "Dark Mode (system)"
+
+                                        Just DarkMode ->
+                                            "Light Mode (system)"
+
+                                        Just SystemMode ->
+                                            "System Mode (toggled)"
+
+                                        Nothing ->
+                                            case model.colorMode of
+                                                LightMode ->
+                                                    "Dark Mode (system)"
+
+                                                DarkMode ->
+                                                    "Light Mode (system)"
+
+                                                SystemMode ->
+                                                    "Toggle Theme"
+                                    )
                                 , span [ class "toggle-icon" ]
-                                    [ if model.colorMode == DarkMode then
+                                    [ if (model.explicitMode |> Maybe.withDefault model.colorMode) == DarkMode then
                                         VirtualDom.node "svg"
                                             [ Html.Attributes.attribute "viewBox" "0 0 24 24"
                                             , Html.Attributes.attribute "width" "16"
@@ -180,7 +299,7 @@ view model =
 
                   else
                     div [ class "mobile-menu-overlay", onClick ToggleMobileMenu ]
-                        [ div [ class "mobile-menu", onClick (\_ -> ()) ]
+                        [ div [ class "mobile-menu", stopPropagationOn "click" (Json.succeed (NoOp, True)) ]
                             [ div [ class "mobile-menu-header" ]
                                 [ h2 [] [ text "Menu" ]
                                 , button [ class "close-mobile-menu", onClick ToggleMobileMenu ] [ text "Close" ]
@@ -206,7 +325,7 @@ view model =
                             div []
                                 [ h1 [] [ text "oh Hi!" ]
                                 , p [] [ text "I am Ren or Warren, I am a High School student studying Nuclear Theory and Electrical Engineering" ]
-                                , img [ src "https://web.kaitotlex.systems/cont/bike.jpg", alt "Bike" ] []
+                                , img [ src "https://web.kaitotlex.systems/cont/bike.jpg", alt "Bike", class "responsive-image" ] []
                                 , p [] [ text "I am interested in semi-conductor manufacturing, SOCs, and low power hardware. I work on projects that involves low power hardware -- anything RISC. I can't code. I like FOSS and FOSH, including RISC-V." ]
                                 , p [] [ text "I like cycling and sim-racing. I watch MLB, NPB, F1, WEC, and WRC as a sport. I play the piano, bass and saxophone (Tenor && Alto). I do RE and hardware hacking in my freetime" ]
                                 , p [] [ text "I play too much rythm games" ]
@@ -271,45 +390,57 @@ routeParser =
 buildCss : Model -> String
 buildCss model =
     let
+        -- Get the effective color mode (respects system preference)
+        effectiveMode =
+            case model.explicitMode of
+                Just mode ->
+                    mode
+
+                Nothing ->
+                    if model.systemPrefersDark then
+                        DarkMode
+                    else
+                        LightMode
+
         -- Direct color values based on current mode
         bg =
-            if model.colorMode == DarkMode then
+            if effectiveMode == DarkMode then
                 "#3d3653"
             else
                 "#c5c2d6"
 
         text =
-            if model.colorMode == DarkMode then
+            if effectiveMode == DarkMode then
                 "#c5c2d6"
             else
                 "#3d3653"
 
         brandingBg =
-            if model.colorMode == DarkMode then
+            if effectiveMode == DarkMode then
                 "#4e4864"
             else
                 "#a39fb6"
 
         sidebarBorder =
-            if model.colorMode == DarkMode then
+            if effectiveMode == DarkMode then
                 "#5f5974"
             else
                 "#817c95"
 
         buttonBg =
-            if model.colorMode == DarkMode then
+            if effectiveMode == DarkMode then
                 "#5f5974"
             else
                 "#817c95"
 
         buttonText =
-            if model.colorMode == DarkMode then
+            if effectiveMode == DarkMode then
                 "#c5c2d6"
             else
                 "#3d3653"
 
         linkColor =
-            if model.colorMode == DarkMode then
+            if effectiveMode == DarkMode then
                 "#a39fb6"
             else
                 "#5f5974"
@@ -319,6 +450,17 @@ buildCss model =
     in
     """
     @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+    
+    :root {
+      --english-violet: #3d3653;
+      --english-violet-2: #423b58;
+      --english-violet-3: #463f5c;
+      --english-violet-4: #4e4864;
+      --ultra-violet: #5f5974;
+      --cool-gray: #817c95;
+      --rose-quartz: #a39fb6;
+      --french-gray: #c5c2d6;
+    }
     
     body {
       font-family: 'Fira Code', monospace;
@@ -409,6 +551,23 @@ buildCss model =
     
     .contact-item {
       display: block;
+    }
+    
+    /* Responsive image styling */
+    .responsive-image {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 1.5rem auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    @media (max-width: 768px) {
+      .responsive-image {
+        margin: 1rem auto;
+        max-width: 95%;
+      }
     }
     
     .mobile-menu-toggle {
