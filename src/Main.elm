@@ -141,7 +141,7 @@ view model =
                             , a [ href "/projects", onClick (LinkClicked (Browser.Internal (Url.fromString "/projects" |> Maybe.withDefault model.url))) ] [ text "projects" ]
                             , a [ href "https://eexiv.functor.systems/author/wlin" ] [ text "personal research" ]
                             , a [ href "https://yap.kaitotlex.systems" ] [ text "log" ]
-                            , a [ href "/cont/cv.pdf" ] [ text "download CV" ]
+                            , a [ href "https://web.kaitotlex.systems/cont/cv.pdf" ] [ text "download CV" ]
                             ]
                         , h2 [] [ text "orgs" ]
                         , div [ class "org-links" ]
@@ -150,7 +150,7 @@ view model =
                             ]
                         , div [ class "mode-toggle-container" ]
                             [ button [ class "mode-toggle", onClick ToggleColorMode ]
-                                [ text (if model.colorMode == DarkMode then "Light Mode" else "Dark Mode")
+                                [ text (if model.colorMode == DarkMode then "󰂔" else "󰂕")
                                 , span [ class "toggle-icon" ]
                                     [ if model.colorMode == DarkMode then
                                         VirtualDom.node "svg"
@@ -180,7 +180,7 @@ view model =
 
                   else
                     div [ class "mobile-menu-overlay", onClick ToggleMobileMenu ]
-                        [ div [ class "mobile-menu", onClick (\_ -> NoOp) ]
+                        [ div [ class "mobile-menu" ]
                             [ div [ class "mobile-menu-header" ]
                                 [ h2 [] [ text "Menu" ]
                                 , button [ class "close-mobile-menu", onClick ToggleMobileMenu ] [ text "Close" ]
@@ -191,7 +191,7 @@ view model =
                                 , a [ href "/projects", onClick (LinkClicked (Browser.Internal (Url.fromString "/projects" |> Maybe.withDefault model.url))), class "mobile-nav-item" ] [ text "projects" ]
                                 , a [ href "https://eexiv.functor.systems/author/wlin", class "mobile-nav-item" ] [ text "personal research" ]
                                 , a [ href "https://yap.kaitotlex.systems", class "mobile-nav-item" ] [ text "log" ]
-                                , a [ href "/cont/cv.pdf", class "mobile-nav-item" ] [ text "download CV" ]
+                                , a [ href "https://web.kaitotlex.systems/cont/cv.pdf", class "mobile-nav-item" ] [ text "download CV" ]
                                 ]
                             , h2 [] [ text "Organizations" ]
                             , div [ class "mobile-org-links" ]
@@ -205,8 +205,8 @@ view model =
                         Home ->
                             div []
                                 [ h1 [] [ text "oh Hi!" ]
-                                , p [] [ text "I am Ren or Warren, I am a High School student studying Nuclear Theory and Electrical Engineering" ]
-                                , img [ src "/cont/bike.jpg", alt "Bike", class "responsive-image" ] []
+                                , p [] [ text "I am Ren or Warren, I am a High School student interested in  Nuclear Theory and Electrical Engineering" ]
+                                --, img [ src "https://web.kaitotlex.systems/cont/bike.jpeg", alt "Bike", class "responsive-image" ] []
                                 , p [] [ text "I am interested in semi-conductor manufacturing, SOCs, and low power hardware. I work on projects that involves low power hardware -- anything RISC. I can't code. I like FOSS and FOSH, including RISC-V." ]
                                 , p [] [ text "I like cycling and sim-racing. I watch MLB, NPB, F1, WEC, and WRC as a sport. I play the piano, bass and saxophone (Tenor && Alto). I do RE and hardware hacking in my freetime" ]
                                 , p [] [ text "I play too much rythm games" ]
@@ -216,7 +216,7 @@ view model =
                                     [ a [ href "https://web.kaitotlex.systems", class "contact-item" ] [ text "kaitotlex.systems" ]
                                     , a [ href "mailto:rlin@kaitotlex.systems", class "contact-item" ] [ text "send a email (please sign with pgp)" ]
                                     , a [ href "https://bsky.app/profile/kaitotlex.systems", class "contact-item" ] [ text "bluesky" ]
-                                    , a [ href "https://x.com/Kaito_Malfoy", class "contact-item" ] [ text "X (formerly twitter)" ]
+                                    , a [ href "https://twitter.com/Kaito_Malfoy", class "contact-item" ] [ text "X (formerly twitter)" ]
                                     , a [ href "https://github.com/kaitotlex", class "contact-item" ] [ text "github" ]
                                     , a [ href "https://osu.ppy.sh/users/26069038", class "contact-item" ] [ text "osu" ]
                                     , a [ href "https://arxiv.org/abs/2204.04549", class "contact-item" ] [ text "send ripples through the maxwell matter wave" ]
