@@ -5202,7 +5202,7 @@ var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = F3(
 	function (_v0, url, key) {
 		return _Utils_Tuple2(
-			{colorMode: $author$project$Main$DarkMode, commitHash: 'GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER', key: key, mobileMenuOpen: false, url: url},
+			{colorMode: $author$project$Main$DarkMode, key: key, mobileMenuOpen: false, url: url},
 			$elm$core$Platform$Cmd$none);
 	});
 var $elm$core$Platform$Sub$batch = _Platform_batch;
@@ -5302,15 +5302,6 @@ var $author$project$Main$update = F2(
 var $author$project$Main$ToggleColorMode = {$: 'ToggleColorMode'};
 var $author$project$Main$ToggleMobileMenu = {$: 'ToggleMobileMenu'};
 var $elm$html$Html$a = _VirtualDom_node('a');
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $elm$html$Html$Attributes$alt = $elm$html$Html$Attributes$stringProperty('alt');
 var $elm$virtual_dom$VirtualDom$attribute = F2(
 	function (key, value) {
 		return A2(
@@ -5331,6 +5322,14 @@ var $author$project$Main$buildCss = function (model) {
 	return '\n    @import url(\'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap\');\n    \n    :root {\n      --english-violet: #3d3653;\n      --english-violet-2: #423b58;\n      --english-violet-3: #463f5c;\n      --english-violet-4: #4e4864;\n      --ultra-violet: #5f5974;\n      --cool-gray: #817c95;\n      --rose-quartz: #a39fb6;\n      --french-gray: #c5c2d6;\n    }\n    \n    body {\n      font-family: \'Fira Code\', monospace;\n      background-color: ' + (bg + (';\n      color: ' + (text + (';\n      line-height: 1.6;\n      margin: 0;\n      padding: 0;\n      min-height: 100vh;\n      transition: background-color 0.3s ease, color 0.3s ease;\n    }\n    \n    a {\n      color: ' + (linkColor + (';\n      text-decoration: none;\n      transition: all 0.2s ease;\n    }\n    \n    a:hover {\n      color: ' + (linkHover + (';\n    }\n    \n    .container {\n      max-width: 1200px;\n      margin: 0 auto;\n      padding: 2rem;\n      display: flex;\n      flex-direction: column;\n      min-height: 100vh;\n    }\n    \n    .branding {\n      background-color: ' + (brandingBg + (';\n      padding: 1rem;\n      text-align: center;\n      position: sticky;\n      top: 0;\n      z-index: 100;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      gap: 0.5rem;\n    }\n    \n    .logo {\n      display: flex;\n      align-items: center;\n    }\n    \n    .content-wrapper {\n      display: grid;\n      grid-template-columns: 1fr 3fr;\n      gap: 2rem;\n      margin-top: 2rem;\n      flex-grow: 1;\n    }\n    \n    .sidebar {\n      border-right: 1px solid ' + (sidebarBorder + (';\n      padding-right: 2rem;\n    }\n    \n    .main-content {\n      padding: 1rem 0;\n    }\n    \n    h1, h2, h3 {\n      color: ' + (text + (';\n      margin-top: 1.5rem;\n    }\n    \n    .nav-links, .org-links {\n      display: flex;\n      flex-direction: column;\n    }\n    \n    .nav-links a, .org-links a {\n      display: block;\n      padding: 0.75rem 0;\n    }\n    \n    .contact-links {\n      display: flex;\n      flex-direction: column;\n      gap: 0.75rem;\n      margin-top: 1rem;\n    }\n    \n    .contact-item {\n      display: block;\n    }\n    \n    /* Responsive image styling */\n    .responsive-image {\n      max-width: 100%;\n      height: auto;\n      display: block;\n      margin: 1.5rem auto;\n      border-radius: 8px;\n      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);\n    }\n    \n    @media (max-width: 768px) {\n      .responsive-image {\n        margin: 1rem auto;\n        max-width: 95%;\n      }\n    }\n    \n    .mobile-menu-toggle {\n      display: none;\n      background: none;\n      border: none;\n      color: currentColor;\n      font-size: 1.5rem;\n      cursor: pointer;\n      margin-left: auto;\n      position: relative;\n      z-index: 1001;\n    }\n    \n    .mobile-menu-overlay {\n      position: fixed;\n      top: 0;\n      left: 0;\n      width: 100%;\n      height: 100%;\n      background-color: rgba(0, 0, 0, 0.5);\n      z-index: 999;\n      display: flex;\n      align-items: flex-start;\n      justify-content: flex-end;\n    }\n    \n    .mobile-menu {\n      background-color: ' + (bg + (';\n      width: 80%;\n      max-width: 400px;\n      height: 100%;\n      padding: 1.5rem;\n      overflow-y: auto;\n      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);\n    }\n    \n    .mobile-menu-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 1.5rem;\n    }\n    \n    .mobile-nav-links, .mobile-org-links {\n      display: flex;\n      flex-direction: column;\n      margin-top: 1rem;\n    }\n    \n    .mobile-nav-item {\n      padding: 1.25rem 0;\n      border-bottom: 1px solid ' + (sidebarBorder + (';\n      font-size: 1.2rem;\n      line-height: 1.4;\n    }\n    \n    .close-mobile-menu {\n      background: none;\n      border: none;\n      color: currentColor;\n      font-size: 1.2rem;\n      cursor: pointer;\n      padding: 0.25rem 0.5rem;\n    }\n    \n    .copyright-footer {\n      text-align: center;\n      padding: 1.5rem 0;\n      font-size: 0.85rem;\n      opacity: 0.7;\n      border-top: 1px solid ' + (sidebarBorder + (';\n      margin-top: auto;\n    }\n    \n    .copyright-footer a {\n      color: ' + (linkColor + (';\n      text-decoration: underline;\n    }\n    \n    .copyright-footer a:hover {\n      color: ' + (linkHover + (';\n      text-decoration: underline;\n    }\n    \n    .mode-toggle {\n      background-color: ' + (buttonBg + (';\n      color: ' + (buttonText + (';\n      border: none;\n      padding: 0.75rem 1.5rem;\n      border-radius: 4px;\n      cursor: pointer;\n      z-index: 1000;\n      display: inline-flex;\n      align-items: center;\n      gap: 0.5rem;\n      transition: all 0.3s ease;\n      box-shadow: 0 2px 5px rgba(0,0,0,0.2);\n      margin-top: 1rem;\n    }\n    \n    .mode-toggle:hover {\n      background-color: ' + (linkHover + ';\n      transform: translateY(-2px);\n    }\n    \n    @media (max-width: 768px) {\n      :root {\n        --font-size-base: 16px;\n        --font-size-h1: 1.8rem;\n        --font-size-h2: 1.4rem;\n        --font-size-body: 1.1rem;\n        --spacing-unit: 1rem;\n      }\n      \n      .container {\n        padding: 1rem;\n      }\n      \n      .branding {\n        padding: 0.75rem;\n        flex-direction: column;\n        align-items: flex-start;\n      }\n      \n      .mobile-menu-toggle {\n        display: block;\n      }\n      \n      .content-wrapper {\n        grid-template-columns: 1fr;\n        margin-top: 1rem;\n      }\n      \n      .sidebar {\n        display: none;\n      }\n      \n      .mobile-menu-overlay {\n        display: flex;\n      }\n      \n      .mobile-menu {\n        width: 90%;\n        padding: 1.5rem;\n      }\n      \n      .mobile-nav-links, .mobile-org-links {\n        gap: 1rem;\n      }\n      \n      .mobile-nav-item {\n        padding: 1.25rem 0;\n        font-size: 1.2rem;\n        line-height: 1.4;\n      }\n      \n      .main-content {\n        padding: 1rem 0.5rem;\n      }\n      \n      h1 {\n        font-size: var(--font-size-h1);\n      }\n      \n      h2 {\n        font-size: var(--font-size-h2);\n        margin-top: 1.5rem;\n      }\n      \n      p {\n        font-size: var(--font-size-body);\n        line-height: 1.6;\n      }\n      \n      .nav-links a, .org-links a {\n        padding: 1rem 0;\n        font-size: 1.1rem;\n      }\n      \n      .mode-toggle {\n        padding: 0.75rem 1.25rem;\n        font-size: 1rem;\n        margin-top: 1.5rem;\n      }\n      \n      .copyright-footer {\n        padding: 1.25rem 0;\n        font-size: 0.95rem;\n      }\n    }\n    ')))))))))))))))))))))))))))));
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$virtual_dom$VirtualDom$node = function (tag) {
 	return _VirtualDom_node(
@@ -5367,7 +5366,6 @@ var $elm$html$Html$Attributes$href = function (url) {
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
-var $elm$html$Html$img = _VirtualDom_node('img');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -6140,12 +6138,6 @@ var $author$project$Main$parseUrl = function (url) {
 	}
 };
 var $elm$html$Html$span = _VirtualDom_node('span');
-var $elm$html$Html$Attributes$src = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'src',
-		_VirtualDom_noJavaScriptOrHtmlUri(url));
-};
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Projects$kaitoRepositories = _List_fromArray(
@@ -6503,7 +6495,7 @@ var $author$project$Main$view = function (model) {
 												$elm$html$Html$a,
 												_List_fromArray(
 													[
-														$elm$html$Html$Attributes$href('https://cdn.example.com/resume.pdf')
+														$elm$html$Html$Attributes$href('https://web.kaitotlex.systems/cont/cv.pdf')
 													]),
 												_List_fromArray(
 													[
@@ -6564,7 +6556,7 @@ var $author$project$Main$view = function (model) {
 												_List_fromArray(
 													[
 														$elm$html$Html$text(
-														_Utils_eq(model.colorMode, $author$project$Main$DarkMode) ? 'Light Mode' : 'Dark Mode'),
+														_Utils_eq(model.colorMode, $author$project$Main$DarkMode) ? '\uDB80\uDC94' : '\uDB80\uDC95'),
 														A2(
 														$elm$html$Html$span,
 														_List_fromArray(
@@ -6747,7 +6739,7 @@ var $author$project$Main$view = function (model) {
 														$elm$html$Html$a,
 														_List_fromArray(
 															[
-																$elm$html$Html$Attributes$href('https://cdn.example.com/resume.pdf'),
+																$elm$html$Html$Attributes$href('https://web.kaitotlex.systems/cont/cv.pdf'),
 																$elm$html$Html$Attributes$class('mobile-nav-item')
 															]),
 														_List_fromArray(
@@ -6824,17 +6816,8 @@ var $author$project$Main$view = function (model) {
 															_List_Nil,
 															_List_fromArray(
 																[
-																	$elm$html$Html$text('I am Ren or Warren, I am a High School student studying Nuclear Theory and Electrical Engineering')
+																	$elm$html$Html$text('I am Ren or Warren, I am a High School student interested in  Nuclear Theory and Electrical Engineering')
 																])),
-															A2(
-															$elm$html$Html$img,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$src('https://web.kaitotlex.systems/cont/bike.jpg'),
-																	$elm$html$Html$Attributes$alt('Bike'),
-																	$elm$html$Html$Attributes$class('responsive-image')
-																]),
-															_List_Nil),
 															A2(
 															$elm$html$Html$p,
 															_List_Nil,
@@ -6848,13 +6831,6 @@ var $author$project$Main$view = function (model) {
 															_List_fromArray(
 																[
 																	$elm$html$Html$text('I like cycling and sim-racing. I watch MLB, NPB, F1, WEC, and WRC as a sport. I play the piano, bass and saxophone (Tenor && Alto). I do RE and hardware hacking in my freetime')
-																])),
-															A2(
-															$elm$html$Html$p,
-															_List_Nil,
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('I play too much rythm games')
 																])),
 															A2(
 															$elm$html$Html$p,
@@ -6915,7 +6891,7 @@ var $author$project$Main$view = function (model) {
 																	$elm$html$Html$a,
 																	_List_fromArray(
 																		[
-																			$elm$html$Html$Attributes$href('https://x.com/Kaito_Malfoy'),
+																			$elm$html$Html$Attributes$href('https://twitter.com/Kaito_Malfoy'),
 																			$elm$html$Html$Attributes$class('contact-item')
 																		]),
 																	_List_fromArray(
@@ -7009,13 +6985,10 @@ var $author$project$Main$view = function (model) {
 										$elm$html$Html$a,
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$href('https://github.com/kaitotlex/web/commit/' + model.commitHash),
+												$elm$html$Html$Attributes$href('https://github.com/kaitotlex/web'),
 												$elm$html$Html$Attributes$class('commit-link')
 											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text(model.commitHash)
-											]))
+										_List_Nil)
 									]))
 							]))
 					]))

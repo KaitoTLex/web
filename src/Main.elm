@@ -5,10 +5,10 @@ import Browser.Navigation exposing (Key)
 import Html exposing (Html, a, button, div, footer, h1, h2, img, p, span, text)
 import Html.Attributes exposing (alt, class, href, src, style)
 import Html.Events exposing (onClick)
+import Projects exposing (cssStyles, viewProjects)
 import Url
 import Url.Parser as Parser exposing (Parser, map, oneOf, s, top)
 import VirtualDom
-import Projects exposing (viewProjects, cssStyles)
 
 
 main : Program () Model Msg
@@ -21,6 +21,7 @@ main =
         , onUrlChange = UrlChanged
         , onUrlRequest = LinkClicked
         }
+
 
 
 -- MODEL
@@ -41,7 +42,8 @@ type alias Model =
     { key : Key
     , url : Url.Url
     , colorMode : ColorMode
-    , commitHash : String
+
+    -- , commitHash : String
     , mobileMenuOpen : Bool
     }
 
@@ -51,11 +53,13 @@ init _ url key =
     ( { key = key
       , url = url
       , colorMode = DarkMode
-      , commitHash = "GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER"
+
+      -- #      , commitHash = "GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER"
       , mobileMenuOpen = False
       }
     , Cmd.none
     )
+
 
 
 -- UPDATE
@@ -87,6 +91,7 @@ update msg model =
                 newMode =
                     if model.colorMode == DarkMode then
                         LightMode
+
                     else
                         DarkMode
             in
@@ -99,6 +104,7 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
+
 
 
 -- VIEW
@@ -127,7 +133,13 @@ view model =
                 , h1 [] [ text "Ren Lin" ]
                 , p [] [ text "kaitotlex.systems" ]
                 , button [ class "mobile-menu-toggle", onClick ToggleMobileMenu ]
-                    [ text (if model.mobileMenuOpen then "✕" else "☰")
+                    [ text
+                        (if model.mobileMenuOpen then
+                            "✕"
+
+                         else
+                            "☰"
+                        )
                     , span [ class "sr-only" ] [ text "Menu" ]
                     ]
                 ]
@@ -150,7 +162,13 @@ view model =
                             ]
                         , div [ class "mode-toggle-container" ]
                             [ button [ class "mode-toggle", onClick ToggleColorMode ]
-                                [ text (if model.colorMode == DarkMode then "󰂔" else "󰂕")
+                                [ text
+                                    (if model.colorMode == DarkMode then
+                                        "\u{F0094}"
+
+                                     else
+                                        "\u{F0095}"
+                                    )
                                 , span [ class "toggle-icon" ]
                                     [ if model.colorMode == DarkMode then
                                         VirtualDom.node "svg"
@@ -206,10 +224,10 @@ view model =
                             div []
                                 [ h1 [] [ text "oh Hi!" ]
                                 , p [] [ text "I am Ren or Warren, I am a High School student interested in  Nuclear Theory and Electrical Engineering" ]
+
                                 --, img [ src "https://web.kaitotlex.systems/cont/bike.jpeg", alt "Bike", class "responsive-image" ] []
                                 , p [] [ text "I am interested in semi-conductor manufacturing, SOCs, and low power hardware. I work on projects that involves low power hardware -- anything RISC. I can't code. I like FOSS and FOSH, including RISC-V." ]
                                 , p [] [ text "I like cycling and sim-racing. I watch MLB, NPB, F1, WEC, and WRC as a sport. I play the piano, bass and saxophone (Tenor && Alto). I do RE and hardware hacking in my freetime" ]
-                                , p [] [ text "I play too much rythm games" ]
                                 , p [] [ text "If you would like to learn more about me, send a Matrix message or read my logs." ]
                                 , h2 [] [ text "contact" ]
                                 , div [ class "contact-links" ]
@@ -238,10 +256,10 @@ view model =
                 , span [ class "commit-info" ]
                     [ text " source: "
                     , a
-                        [ href ("https://github.com/kaitotlex/web/commit/" ++ model.commitHash)
+                        [ href "https://github.com/kaitotlex/web"
                         , class "commit-link"
                         ]
-                        [ text model.commitHash ]
+                        []
                     ]
                 ]
             ]
@@ -275,42 +293,49 @@ buildCss model =
         bg =
             if model.colorMode == DarkMode then
                 "#3d3653"
+
             else
                 "#c5c2d6"
 
         text =
             if model.colorMode == DarkMode then
                 "#c5c2d6"
+
             else
                 "#3d3653"
 
         brandingBg =
             if model.colorMode == DarkMode then
                 "#4e4864"
+
             else
                 "#a39fb6"
 
         sidebarBorder =
             if model.colorMode == DarkMode then
                 "#5f5974"
+
             else
                 "#817c95"
 
         buttonBg =
             if model.colorMode == DarkMode then
                 "#5f5974"
+
             else
                 "#817c95"
 
         buttonText =
             if model.colorMode == DarkMode then
                 "#c5c2d6"
+
             else
                 "#3d3653"
 
         linkColor =
             if model.colorMode == DarkMode then
                 "#a39fb6"
+
             else
                 "#5f5974"
 
