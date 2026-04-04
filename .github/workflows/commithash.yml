@@ -22,7 +22,6 @@ jobs:
         run: npm install -g elm@0.19.1
 
       - name: Get commit hash
-        id: commit
         run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Replace commit placeholder
@@ -30,12 +29,13 @@ jobs:
           find . -name '*.elm' -type f -exec sed -i 's/"GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER"/"${{ env.COMMIT_HASH }}"/g' {} \;
 
       - name: Build Elm application
-        run: elm make src/Main.elm --output=dist/bundle.js
+        run: elm make src/Main.elm --optimize --output=bundle.js
 
       - name: Create index.html
         run: |
-          echo '<!DOCTYPE html>
-          <html>
+          cat > index.html << 'HTMLEOF'
+          <!DOCTYPE html>
+          <html lang="en">
             <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,22 +44,22 @@ jobs:
             <body>
               <div id="root"></div>
               <script src="bundle.js"></script>
+              <script>Elm.Main.init({ node: document.getElementById("root") });</script>
             </body>
-          </html>' > index.html
+          </html>
+          HTMLEOF
 
-      - name: Create 404.html for client-side routing
+      - name: Create 404.html for SPA routing
         run: |
-          echo '<!DOCTYPE html>
+          cat > 404.html << 'HTMLEOF'
+          <!DOCTYPE html>
           <html>
             <head>
               <meta charset="utf-8">
-              <meta http-equiv="refresh" content="0; url=/">
-              <script>
-                sessionStorage.redirect = location.pathname;
-                location.replace("/");
-              </script>
+              <script>sessionStorage.redirect = location.pathname; location.replace("/");</script>
             </head>
-          </html>' > 404.html
+          </html>
+          HTMLEOF
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v30
