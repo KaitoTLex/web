@@ -119,7 +119,7 @@ navItems =
     , ( "/projects", "projects" )
     , ( "https://eexiv.functor.systems/author/wlin", "personal research" )
     , ( "https://yap.kaitotlex.systems", "log" )
-    , ( "https://web.kaitotlex.systems/cont/cv.pdf", "download cv" )
+    , ( "/cont/cv.pdf", "download cv" )
     ]
 
 
@@ -138,8 +138,24 @@ css cssContent =
     VirtualDom.node "style" [] [ text cssContent ]
 
 
-viewSidebar : ColorMode -> String -> Html Msg
-viewSidebar colorMode commitHash =
+isActiveLink : Page -> String -> Bool
+isActiveLink currentPage url =
+    case ( currentPage, url ) of
+        ( Home, "/" ) ->
+            True
+
+        ( AboutPage, "/about" ) ->
+            True
+
+        ( ProjectsPage, "/projects" ) ->
+            True
+
+        _ ->
+            False
+
+
+viewSidebar : ColorMode -> String -> Page -> Html Msg
+viewSidebar colorMode commitHash currentPage =
     let
         isPlaceholder =
             String.startsWith "GITHUB" commitHash
@@ -161,19 +177,30 @@ viewSidebar colorMode commitHash =
                     , class "commit-hash"
                     ]
                     [ text ("src: " ++ shortHash) ]
+
+        navLinkItem ( url, label ) =
+            a
+                [ href url
+                , class
+                    (if isActiveLink currentPage url then
+                        "nav-link active"
+
+                     else
+                        "nav-link"
+                    )
+                ]
+                [ text label ]
     in
     div [ class "sidebar" ]
         [ div [ class "sidebar-identity" ]
             [ div [ class "sidebar-name" ] [ text "Ren Lin" ]
             , div [ class "sidebar-tagline" ] [ text "kaitotlex.systems" ]
+            , div [ class "sidebar-location" ] [ text "Long Beach → Taipei → Bay Area" ]
             ]
         , div [ class "sidebar-divider" ] []
         , div [ class "sidebar-section-label" ] [ text "dir" ]
         , div [ class "nav-links" ]
-            (List.map
-                (\( url, label ) -> a [ href url, class "nav-link" ] [ text label ])
-                navItems
-            )
+            (List.map navLinkItem navItems)
         , div [ class "sidebar-divider" ] []
         , div [ class "sidebar-section-label" ] [ text "orgs" ]
         , div [ class "org-links" ]
@@ -197,8 +224,22 @@ viewSidebar colorMode commitHash =
         ]
 
 
-viewMobileMenu : ColorMode -> Html Msg
-viewMobileMenu colorMode =
+viewMobileMenu : ColorMode -> Page -> Html Msg
+viewMobileMenu colorMode currentPage =
+    let
+        mobileNavItem ( url, label ) =
+            a
+                [ href url
+                , class
+                    (if isActiveLink currentPage url then
+                        "mobile-nav-item active"
+
+                     else
+                        "mobile-nav-item"
+                    )
+                ]
+                [ text label ]
+    in
     div [ class "mobile-menu-wrapper" ]
         [ div [ class "mobile-menu-backdrop", onClick ToggleMobileMenu ] []
         , div
@@ -206,17 +247,15 @@ viewMobileMenu colorMode =
             , stopPropagationOn "click" (Decode.succeed ( NoOp, True ))
             ]
             [ div [ class "mobile-menu-header" ]
-                [ span [ class "mobile-menu-title" ] [ text "Menu" ]
+                [ div []
+                    [ span [ class "mobile-menu-title" ] [ text "Ren Lin" ]
+                    , div [ class "mobile-menu-location" ] [ text "Long Beach → Taipei → Bay Area" ]
+                    ]
                 , button [ class "close-mobile-menu", onClick ToggleMobileMenu ] [ text "✕" ]
                 ]
             , div [ class "mobile-nav-section-label" ] [ text "dir" ]
             , div [ class "mobile-nav-links" ]
-                (List.map
-                    (\( url, label ) ->
-                        a [ href url, class "mobile-nav-item" ] [ text label ]
-                    )
-                    navItems
-                )
+                (List.map mobileNavItem navItems)
             , div [ class "mobile-nav-section-label" ] [ text "orgs" ]
             , div [ class "mobile-org-links" ]
                 (List.map
@@ -235,6 +274,32 @@ viewMobileMenu colorMode =
                     )
                 ]
             ]
+        ]
+
+
+viewPageFooter : String -> Html Msg
+viewPageFooter commitHash =
+    let
+        isPlaceholder =
+            String.startsWith "GITHUB" commitHash
+
+        shortHash =
+            if isPlaceholder then
+                "dev"
+
+            else
+                String.left 7 commitHash
+    in
+    div [ class "page-footer" ]
+        [ if isPlaceholder then
+            span [ class "footer-hash" ] [ text ("src: " ++ shortHash) ]
+
+          else
+            a
+                [ href ("https://github.com/KaitoTLex/web/commit/" ++ commitHash)
+                , class "footer-hash"
+                ]
+                [ text ("src: " ++ shortHash) ]
         ]
 
 
@@ -262,6 +327,10 @@ viewPage page =
 
 view : Model -> Browser.Document Msg
 view model =
+    let
+        currentPage =
+            parseUrl model.url
+    in
     { title = "KaitoTLex.Systems"
     , body =
         [ css (buildCss model.colorMode)
@@ -274,11 +343,13 @@ view model =
                     , span [ class "sr-only" ] [ text "Menu" ]
                     ]
                 ]
-            , viewSidebar model.colorMode model.commitHash
+            , viewSidebar model.colorMode model.commitHash currentPage
             , div [ class "main-content" ]
-                [ viewPage (parseUrl model.url) ]
+                [ viewPage currentPage
+                , viewPageFooter model.commitHash
+                ]
             , if model.mobileMenuOpen then
-                viewMobileMenu model.colorMode
+                viewMobileMenu model.colorMode currentPage
 
               else
                 text ""
@@ -366,6 +437,10 @@ buildCss colorMode =
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     html, body {
       margin: 0;
       padding: 0;
@@ -444,6 +519,14 @@ buildCss colorMode =
       margin-top: 0.25rem;
     }
 
+    .sidebar-location {
+      font-size: 0.7rem;
+      color: """ ++ t.muted ++ """;
+      margin-top: 0.3rem;
+      opacity: 0.75;
+      letter-spacing: 0.02em;
+    }
+
     .sidebar-divider {
       height: 1px;
       background-color: """ ++ t.border ++ """;
@@ -479,6 +562,12 @@ buildCss colorMode =
       color: """ ++ t.linkHover ++ """;
       background-color: """ ++ t.surface ++ """;
       border-left-color: """ ++ t.accent ++ """;
+    }
+
+    .nav-link.active {
+      color: """ ++ t.accent ++ """;
+      border-left-color: """ ++ t.accent ++ """;
+      background-color: """ ++ t.surface ++ """;
     }
 
     .sidebar-spacer {
@@ -558,6 +647,25 @@ buildCss colorMode =
       font-size: 0.93rem;
     }
 
+    /* ── Page footer ────────────────────────────── */
+
+    .page-footer {
+      margin-top: 4rem;
+      padding-top: 1rem;
+      border-top: 1px solid """ ++ t.border ++ """;
+    }
+
+    .footer-hash {
+      font-size: 0.72rem;
+      color: """ ++ t.muted ++ """;
+      opacity: 0.65;
+    }
+
+    a.footer-hash:hover {
+      color: """ ++ t.linkHover ++ """;
+      opacity: 1;
+    }
+
     /* ── About page ─────────────────────────────── */
 
     .about-content {
@@ -568,6 +676,31 @@ buildCss colorMode =
       margin-bottom: 1rem;
       line-height: 1.8;
       font-size: 0.93rem;
+    }
+
+    .about-quote {
+      border-left: 2px solid """ ++ t.accent ++ """;
+      padding: 0.75rem 1.25rem;
+      margin: 1.5rem 0;
+      background-color: """ ++ t.surface ++ """;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .quote-text {
+      font-size: 0.88rem;
+      color: """ ++ t.muted ++ """;
+      margin: 0;
+      font-style: italic;
+      line-height: 1.7;
+      max-width: 100%;
+    }
+
+    .quote-attribution {
+      font-size: 0.75rem;
+      color: """ ++ t.muted ++ """;
+      opacity: 0.75;
+      margin-top: 0.5rem;
+      margin-bottom: 0;
     }
 
     .contact-links {
@@ -750,7 +883,24 @@ buildCss colorMode =
 
     /* ── Responsive ─────────────────────────────── */
 
+    .mobile-menu-location {
+      font-size: 0.7rem;
+      color: """ ++ t.muted ++ """;
+      margin-top: 0.15rem;
+      opacity: 0.75;
+    }
+
+    .mobile-nav-item.active {
+      color: """ ++ t.accent ++ """;
+      border-left-color: """ ++ t.accent ++ """;
+      background-color: """ ++ t.surface ++ """;
+    }
+
     @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+      }
+
       .sidebar {
         display: none;
       }
