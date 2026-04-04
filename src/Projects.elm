@@ -27,12 +27,12 @@ type alias Repository =
 
 kaitoRepositories : List Repository
 kaitoRepositories =
-    [ { name = "KaitoianOS"
-      , url = "https://github.com/KaitoTLex/KaitoianOS"
-      , description = "KaitoTLex's Mafuyu themed Hyprland on NixOS"
+    [ { name = "ame"
+      , url = "https://github.com/KaitoTLex/ame"
+      , description = " KaitoTLex's functorOS configuration, supported for x86-64-linux and aarch64-linux "
       , language = "Nix"
       , languageColor = "#9e9ab8"
-      , readmeExcerpt = "Fully customizable container-based operating system based on NixOS running Hyprland && Hyprscroller."
+      , readmeExcerpt = "KaitoTLex's EE Optimized FunctorOS (NixOS) configuration, KaitoianOS's spiritual successor"
       }
     ]
 
