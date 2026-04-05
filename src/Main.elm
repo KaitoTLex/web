@@ -115,7 +115,6 @@ subscriptions _ =
 navItems : List ( String, String )
 navItems =
     [ ( "/", "home" )
-    , ( "/about", "about" )
     , ( "/projects", "projects" )
     , ( "https://eexiv.functor.systems/author/wlin", "personal research" )
     , ( "https://yap.kaitotlex.systems", "log" )
