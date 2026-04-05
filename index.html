@@ -5311,7 +5311,7 @@ var $author$project$Main$themeFor = function (colorMode) {
 };
 var $author$project$Main$buildCss = function (colorMode) {
 	var t = $author$project$Main$themeFor(colorMode);
-	return '\n    @import url(\'https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap\');\n\n    *, *::before, *::after {\n      box-sizing: border-box;\n    }\n\n    html, body {\n      margin: 0;\n      padding: 0;\n      height: 100%;\n    }\n\n    :root {\n      --border-color: ' + (t.border + (';\n      --surface-color: ' + (t.surface + (';\n      --accent-color: ' + (t.accent + (';\n      --muted-color: ' + (t.muted + (';\n      --text-color: ' + (t.fg + (';\n      --link-color: ' + (t.linkColor + (';\n      --link-hover-color: ' + (t.linkHover + (';\n    }\n\n    body {\n      font-family: \'Fira Code\', monospace;\n      background-color: ' + (t.bg + (';\n      color: ' + (t.fg + (';\n      font-size: 15px;\n      line-height: 1.7;\n      transition: background-color 0.25s ease, color 0.25s ease;\n    }\n\n    a {\n      color: ' + (t.linkColor + (';\n      text-decoration: none;\n      transition: color 0.15s ease;\n    }\n\n    a:hover {\n      color: ' + (t.linkHover + (';\n    }\n\n    /* ── Layout ─────────────────────────────────── */\n\n    .layout {\n      display: flex;\n      min-height: 100vh;\n      position: relative;\n    }\n\n    /* ── Sidebar ─────────────────────────────────── */\n\n    .sidebar {\n      position: fixed;\n      left: 0;\n      top: 0;\n      width: 240px;\n      height: 100vh;\n      overflow-y: auto;\n      display: flex;\n      flex-direction: column;\n      background-color: ' + (t.sidebarBg + (';\n      border-right: 1px solid ' + (t.border + (';\n      padding: 2rem 1.5rem;\n      z-index: 100;\n      transition: background-color 0.25s ease;\n    }\n\n    .sidebar-identity {\n      margin-bottom: 1.5rem;\n    }\n\n    .sidebar-name {\n      font-size: 1.05rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-tagline {\n      font-size: 0.78rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.25rem;\n    }\n\n    .sidebar-divider {\n      height: 1px;\n      background-color: ' + (t.border + (';\n      margin: 1rem 0;\n    }\n\n    .sidebar-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-bottom: 0.4rem;\n    }\n\n    .nav-links,\n    .org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .nav-link {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.86rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .nav-link:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .sidebar-spacer {\n      flex-grow: 1;\n    }\n\n    .sidebar-footer {\n      display: flex;\n      flex-direction: column;\n      gap: 0.5rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .theme-toggle {\n      background: none;\n      border: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.78rem;\n      padding: 0.3rem 0.6rem;\n      border-radius: 4px;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease, border-color 0.15s ease;\n      width: 100%;\n    }\n\n    .theme-toggle:hover {\n      color: ' + (t.fg + (';\n      border-color: ' + (t.accent + (';\n    }\n\n    .commit-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.commit-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    /* ── Main Content ────────────────────────────── */\n\n    .main-content {\n      margin-left: 240px;\n      padding: 3.5rem 4rem;\n      flex: 1;\n      min-height: 100vh;\n    }\n\n    .main-content h1 {\n      font-size: 1.8rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      margin-top: 0;\n      margin-bottom: 0.5rem;\n      letter-spacing: -0.01em;\n    }\n\n    .main-content h2 {\n      font-size: 0.82rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      margin-top: 2rem;\n      margin-bottom: 0.6rem;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .main-content p {\n      color: ' + (t.fg + (';\n      max-width: 600px;\n      margin-bottom: 1rem;\n      font-size: 0.93rem;\n    }\n\n    /* ── About page ─────────────────────────────── */\n\n    .about-content {\n      max-width: 640px;\n    }\n\n    .about-para {\n      margin-bottom: 1rem;\n      line-height: 1.8;\n      font-size: 0.93rem;\n    }\n\n    .contact-links {\n      display: flex;\n      flex-direction: column;\n      gap: 0.1rem;\n      margin-top: 0.5rem;\n    }\n\n    .contact-item {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.88rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .contact-item::before {\n      content: "→ ";\n      color: ' + (t.accent + (';\n    }\n\n    .contact-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    /* ── Mobile top bar ─────────────────────────── */\n\n    .mobile-topbar {\n      display: none;\n      position: sticky;\n      top: 0;\n      z-index: 200;\n      background-color: ' + (t.sidebarBg + (';\n      border-bottom: 1px solid ' + (t.border + (';\n      padding: 0.75rem 1.25rem;\n      align-items: center;\n      justify-content: space-between;\n      width: 100%;\n    }\n\n    .mobile-site-name {\n      font-size: 0.95rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-menu-toggle {\n      background: none;\n      border: none;\n      color: ' + (t.fg + (';\n      font-size: 1.3rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      line-height: 1;\n    }\n\n    .sr-only {\n      position: absolute;\n      width: 1px;\n      height: 1px;\n      padding: 0;\n      margin: -1px;\n      overflow: hidden;\n      clip: rect(0, 0, 0, 0);\n      white-space: nowrap;\n      border: 0;\n    }\n\n    /* ── Mobile menu ────────────────────────────── */\n\n    .mobile-menu-wrapper {\n      position: fixed;\n      inset: 0;\n      z-index: 300;\n    }\n\n    .mobile-menu-backdrop {\n      position: absolute;\n      inset: 0;\n      background-color: rgba(0, 0, 0, 0.5);\n    }\n\n    .mobile-menu-panel {\n      position: absolute;\n      top: 0;\n      right: 0;\n      width: 280px;\n      height: 100%;\n      overflow-y: auto;\n      background-color: ' + (t.sidebarBg + (';\n      border-left: 1px solid ' + (t.border + (';\n      padding: 1.5rem 1.25rem;\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-menu-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 1.25rem;\n    }\n\n    .mobile-menu-title {\n      font-size: 0.7rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .close-mobile-menu {\n      background: none;\n      border: none;\n      color: ' + (t.muted + (';\n      font-size: 1rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      transition: color 0.15s ease;\n    }\n\n    .close-mobile-menu:hover {\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-nav-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-top: 1.25rem;\n      margin-bottom: 0.4rem;\n    }\n\n    .mobile-nav-links,\n    .mobile-org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-nav-item {\n      display: block;\n      padding: 0.5rem 0.6rem;\n      font-size: 0.9rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .mobile-nav-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .mobile-mode-toggle {\n      margin-top: auto;\n      background: none;\n      border: none;\n      border-top: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.8rem;\n      padding: 0.75rem 0.6rem 0.4rem;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease;\n    }\n\n    .mobile-mode-toggle:hover {\n      color: ' + (t.fg + ';\n    }\n\n    /* ── Responsive ─────────────────────────────── */\n\n    @media (max-width: 768px) {\n      .sidebar {\n        display: none;\n      }\n\n      .mobile-topbar {\n        display: flex;\n      }\n\n      .main-content {\n        margin-left: 0;\n        padding: 1.75rem 1.25rem;\n        max-width: 100%;\n      }\n    }\n\n    @media (min-width: 769px) and (max-width: 1100px) {\n      .sidebar {\n        width: 200px;\n      }\n\n      .main-content {\n        margin-left: 200px;\n        padding: 2.5rem 2.5rem;\n      }\n    }\n    ')))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+	return '\n    @import url(\'https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap\');\n\n    *, *::before, *::after {\n      box-sizing: border-box;\n    }\n\n    html {\n      scroll-behavior: smooth;\n    }\n\n    html, body {\n      margin: 0;\n      padding: 0;\n      height: 100%;\n    }\n\n    :root {\n      --border-color: ' + (t.border + (';\n      --surface-color: ' + (t.surface + (';\n      --accent-color: ' + (t.accent + (';\n      --muted-color: ' + (t.muted + (';\n      --text-color: ' + (t.fg + (';\n      --link-color: ' + (t.linkColor + (';\n      --link-hover-color: ' + (t.linkHover + (';\n    }\n\n    body {\n      font-family: \'Fira Code\', monospace;\n      background-color: ' + (t.bg + (';\n      color: ' + (t.fg + (';\n      font-size: 15px;\n      line-height: 1.7;\n      transition: background-color 0.25s ease, color 0.25s ease;\n    }\n\n    a {\n      color: ' + (t.linkColor + (';\n      text-decoration: none;\n      transition: color 0.15s ease;\n    }\n\n    a:hover {\n      color: ' + (t.linkHover + (';\n    }\n\n    /* ── Layout ─────────────────────────────────── */\n\n    .layout {\n      display: flex;\n      min-height: 100vh;\n      position: relative;\n    }\n\n    /* ── Sidebar ─────────────────────────────────── */\n\n    .sidebar {\n      position: fixed;\n      left: 0;\n      top: 0;\n      width: 240px;\n      height: 100vh;\n      overflow-y: auto;\n      display: flex;\n      flex-direction: column;\n      background-color: ' + (t.sidebarBg + (';\n      border-right: 1px solid ' + (t.border + (';\n      padding: 2rem 1.5rem;\n      z-index: 100;\n      transition: background-color 0.25s ease;\n    }\n\n    .sidebar-identity {\n      margin-bottom: 1.5rem;\n    }\n\n    .sidebar-name {\n      font-size: 1.05rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-tagline {\n      font-size: 0.78rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.25rem;\n    }\n\n    .sidebar-location {\n      font-size: 0.7rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.3rem;\n      opacity: 0.75;\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-divider {\n      height: 1px;\n      background-color: ' + (t.border + (';\n      margin: 1rem 0;\n    }\n\n    .sidebar-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-bottom: 0.4rem;\n    }\n\n    .nav-links,\n    .org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .nav-link {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.86rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .nav-link:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .nav-link.active {\n      color: ' + (t.accent + (';\n      border-left-color: ' + (t.accent + (';\n      background-color: ' + (t.surface + (';\n    }\n\n    .sidebar-spacer {\n      flex-grow: 1;\n    }\n\n    .sidebar-footer {\n      display: flex;\n      flex-direction: column;\n      gap: 0.5rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .theme-toggle {\n      background: none;\n      border: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.78rem;\n      padding: 0.3rem 0.6rem;\n      border-radius: 4px;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease, border-color 0.15s ease;\n      width: 100%;\n    }\n\n    .theme-toggle:hover {\n      color: ' + (t.fg + (';\n      border-color: ' + (t.accent + (';\n    }\n\n    .commit-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.commit-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    /* ── Main Content ────────────────────────────── */\n\n    .main-content {\n      margin-left: 240px;\n      padding: 3.5rem 4rem;\n      flex: 1;\n      min-height: 100vh;\n    }\n\n    .main-content h1 {\n      font-size: 1.8rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      margin-top: 0;\n      margin-bottom: 0.5rem;\n      letter-spacing: -0.01em;\n    }\n\n    .main-content h2 {\n      font-size: 0.82rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      margin-top: 2rem;\n      margin-bottom: 0.6rem;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .main-content p {\n      color: ' + (t.fg + (';\n      max-width: 600px;\n      margin-bottom: 1rem;\n      font-size: 0.93rem;\n    }\n\n    /* ── Page footer ────────────────────────────── */\n\n    .page-footer {\n      margin-top: 4rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .footer-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.footer-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    /* ── About page ─────────────────────────────── */\n\n    .about-content {\n      max-width: 640px;\n    }\n\n    .about-para {\n      margin-bottom: 1rem;\n      line-height: 1.8;\n      font-size: 0.93rem;\n    }\n\n    .about-quote {\n      border-left: 2px solid ' + (t.accent + (';\n      padding: 0.75rem 1.25rem;\n      margin: 1.5rem 0;\n      background-color: ' + (t.surface + (';\n      border-radius: 0 4px 4px 0;\n    }\n\n    .quote-text {\n      font-size: 0.88rem;\n      color: ' + (t.muted + (';\n      margin: 0;\n      font-style: italic;\n      line-height: 1.7;\n      max-width: 100%;\n    }\n\n    .quote-attribution {\n      font-size: 0.75rem;\n      color: ' + (t.muted + (';\n      opacity: 0.75;\n      margin-top: 0.5rem;\n      margin-bottom: 0;\n    }\n\n    .contact-links {\n      display: flex;\n      flex-direction: column;\n      gap: 0.1rem;\n      margin-top: 0.5rem;\n    }\n\n    .contact-item {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.88rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .contact-item::before {\n      content: "→ ";\n      color: ' + (t.accent + (';\n    }\n\n    .contact-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    /* ── Mobile top bar ─────────────────────────── */\n\n    .mobile-topbar {\n      display: none;\n      position: sticky;\n      top: 0;\n      z-index: 200;\n      background-color: ' + (t.sidebarBg + (';\n      border-bottom: 1px solid ' + (t.border + (';\n      padding: 0.75rem 1.25rem;\n      align-items: center;\n      justify-content: space-between;\n      width: 100%;\n    }\n\n    .mobile-site-name {\n      font-size: 0.95rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-menu-toggle {\n      background: none;\n      border: none;\n      color: ' + (t.fg + (';\n      font-size: 1.3rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      line-height: 1;\n    }\n\n    .sr-only {\n      position: absolute;\n      width: 1px;\n      height: 1px;\n      padding: 0;\n      margin: -1px;\n      overflow: hidden;\n      clip: rect(0, 0, 0, 0);\n      white-space: nowrap;\n      border: 0;\n    }\n\n    /* ── Mobile menu ────────────────────────────── */\n\n    .mobile-menu-wrapper {\n      position: fixed;\n      inset: 0;\n      z-index: 300;\n    }\n\n    .mobile-menu-backdrop {\n      position: absolute;\n      inset: 0;\n      background-color: rgba(0, 0, 0, 0.5);\n    }\n\n    .mobile-menu-panel {\n      position: absolute;\n      top: 0;\n      right: 0;\n      width: 280px;\n      height: 100%;\n      overflow-y: auto;\n      background-color: ' + (t.sidebarBg + (';\n      border-left: 1px solid ' + (t.border + (';\n      padding: 1.5rem 1.25rem;\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-menu-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 1.25rem;\n    }\n\n    .mobile-menu-title {\n      font-size: 0.7rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .close-mobile-menu {\n      background: none;\n      border: none;\n      color: ' + (t.muted + (';\n      font-size: 1rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      transition: color 0.15s ease;\n    }\n\n    .close-mobile-menu:hover {\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-nav-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-top: 1.25rem;\n      margin-bottom: 0.4rem;\n    }\n\n    .mobile-nav-links,\n    .mobile-org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-nav-item {\n      display: block;\n      padding: 0.5rem 0.6rem;\n      font-size: 0.9rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .mobile-nav-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .mobile-mode-toggle {\n      margin-top: auto;\n      background: none;\n      border: none;\n      border-top: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.8rem;\n      padding: 0.75rem 0.6rem 0.4rem;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease;\n    }\n\n    .mobile-mode-toggle:hover {\n      color: ' + (t.fg + (';\n    }\n\n    /* ── Responsive ─────────────────────────────── */\n\n    .mobile-menu-location {\n      font-size: 0.7rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.15rem;\n      opacity: 0.75;\n    }\n\n    .mobile-nav-item.active {\n      color: ' + (t.accent + (';\n      border-left-color: ' + (t.accent + (';\n      background-color: ' + (t.surface + ';\n    }\n\n    @media (max-width: 768px) {\n      .layout {\n        flex-direction: column;\n      }\n\n      .sidebar {\n        display: none;\n      }\n\n      .mobile-topbar {\n        display: flex;\n      }\n\n      .main-content {\n        margin-left: 0;\n        padding: 1.75rem 1.25rem;\n        max-width: 100%;\n      }\n    }\n\n    @media (min-width: 769px) and (max-width: 1100px) {\n      .sidebar {\n        width: 200px;\n      }\n\n      .main-content {\n        margin-left: 200px;\n        padding: 2.5rem 2.5rem;\n      }\n    }\n    ')))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$json$Json$Encode$string = _Json_wrap;
@@ -6130,6 +6130,39 @@ var $elm$html$Html$Attributes$href = function (url) {
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
+var $author$project$Main$isActiveLink = F2(
+	function (currentPage, url) {
+		var _v0 = _Utils_Tuple2(currentPage, url);
+		_v0$3:
+		while (true) {
+			switch (_v0.a.$) {
+				case 'Home':
+					if (_v0.b === '/') {
+						var _v1 = _v0.a;
+						return true;
+					} else {
+						break _v0$3;
+					}
+				case 'AboutPage':
+					if (_v0.b === '/about') {
+						var _v2 = _v0.a;
+						return true;
+					} else {
+						break _v0$3;
+					}
+				case 'ProjectsPage':
+					if (_v0.b === '/projects') {
+						var _v3 = _v0.a;
+						return true;
+					} else {
+						break _v0$3;
+					}
+				default:
+					break _v0$3;
+			}
+		}
+		return false;
+	});
 var $author$project$Main$navItems = _List_fromArray(
 	[
 		_Utils_Tuple2('/', 'home'),
@@ -6137,7 +6170,7 @@ var $author$project$Main$navItems = _List_fromArray(
 		_Utils_Tuple2('/projects', 'projects'),
 		_Utils_Tuple2('https://eexiv.functor.systems/author/wlin', 'personal research'),
 		_Utils_Tuple2('https://yap.kaitotlex.systems', 'log'),
-		_Utils_Tuple2('https://web.kaitotlex.systems/cont/cv.pdf', 'download cv')
+		_Utils_Tuple2('/cont/cv.pdf', 'download cv')
 	]);
 var $author$project$Main$orgItems = _List_fromArray(
 	[
@@ -6154,149 +6187,165 @@ var $elm$html$Html$Events$stopPropagationOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
 	});
-var $author$project$Main$viewMobileMenu = function (colorMode) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('mobile-menu-wrapper')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
+var $author$project$Main$viewMobileMenu = F2(
+	function (colorMode, currentPage) {
+		var mobileNavItem = function (_v1) {
+			var url = _v1.a;
+			var label = _v1.b;
+			return A2(
+				$elm$html$Html$a,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('mobile-menu-backdrop'),
-						$elm$html$Html$Events$onClick($author$project$Main$ToggleMobileMenu)
-					]),
-				_List_Nil),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('mobile-menu-panel'),
-						A2(
-						$elm$html$Html$Events$stopPropagationOn,
-						'click',
-						$elm$json$Json$Decode$succeed(
-							_Utils_Tuple2($author$project$Main$NoOp, true)))
+						$elm$html$Html$Attributes$href(url),
+						$elm$html$Html$Attributes$class(
+						A2($author$project$Main$isActiveLink, currentPage, url) ? 'mobile-nav-item active' : 'mobile-nav-item')
 					]),
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('mobile-menu-header')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$span,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('mobile-menu-title')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Menu')
-									])),
-								A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('close-mobile-menu'),
-										$elm$html$Html$Events$onClick($author$project$Main$ToggleMobileMenu)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('✕')
-									]))
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('mobile-nav-section-label')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('dir')
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('mobile-nav-links')
-							]),
-						A2(
-							$elm$core$List$map,
-							function (_v0) {
-								var url = _v0.a;
-								var label = _v0.b;
-								return A2(
-									$elm$html$Html$a,
+						$elm$html$Html$text(label)
+					]));
+		};
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('mobile-menu-wrapper')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('mobile-menu-backdrop'),
+							$elm$html$Html$Events$onClick($author$project$Main$ToggleMobileMenu)
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('mobile-menu-panel'),
+							A2(
+							$elm$html$Html$Events$stopPropagationOn,
+							'click',
+							$elm$json$Json$Decode$succeed(
+								_Utils_Tuple2($author$project$Main$NoOp, true)))
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-menu-header')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_Nil,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$href(url),
-											$elm$html$Html$Attributes$class('mobile-nav-item')
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('mobile-menu-title')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Ren Lin')
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('mobile-menu-location')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Long Beach → Taipei → Bay Area')
+												]))
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('close-mobile-menu'),
+											$elm$html$Html$Events$onClick($author$project$Main$ToggleMobileMenu)
 										]),
 									_List_fromArray(
 										[
-											$elm$html$Html$text(label)
-										]));
-							},
-							$author$project$Main$navItems)),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('mobile-nav-section-label')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('orgs')
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('mobile-org-links')
-							]),
-						A2(
-							$elm$core$List$map,
-							function (_v1) {
-								var url = _v1.a;
-								var label = _v1.b;
-								return A2(
-									$elm$html$Html$a,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$href(url),
-											$elm$html$Html$Attributes$class('mobile-nav-item')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text(label)
-										]));
-							},
-							$author$project$Main$orgItems)),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('mobile-mode-toggle'),
-								$elm$html$Html$Events$onClick($author$project$Main$ToggleColorMode)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								_Utils_eq(colorMode, $author$project$Main$DarkMode) ? '[ light ]' : '[ dark ]')
-							]))
-					]))
-			]));
-};
+											$elm$html$Html$text('✕')
+										]))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-nav-section-label')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('dir')
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-nav-links')
+								]),
+							A2($elm$core$List$map, mobileNavItem, $author$project$Main$navItems)),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-nav-section-label')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('orgs')
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-org-links')
+								]),
+							A2(
+								$elm$core$List$map,
+								function (_v0) {
+									var url = _v0.a;
+									var label = _v0.b;
+									return A2(
+										$elm$html$Html$a,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$href(url),
+												$elm$html$Html$Attributes$class('mobile-nav-item')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text(label)
+											]));
+								},
+								$author$project$Main$orgItems)),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-mode-toggle'),
+									$elm$html$Html$Events$onClick($author$project$Main$ToggleColorMode)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									_Utils_eq(colorMode, $author$project$Main$DarkMode) ? '[ light ]' : '[ dark ]')
+								]))
+						]))
+				]));
+	});
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$p = _VirtualDom_node('p');
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
@@ -6313,7 +6362,7 @@ var $author$project$About$view = A2(
 			_List_Nil,
 			_List_fromArray(
 				[
-					$elm$html$Html$text('hi, i\'m Ren')
+					$elm$html$Html$text('oh hi!')
 				])),
 			A2(
 			$elm$html$Html$p,
@@ -6323,7 +6372,7 @@ var $author$project$About$view = A2(
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text('I\'m a high school student interested in nuclear theory and electrical engineering.')
+					$elm$html$Html$text('i\'m a high school student during the day and an electrical engineer and an amateur physicist at night')
 				])),
 			A2(
 			$elm$html$Html$p,
@@ -6333,7 +6382,7 @@ var $author$project$About$view = A2(
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text('I work on projects involving low-power hardware — anything RISC. Interested in semiconductor manufacturing, SoCs, RISC-V, and FOSS/FOSH.')
+					$elm$html$Html$text('i work on projects involving low-power hardware — anything RISC. Interested in semiconductor manufacturing, SoCs, RISC-V, and FOSS/FOSH.')
 				])),
 			A2(
 			$elm$html$Html$p,
@@ -6343,7 +6392,76 @@ var $author$project$About$view = A2(
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text('Outside of that: cycling, sim-racing, MLB, NPB, F1, WEC, WRC. I play piano, bass, and saxophone (tenor & alto). RE and hardware hacking in my free time. Too much rhythm gaming.')
+					$elm$html$Html$text('outside of nerd stuff i enjoy: cycling, sim-racing, and badminton. i play piano, bass, and saxophone.')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('about-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('i am an engineer by heart, i\'ve built a couple of impressive projects including a breadboard computer')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('about-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('i am currently maintaining infra for functor.systems and working in MIT Open-Compute developing hardware, i am also currently building my own RISC-V chip with the vector extension')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('about-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('i aspire to continue education beyond BS/BA in Physics or Electrical Engineering to contribute to premier research facilities such as the National Aeronautics and Space Administration (NASA) or Organisation européenne pour la recherche nucléaire (CERN)')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('about-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('i am currently drowning in an information soup')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('about-quote')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$p,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('quote-text')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('\"The clear-cut idea of what is meant by proof ... he perhaps did not possess at all; once he had become satisfied of a theorem\'s truth, he had scant interest in proving it to others.\"')
+						])),
+					A2(
+					$elm$html$Html$p,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('quote-attribution')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('— John Littlewood')
+						]))
 				])),
 			A2(
 			$elm$html$Html$h2,
@@ -6375,6 +6493,17 @@ var $author$project$About$view = A2(
 					$elm$html$Html$a,
 					_List_fromArray(
 						[
+							$elm$html$Html$Attributes$href('https://matrix.to/#/@kaitotlex26:functor.systems'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('matrix')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
 							$elm$html$Html$Attributes$href('https://github.com/kaitotlex'),
 							$elm$html$Html$Attributes$class('contact-item')
 						]),
@@ -6397,7 +6526,18 @@ var $author$project$About$view = A2(
 					$elm$html$Html$a,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$href('https://twitter.com/Kaito_Malfoy'),
+							$elm$html$Html$Attributes$href('https://www.instagram.com/kaitotlex.ttv'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('instagram')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('https://twitter.com/kaitotlex'),
 							$elm$html$Html$Attributes$class('contact-item')
 						]),
 					_List_fromArray(
@@ -6419,18 +6559,29 @@ var $author$project$About$view = A2(
 					$elm$html$Html$a,
 					_List_fromArray(
 						[
+							$elm$html$Html$Attributes$href('https://code.functor.system/kaitotlex'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('functor.systems code')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
 							$elm$html$Html$Attributes$href('https://arxiv.org/abs/2204.04549'),
 							$elm$html$Html$Attributes$class('contact-item')
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('arxiv: 2204.04549')
+							$elm$html$Html$text('send through matter-wave field')
 						]))
 				]))
 		]));
 var $author$project$Projects$kaitoRepositories = _List_fromArray(
 	[
-		{description: 'KaitoTLex\'s Mafuyu themed Hyprland on NixOS', language: 'Nix', languageColor: '#9e9ab8', name: 'KaitoianOS', readmeExcerpt: 'Fully customizable container-based operating system based on NixOS running Hyprland && Hyprscroller.', url: 'https://github.com/KaitoTLex/KaitoianOS'}
+		{description: ' KaitoTLex\'s functorOS configuration, supported for x86-64-linux and aarch64-linux ', language: 'Nix', languageColor: '#9e9ab8', name: 'ame', readmeExcerpt: 'KaitoTLex\'s EE Optimized FunctorOS (NixOS) configuration, KaitoianOS\'s spiritual successor', url: 'https://github.com/KaitoTLex/ame'}
 	]);
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
@@ -6605,8 +6756,57 @@ var $author$project$Main$viewPage = function (page) {
 					]));
 	}
 };
-var $author$project$Main$viewSidebar = F2(
-	function (colorMode, commitHash) {
+var $author$project$Main$viewPageFooter = function (commitHash) {
+	var isPlaceholder = A2($elm$core$String$startsWith, 'GITHUB', commitHash);
+	var shortHash = isPlaceholder ? 'dev' : A2($elm$core$String$left, 7, commitHash);
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('page-footer')
+			]),
+		_List_fromArray(
+			[
+				isPlaceholder ? A2(
+				$elm$html$Html$span,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('footer-hash')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('src: ' + shortHash)
+					])) : A2(
+				$elm$html$Html$a,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$href('https://github.com/KaitoTLex/web/commit/' + commitHash),
+						$elm$html$Html$Attributes$class('footer-hash')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('src: ' + shortHash)
+					]))
+			]));
+};
+var $author$project$Main$viewSidebar = F3(
+	function (colorMode, commitHash, currentPage) {
+		var navLinkItem = function (_v1) {
+			var url = _v1.a;
+			var label = _v1.b;
+			return A2(
+				$elm$html$Html$a,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$href(url),
+						$elm$html$Html$Attributes$class(
+						A2($author$project$Main$isActiveLink, currentPage, url) ? 'nav-link active' : 'nav-link')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(label)
+					]));
+		};
 		var isPlaceholder = A2($elm$core$String$startsWith, 'GITHUB', commitHash);
 		var shortHash = isPlaceholder ? 'dev' : A2($elm$core$String$left, 7, commitHash);
 		var commitDisplay = isPlaceholder ? A2(
@@ -6664,6 +6864,16 @@ var $author$project$Main$viewSidebar = F2(
 							_List_fromArray(
 								[
 									$elm$html$Html$text('kaitotlex.systems')
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('sidebar-location')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Long Beach → Taipei → Bay Area')
 								]))
 						])),
 					A2(
@@ -6689,24 +6899,7 @@ var $author$project$Main$viewSidebar = F2(
 						[
 							$elm$html$Html$Attributes$class('nav-links')
 						]),
-					A2(
-						$elm$core$List$map,
-						function (_v0) {
-							var url = _v0.a;
-							var label = _v0.b;
-							return A2(
-								$elm$html$Html$a,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$href(url),
-										$elm$html$Html$Attributes$class('nav-link')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text(label)
-									]));
-						},
-						$author$project$Main$navItems)),
+					A2($elm$core$List$map, navLinkItem, $author$project$Main$navItems)),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -6732,9 +6925,9 @@ var $author$project$Main$viewSidebar = F2(
 						]),
 					A2(
 						$elm$core$List$map,
-						function (_v1) {
-							var url = _v1.a;
-							var label = _v1.b;
+						function (_v0) {
+							var url = _v0.a;
+							var label = _v0.b;
 							return A2(
 								$elm$html$Html$a,
 								_List_fromArray(
@@ -6780,6 +6973,7 @@ var $author$project$Main$viewSidebar = F2(
 				]));
 	});
 var $author$project$Main$view = function (model) {
+	var currentPage = $author$project$Main$parseUrl(model.url);
 	return {
 		body: _List_fromArray(
 			[
@@ -6834,7 +7028,7 @@ var $author$project$Main$view = function (model) {
 											]))
 									]))
 							])),
-						A2($author$project$Main$viewSidebar, model.colorMode, model.commitHash),
+						A3($author$project$Main$viewSidebar, model.colorMode, model.commitHash, currentPage),
 						A2(
 						$elm$html$Html$div,
 						_List_fromArray(
@@ -6843,10 +7037,10 @@ var $author$project$Main$view = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$author$project$Main$viewPage(
-								$author$project$Main$parseUrl(model.url))
+								$author$project$Main$viewPage(currentPage),
+								$author$project$Main$viewPageFooter(model.commitHash)
 							])),
-						model.mobileMenuOpen ? $author$project$Main$viewMobileMenu(model.colorMode) : $elm$html$Html$text('')
+						model.mobileMenuOpen ? A2($author$project$Main$viewMobileMenu, model.colorMode, currentPage) : $elm$html$Html$text('')
 					]))
 			]),
 		title: 'KaitoTLex.Systems'
