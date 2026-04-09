@@ -3,11 +3,14 @@ module Main exposing (main)
 import About
 import Browser
 import Browser.Navigation exposing (Key)
-import Html exposing (Html, a, button, div, h1, p, span, text)
-import Html.Attributes exposing (class, href)
+import Home
+import Html exposing (Html, a, button, div, h1, img, node, p, span, text)
+import Html.Attributes exposing (alt, class, href, rel, src, type_)
 import Html.Events exposing (onClick, stopPropagationOn)
+import Http
 import Json.Decode as Decode
 import Projects
+import Status
 import Url
 import Url.Parser as Parser exposing (Parser, oneOf, s, top)
 import VirtualDom
@@ -37,6 +40,7 @@ type Page
     = Home
     | AboutPage
     | ProjectsPage
+    | StatusPage
     | NotFound
 
 
@@ -46,18 +50,48 @@ type alias Model =
     , colorMode : ColorMode
     , commitHash : String
     , mobileMenuOpen : Bool
+    , statusState : Status.StatusState
     }
+
+
+fetchMeta : Cmd Msg
+fetchMeta =
+    Http.get
+        { url = "/api/meta"
+        , expect = Http.expectJson MetaResult (Decode.field "sha" Decode.string)
+        }
 
 
 init : () -> Url.Url -> Key -> ( Model, Cmd Msg )
 init _ url key =
+    let
+        initialPage =
+            case Parser.parse routeParser url of
+                Just page ->
+                    page
+
+                Nothing ->
+                    NotFound
+
+        onStatusPage =
+            initialPage == StatusPage
+    in
     ( { key = key
       , url = url
       , colorMode = DarkMode
       , commitHash = "GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER"
       , mobileMenuOpen = False
+      , statusState =
+            if onStatusPage then
+                Status.StatusLoading
+
+            else
+                Status.StatusIdle
       }
-    , Cmd.none
+    , Cmd.batch
+        [ fetchMeta
+        , if onStatusPage then Status.fetchApi StatusApiResult else Cmd.none
+        ]
     )
 
 
@@ -70,6 +104,9 @@ type Msg
     | ToggleColorMode
     | ToggleMobileMenu
     | NoOp
+    | StatusApiResult (Result Http.Error (List Status.StatusSnapshot))
+    | RefreshStatuses
+    | MetaResult (Result Http.Error String)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -84,7 +121,30 @@ update msg model =
                     ( model, Browser.Navigation.load href_ )
 
         UrlChanged url ->
-            ( { model | url = url, mobileMenuOpen = False }, Cmd.none )
+            let
+                newPage =
+                    case Parser.parse routeParser url of
+                        Just page ->
+                            page
+
+                        Nothing ->
+                            NotFound
+
+                onStatusPage =
+                    newPage == StatusPage
+            in
+            ( { model
+                | url = url
+                , mobileMenuOpen = False
+                , statusState =
+                    if onStatusPage then
+                        Status.StatusLoading
+
+                    else
+                        model.statusState
+              }
+            , if onStatusPage then Status.fetchApi StatusApiResult else Cmd.none
+            )
 
         ToggleColorMode ->
             let
@@ -103,6 +163,36 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
+        StatusApiResult result ->
+            ( { model
+                | statusState =
+                    case result of
+                        Ok history ->
+                            Status.StatusLoaded history
+
+                        Err _ ->
+                            Status.StatusFailed "could not reach /api/status"
+              }
+            , Cmd.none
+            )
+
+        RefreshStatuses ->
+            ( { model | statusState = Status.StatusLoading }
+            , Status.fetchApi StatusApiResult
+            )
+
+        MetaResult result ->
+            case result of
+                Ok sha ->
+                    if String.isEmpty sha then
+                        ( model, Cmd.none )
+
+                    else
+                        ( { model | commitHash = sha }, Cmd.none )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
@@ -115,7 +205,9 @@ subscriptions _ =
 navItems : List ( String, String )
 navItems =
     [ ( "/", "home" )
+    , ( "/about", "about" )
     , ( "/projects", "projects" )
+    , ( "/status", "status" )
     , ( "https://eexiv.functor.systems/author/wlin", "personal research" )
     , ( "https://yap.kaitotlex.systems", "log" )
     , ( "/cont/cv.pdf", "download cv" )
@@ -147,6 +239,9 @@ isActiveLink currentPage url =
             True
 
         ( ProjectsPage, "/projects" ) ->
+            True
+
+        ( StatusPage, "/status" ) ->
             True
 
         _ ->
@@ -194,7 +289,7 @@ viewSidebar colorMode commitHash currentPage =
         [ div [ class "sidebar-identity" ]
             [ div [ class "sidebar-name" ] [ text "Ren Lin" ]
             , div [ class "sidebar-tagline" ] [ text "kaitotlex.systems" ]
-            , div [ class "sidebar-location" ] [ text "Long Beach → Taipei → Bay Area" ]
+            , div [ class "sidebar-location" ] [ img [ src "/assets/pcb.svg", alt "pcb traces"] [] ]
             ]
         , div [ class "sidebar-divider" ] []
         , div [ class "sidebar-section-label" ] [ text "dir" ]
@@ -248,7 +343,7 @@ viewMobileMenu colorMode currentPage =
             [ div [ class "mobile-menu-header" ]
                 [ div []
                     [ span [ class "mobile-menu-title" ] [ text "Ren Lin" ]
-                    , div [ class "mobile-menu-location" ] [ text "Long Beach → Taipei → Bay Area" ]
+                    , div [ class "mobile-menu-location" ] [ img [ src "/assets/pcb.svg", alt "pcb traces" ] [] ]
                     ]
                 , button [ class "close-mobile-menu", onClick ToggleMobileMenu ] [ text "✕" ]
                 ]
@@ -290,7 +385,19 @@ viewPageFooter commitHash =
                 String.left 7 commitHash
     in
     div [ class "page-footer" ]
-        [ if isPlaceholder then
+        [ div [ class "footer-gifs" ]
+            [ img [ src "/assets/gif/eva.gif", alt "eva" ] []
+            , img [ src "/assets/gif/nec.gif", alt "nec" ] []
+            , img [ src "/assets/gif/linux_powered.gif", alt "linux" ] []
+            , img [ src "/assets/gif/yuri.png", alt "yuri" ] []
+            , img [ src "/assets/gif/trans.gif", alt "trans" ] []
+            , img [ src "/assets/gif/miku.gif", alt "miku" ] []
+            , img [ src "/assets/gif/latex.gif", alt "latex" ] []
+            , img [ src "/assets/gif/kaitotlex.gif", alt "self" ] []
+            , img [ src "/assets/gif/tetris.gif", alt "tetris" ] []
+            ]
+        -- , img [ src "/assets/pcb.svg", alt "pcb traces", class "footer-pcb" ] []
+        , if isPlaceholder then
             span [ class "footer-hash" ] [ text ("src: " ++ shortHash) ]
 
           else
@@ -302,17 +409,20 @@ viewPageFooter commitHash =
         ]
 
 
-viewPage : Page -> Html Msg
-viewPage page =
+viewPage : Page -> Model -> Html Msg
+viewPage page model =
     case page of
         Home ->
-            About.view
+            Home.view
 
         AboutPage ->
             About.view
 
         ProjectsPage ->
             Projects.viewProjects
+
+        StatusPage ->
+            Status.view model.statusState RefreshStatuses
 
         NotFound ->
             div []
@@ -330,9 +440,12 @@ view model =
         currentPage =
             parseUrl model.url
     in
-    { title = "KaitoTLex.Systems"
+    { title = "kaitotlex.systems"
     , body =
-        [ css (buildCss model.colorMode)
+        [ node "link" [ rel "icon", type_ "image/png", href "/assets/favicon.png" ] []
+        , css (buildCss model.colorMode)
+        , Home.cssStyles
+        , Status.cssStyles
         , Projects.cssStyles
         , div [ class "layout" ]
             [ div [ class "mobile-topbar" ]
@@ -344,7 +457,7 @@ view model =
                 ]
             , viewSidebar model.colorMode model.commitHash currentPage
             , div [ class "main-content" ]
-                [ viewPage currentPage
+                [ viewPage currentPage model
                 , viewPageFooter model.commitHash
                 ]
             , if model.mobileMenuOpen then
@@ -376,6 +489,7 @@ routeParser =
         [ Parser.map Home top
         , Parser.map AboutPage (s "about")
         , Parser.map ProjectsPage (s "projects")
+        , Parser.map StatusPage (s "status")
         ]
 
 
@@ -663,6 +777,26 @@ buildCss colorMode =
     a.footer-hash:hover {
       color: """ ++ t.linkHover ++ """;
       opacity: 1;
+    }
+
+    .footer-pcb {
+      display: block;
+      max-width: 340px;
+      height: auto;
+      margin-top: 0.5rem;
+      opacity: 0.8;
+    }
+
+    .footer-gifs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .footer-gifs img {
+      height: 31px;
+      image-rendering: pixelated;
     }
 
     /* ── About page ─────────────────────────────── */
