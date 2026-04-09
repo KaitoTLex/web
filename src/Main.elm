@@ -11,6 +11,7 @@ import Http
 import Json.Decode as Decode
 import Projects
 import Status
+import Time
 import Url
 import Url.Parser as Parser exposing (Parser, oneOf, s, top)
 import VirtualDom
@@ -107,6 +108,7 @@ type Msg
     | StatusApiResult (Result Http.Error (List Status.StatusSnapshot))
     | RefreshStatuses
     | MetaResult (Result Http.Error String)
+    | Tick Time.Posix
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -193,10 +195,18 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
+        Tick _ ->
+            ( model, Status.fetchApi StatusApiResult )
+
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    case parseUrl model.url of
+        StatusPage ->
+            Time.every (60 * 1000) Tick
+
+        _ ->
+            Sub.none
 
 
 -- NAVIGATION DATA

@@ -4576,7 +4576,53 @@ function _Url_percentDecode(string)
 	{
 		return $elm$core$Maybe$Nothing;
 	}
-}var $author$project$Main$LinkClicked = function (a) {
+}
+
+
+function _Time_now(millisToPosix)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(millisToPosix(Date.now())));
+	});
+}
+
+var _Time_setInterval = F2(function(interval, task)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
+		return function() { clearInterval(id); };
+	});
+});
+
+function _Time_here()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(
+			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
+		));
+	});
+}
+
+
+function _Time_getZoneName()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		try
+		{
+			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		}
+		catch (e)
+		{
+			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
+		}
+		callback(_Scheduler_succeed(name));
+	});
+}
+var $author$project$Main$LinkClicked = function (a) {
 	return {$: 'LinkClicked', a: a};
 };
 var $author$project$Main$UrlChanged = function (a) {
@@ -6498,10 +6544,297 @@ var $author$project$Main$init = F3(
 						onStatusPage ? $author$project$Status$fetchApi($author$project$Main$StatusApiResult) : $elm$core$Platform$Cmd$none
 					])));
 	});
+var $author$project$Main$Tick = function (a) {
+	return {$: 'Tick', a: a};
+};
+var $elm$time$Time$Every = F2(
+	function (a, b) {
+		return {$: 'Every', a: a, b: b};
+	});
+var $elm$time$Time$State = F2(
+	function (taggers, processes) {
+		return {processes: processes, taggers: taggers};
+	});
+var $elm$time$Time$init = $elm$core$Task$succeed(
+	A2($elm$time$Time$State, $elm$core$Dict$empty, $elm$core$Dict$empty));
+var $elm$time$Time$addMySub = F2(
+	function (_v0, state) {
+		var interval = _v0.a;
+		var tagger = _v0.b;
+		var _v1 = A2($elm$core$Dict$get, interval, state);
+		if (_v1.$ === 'Nothing') {
+			return A3(
+				$elm$core$Dict$insert,
+				interval,
+				_List_fromArray(
+					[tagger]),
+				state);
+		} else {
+			var taggers = _v1.a;
+			return A3(
+				$elm$core$Dict$insert,
+				interval,
+				A2($elm$core$List$cons, tagger, taggers),
+				state);
+		}
+	});
+var $elm$core$Dict$foldl = F3(
+	function (func, acc, dict) {
+		foldl:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return acc;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var $temp$func = func,
+					$temp$acc = A3(
+					func,
+					key,
+					value,
+					A3($elm$core$Dict$foldl, func, acc, left)),
+					$temp$dict = right;
+				func = $temp$func;
+				acc = $temp$acc;
+				dict = $temp$dict;
+				continue foldl;
+			}
+		}
+	});
+var $elm$core$Dict$merge = F6(
+	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
+		var stepState = F3(
+			function (rKey, rValue, _v0) {
+				stepState:
+				while (true) {
+					var list = _v0.a;
+					var result = _v0.b;
+					if (!list.b) {
+						return _Utils_Tuple2(
+							list,
+							A3(rightStep, rKey, rValue, result));
+					} else {
+						var _v2 = list.a;
+						var lKey = _v2.a;
+						var lValue = _v2.b;
+						var rest = list.b;
+						if (_Utils_cmp(lKey, rKey) < 0) {
+							var $temp$rKey = rKey,
+								$temp$rValue = rValue,
+								$temp$_v0 = _Utils_Tuple2(
+								rest,
+								A3(leftStep, lKey, lValue, result));
+							rKey = $temp$rKey;
+							rValue = $temp$rValue;
+							_v0 = $temp$_v0;
+							continue stepState;
+						} else {
+							if (_Utils_cmp(lKey, rKey) > 0) {
+								return _Utils_Tuple2(
+									list,
+									A3(rightStep, rKey, rValue, result));
+							} else {
+								return _Utils_Tuple2(
+									rest,
+									A4(bothStep, lKey, lValue, rValue, result));
+							}
+						}
+					}
+				}
+			});
+		var _v3 = A3(
+			$elm$core$Dict$foldl,
+			stepState,
+			_Utils_Tuple2(
+				$elm$core$Dict$toList(leftDict),
+				initialResult),
+			rightDict);
+		var leftovers = _v3.a;
+		var intermediateResult = _v3.b;
+		return A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v4, result) {
+					var k = _v4.a;
+					var v = _v4.b;
+					return A3(leftStep, k, v, result);
+				}),
+			intermediateResult,
+			leftovers);
+	});
+var $elm$time$Time$Name = function (a) {
+	return {$: 'Name', a: a};
+};
+var $elm$time$Time$Offset = function (a) {
+	return {$: 'Offset', a: a};
+};
+var $elm$time$Time$Zone = F2(
+	function (a, b) {
+		return {$: 'Zone', a: a, b: b};
+	});
+var $elm$time$Time$customZone = $elm$time$Time$Zone;
+var $elm$time$Time$setInterval = _Time_setInterval;
+var $elm$time$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		if (!intervals.b) {
+			return $elm$core$Task$succeed(processes);
+		} else {
+			var interval = intervals.a;
+			var rest = intervals.b;
+			var spawnTimer = $elm$core$Process$spawn(
+				A2(
+					$elm$time$Time$setInterval,
+					interval,
+					A2($elm$core$Platform$sendToSelf, router, interval)));
+			var spawnRest = function (id) {
+				return A3(
+					$elm$time$Time$spawnHelp,
+					router,
+					rest,
+					A3($elm$core$Dict$insert, interval, id, processes));
+			};
+			return A2($elm$core$Task$andThen, spawnRest, spawnTimer);
+		}
+	});
+var $elm$time$Time$onEffects = F3(
+	function (router, subs, _v0) {
+		var processes = _v0.processes;
+		var rightStep = F3(
+			function (_v6, id, _v7) {
+				var spawns = _v7.a;
+				var existing = _v7.b;
+				var kills = _v7.c;
+				return _Utils_Tuple3(
+					spawns,
+					existing,
+					A2(
+						$elm$core$Task$andThen,
+						function (_v5) {
+							return kills;
+						},
+						$elm$core$Process$kill(id)));
+			});
+		var newTaggers = A3($elm$core$List$foldl, $elm$time$Time$addMySub, $elm$core$Dict$empty, subs);
+		var leftStep = F3(
+			function (interval, taggers, _v4) {
+				var spawns = _v4.a;
+				var existing = _v4.b;
+				var kills = _v4.c;
+				return _Utils_Tuple3(
+					A2($elm$core$List$cons, interval, spawns),
+					existing,
+					kills);
+			});
+		var bothStep = F4(
+			function (interval, taggers, id, _v3) {
+				var spawns = _v3.a;
+				var existing = _v3.b;
+				var kills = _v3.c;
+				return _Utils_Tuple3(
+					spawns,
+					A3($elm$core$Dict$insert, interval, id, existing),
+					kills);
+			});
+		var _v1 = A6(
+			$elm$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			processes,
+			_Utils_Tuple3(
+				_List_Nil,
+				$elm$core$Dict$empty,
+				$elm$core$Task$succeed(_Utils_Tuple0)));
+		var spawnList = _v1.a;
+		var existingDict = _v1.b;
+		var killTask = _v1.c;
+		return A2(
+			$elm$core$Task$andThen,
+			function (newProcesses) {
+				return $elm$core$Task$succeed(
+					A2($elm$time$Time$State, newTaggers, newProcesses));
+			},
+			A2(
+				$elm$core$Task$andThen,
+				function (_v2) {
+					return A3($elm$time$Time$spawnHelp, router, spawnList, existingDict);
+				},
+				killTask));
+	});
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
+var $elm$time$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _v0 = A2($elm$core$Dict$get, interval, state.taggers);
+		if (_v0.$ === 'Nothing') {
+			return $elm$core$Task$succeed(state);
+		} else {
+			var taggers = _v0.a;
+			var tellTaggers = function (time) {
+				return $elm$core$Task$sequence(
+					A2(
+						$elm$core$List$map,
+						function (tagger) {
+							return A2(
+								$elm$core$Platform$sendToApp,
+								router,
+								tagger(time));
+						},
+						taggers));
+			};
+			return A2(
+				$elm$core$Task$andThen,
+				function (_v1) {
+					return $elm$core$Task$succeed(state);
+				},
+				A2($elm$core$Task$andThen, tellTaggers, $elm$time$Time$now));
+		}
+	});
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$time$Time$subMap = F2(
+	function (f, _v0) {
+		var interval = _v0.a;
+		var tagger = _v0.b;
+		return A2(
+			$elm$time$Time$Every,
+			interval,
+			A2($elm$core$Basics$composeL, f, tagger));
+	});
+_Platform_effectManagers['Time'] = _Platform_createManager($elm$time$Time$init, $elm$time$Time$onEffects, $elm$time$Time$onSelfMsg, 0, $elm$time$Time$subMap);
+var $elm$time$Time$subscription = _Platform_leaf('Time');
+var $elm$time$Time$every = F2(
+	function (interval, tagger) {
+		return $elm$time$Time$subscription(
+			A2($elm$time$Time$Every, interval, tagger));
+	});
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Main$subscriptions = function (_v0) {
-	return $elm$core$Platform$Sub$none;
+var $author$project$Main$parseUrl = function (url) {
+	var _v0 = A2($elm$url$Url$Parser$parse, $author$project$Main$routeParser, url);
+	if (_v0.$ === 'Just') {
+		var page = _v0.a;
+		return page;
+	} else {
+		return $author$project$Main$NotFound;
+	}
+};
+var $author$project$Main$subscriptions = function (model) {
+	var _v0 = $author$project$Main$parseUrl(model.url);
+	if (_v0.$ === 'StatusPage') {
+		return A2($elm$time$Time$every, 60 * 1000, $author$project$Main$Tick);
+	} else {
+		return $elm$core$Platform$Sub$none;
+	}
 };
 var $author$project$Main$LightMode = {$: 'LightMode'};
 var $author$project$Status$StatusFailed = function (a) {
@@ -6634,7 +6967,7 @@ var $author$project$Main$update = F2(
 						model,
 						{statusState: $author$project$Status$StatusLoading}),
 					$author$project$Status$fetchApi($author$project$Main$StatusApiResult));
-			default:
+			case 'MetaResult':
 				var result = msg.a;
 				if (result.$ === 'Ok') {
 					var sha = result.a;
@@ -6646,6 +6979,10 @@ var $author$project$Main$update = F2(
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
+			default:
+				return _Utils_Tuple2(
+					model,
+					$author$project$Status$fetchApi($author$project$Main$StatusApiResult));
 		}
 	});
 var $author$project$Main$ToggleMobileMenu = {$: 'ToggleMobileMenu'};
@@ -6658,7 +6995,7 @@ var $author$project$Main$themeFor = function (colorMode) {
 };
 var $author$project$Main$buildCss = function (colorMode) {
 	var t = $author$project$Main$themeFor(colorMode);
-	return '\n    @import url(\'https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap\');\n\n    *, *::before, *::after {\n      box-sizing: border-box;\n    }\n\n    html {\n      scroll-behavior: smooth;\n    }\n\n    html, body {\n      margin: 0;\n      padding: 0;\n      height: 100%;\n    }\n\n    :root {\n      --border-color: ' + (t.border + (';\n      --surface-color: ' + (t.surface + (';\n      --accent-color: ' + (t.accent + (';\n      --muted-color: ' + (t.muted + (';\n      --text-color: ' + (t.fg + (';\n      --link-color: ' + (t.linkColor + (';\n      --link-hover-color: ' + (t.linkHover + (';\n    }\n\n    body {\n      font-family: \'Fira Code\', monospace;\n      background-color: ' + (t.bg + (';\n      color: ' + (t.fg + (';\n      font-size: 15px;\n      line-height: 1.7;\n      transition: background-color 0.25s ease, color 0.25s ease;\n    }\n\n    a {\n      color: ' + (t.linkColor + (';\n      text-decoration: none;\n      transition: color 0.15s ease;\n    }\n\n    a:hover {\n      color: ' + (t.linkHover + (';\n    }\n\n    /* ── Layout ─────────────────────────────────── */\n\n    .layout {\n      display: flex;\n      min-height: 100vh;\n      position: relative;\n    }\n\n    /* ── Sidebar ─────────────────────────────────── */\n\n    .sidebar {\n      position: fixed;\n      left: 0;\n      top: 0;\n      width: 240px;\n      height: 100vh;\n      overflow-y: auto;\n      display: flex;\n      flex-direction: column;\n      background-color: ' + (t.sidebarBg + (';\n      border-right: 1px solid ' + (t.border + (';\n      padding: 2rem 1.5rem;\n      z-index: 100;\n      transition: background-color 0.25s ease;\n    }\n\n    .sidebar-identity {\n      margin-bottom: 1.5rem;\n    }\n\n    .sidebar-name {\n      font-size: 1.05rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-tagline {\n      font-size: 0.78rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.25rem;\n    }\n\n    .sidebar-location {\n      font-size: 0.7rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.3rem;\n      opacity: 0.75;\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-divider {\n      height: 1px;\n      background-color: ' + (t.border + (';\n      margin: 1rem 0;\n    }\n\n    .sidebar-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-bottom: 0.4rem;\n    }\n\n    .nav-links,\n    .org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .nav-link {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.86rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .nav-link:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .nav-link.active {\n      color: ' + (t.accent + (';\n      border-left-color: ' + (t.accent + (';\n      background-color: ' + (t.surface + (';\n    }\n\n    .sidebar-spacer {\n      flex-grow: 1;\n    }\n\n    .sidebar-footer {\n      display: flex;\n      flex-direction: column;\n      gap: 0.5rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .theme-toggle {\n      background: none;\n      border: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.78rem;\n      padding: 0.3rem 0.6rem;\n      border-radius: 4px;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease, border-color 0.15s ease;\n      width: 100%;\n    }\n\n    .theme-toggle:hover {\n      color: ' + (t.fg + (';\n      border-color: ' + (t.accent + (';\n    }\n\n    .commit-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.commit-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    /* ── Main Content ────────────────────────────── */\n\n    .main-content {\n      margin-left: 240px;\n      padding: 3.5rem 4rem;\n      flex: 1;\n      min-height: 100vh;\n    }\n\n    .main-content h1 {\n      font-size: 1.8rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      margin-top: 0;\n      margin-bottom: 0.5rem;\n      letter-spacing: -0.01em;\n    }\n\n    .main-content h2 {\n      font-size: 0.82rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      margin-top: 2rem;\n      margin-bottom: 0.6rem;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .main-content p {\n      color: ' + (t.fg + (';\n      max-width: 600px;\n      margin-bottom: 1rem;\n      font-size: 0.93rem;\n    }\n\n    /* ── Page footer ────────────────────────────── */\n\n    .page-footer {\n      margin-top: 4rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .footer-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.footer-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    .footer-pcb {\n      display: block;\n      max-width: 340px;\n      height: auto;\n      margin-top: 0.5rem;\n      opacity: 0.8;\n    }\n\n    .footer-gifs {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 0.25rem;\n      margin-bottom: 0.75rem;\n    }\n\n    .footer-gifs img {\n      height: 31px;\n      image-rendering: pixelated;\n    }\n\n    /* ── About page ─────────────────────────────── */\n\n    .about-content {\n      max-width: 640px;\n    }\n\n    .about-para {\n      margin-bottom: 1rem;\n      line-height: 1.8;\n      font-size: 0.93rem;\n    }\n\n    .about-quote {\n      border-left: 2px solid ' + (t.accent + (';\n      padding: 0.75rem 1.25rem;\n      margin: 1.5rem 0;\n      background-color: ' + (t.surface + (';\n      border-radius: 0 4px 4px 0;\n    }\n\n    .quote-text {\n      font-size: 0.88rem;\n      color: ' + (t.muted + (';\n      margin: 0;\n      font-style: italic;\n      line-height: 1.7;\n      max-width: 100%;\n    }\n\n    .quote-attribution {\n      font-size: 0.75rem;\n      color: ' + (t.muted + (';\n      opacity: 0.75;\n      margin-top: 0.5rem;\n      margin-bottom: 0;\n    }\n\n    .contact-links {\n      display: flex;\n      flex-direction: column;\n      gap: 0.1rem;\n      margin-top: 0.5rem;\n    }\n\n    .contact-item {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.88rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .contact-item::before {\n      content: "→ ";\n      color: ' + (t.accent + (';\n    }\n\n    .contact-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    /* ── Mobile top bar ─────────────────────────── */\n\n    .mobile-topbar {\n      display: none;\n      position: sticky;\n      top: 0;\n      z-index: 200;\n      background-color: ' + (t.sidebarBg + (';\n      border-bottom: 1px solid ' + (t.border + (';\n      padding: 0.75rem 1.25rem;\n      align-items: center;\n      justify-content: space-between;\n      width: 100%;\n    }\n\n    .mobile-site-name {\n      font-size: 0.95rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-menu-toggle {\n      background: none;\n      border: none;\n      color: ' + (t.fg + (';\n      font-size: 1.3rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      line-height: 1;\n    }\n\n    .sr-only {\n      position: absolute;\n      width: 1px;\n      height: 1px;\n      padding: 0;\n      margin: -1px;\n      overflow: hidden;\n      clip: rect(0, 0, 0, 0);\n      white-space: nowrap;\n      border: 0;\n    }\n\n    /* ── Mobile menu ────────────────────────────── */\n\n    .mobile-menu-wrapper {\n      position: fixed;\n      inset: 0;\n      z-index: 300;\n    }\n\n    .mobile-menu-backdrop {\n      position: absolute;\n      inset: 0;\n      background-color: rgba(0, 0, 0, 0.5);\n    }\n\n    .mobile-menu-panel {\n      position: absolute;\n      top: 0;\n      right: 0;\n      width: 280px;\n      height: 100%;\n      overflow-y: auto;\n      background-color: ' + (t.sidebarBg + (';\n      border-left: 1px solid ' + (t.border + (';\n      padding: 1.5rem 1.25rem;\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-menu-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 1.25rem;\n    }\n\n    .mobile-menu-title {\n      font-size: 0.7rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .close-mobile-menu {\n      background: none;\n      border: none;\n      color: ' + (t.muted + (';\n      font-size: 1rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      transition: color 0.15s ease;\n    }\n\n    .close-mobile-menu:hover {\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-nav-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-top: 1.25rem;\n      margin-bottom: 0.4rem;\n    }\n\n    .mobile-nav-links,\n    .mobile-org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-nav-item {\n      display: block;\n      padding: 0.5rem 0.6rem;\n      font-size: 0.9rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .mobile-nav-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .mobile-mode-toggle {\n      margin-top: auto;\n      background: none;\n      border: none;\n      border-top: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.8rem;\n      padding: 0.75rem 0.6rem 0.4rem;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease;\n    }\n\n    .mobile-mode-toggle:hover {\n      color: ' + (t.fg + (';\n    }\n\n    /* ── Responsive ─────────────────────────────── */\n\n    .mobile-menu-location {\n      font-size: 0.7rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.15rem;\n      opacity: 0.75;\n    }\n\n    .mobile-nav-item.active {\n      color: ' + (t.accent + (';\n      border-left-color: ' + (t.accent + (';\n      background-color: ' + (t.surface + ';\n    }\n\n    @media (max-width: 768px) {\n      .layout {\n        flex-direction: column;\n      }\n\n      .sidebar {\n        display: none;\n      }\n\n      .mobile-topbar {\n        display: flex;\n      }\n\n      .main-content {\n        margin-left: 0;\n        padding: 1.75rem 1.25rem;\n        max-width: 100%;\n      }\n    }\n\n    @media (min-width: 769px) and (max-width: 1100px) {\n      .sidebar {\n        width: 200px;\n      }\n\n      .main-content {\n        margin-left: 200px;\n        padding: 2.5rem 2.5rem;\n      }\n    }\n    ')))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+	return '\n    @import url(\'https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap\');\n\n    *, *::before, *::after {\n      box-sizing: border-box;\n    }\n\n    html {\n      scroll-behavior: smooth;\n    }\n\n    html, body {\n      margin: 0;\n      padding: 0;\n      height: 100%;\n    }\n\n    :root {\n      --border-color: ' + (t.border + (';\n      --surface-color: ' + (t.surface + (';\n      --accent-color: ' + (t.accent + (';\n      --muted-color: ' + (t.muted + (';\n      --text-color: ' + (t.fg + (';\n      --link-color: ' + (t.linkColor + (';\n      --link-hover-color: ' + (t.linkHover + (';\n    }\n\n    body {\n      font-family: \'Fira Code\', monospace;\n      background-color: ' + (t.bg + (';\n      color: ' + (t.fg + (';\n      font-size: 15px;\n      line-height: 1.7;\n      transition: background-color 0.25s ease, color 0.25s ease;\n    }\n\n    a {\n      color: ' + (t.linkColor + (';\n      text-decoration: none;\n      transition: color 0.15s ease;\n    }\n\n    a:hover {\n      color: ' + (t.linkHover + (';\n    }\n\n    /* ── Layout ─────────────────────────────────── */\n\n    .layout {\n      display: flex;\n      min-height: 100vh;\n      position: relative;\n    }\n\n    /* ── Sidebar ─────────────────────────────────── */\n\n    .sidebar {\n      position: fixed;\n      left: 0;\n      top: 0;\n      width: 240px;\n      height: 100vh;\n      overflow-y: auto;\n      display: flex;\n      flex-direction: column;\n      background-color: ' + (t.sidebarBg + (';\n      border-right: 1px solid ' + (t.border + (';\n      padding: 2rem 1.5rem;\n      z-index: 100;\n      transition: background-color 0.25s ease;\n    }\n\n    .sidebar-identity {\n      margin-bottom: 1rem;\n    }\n\n    .sidebar-name {\n      font-size: 1.05rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-tagline {\n      font-size: 0.78rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.25rem;\n    }\n\n    .sidebar-location {\n      font-size: 0.7rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.3rem;\n      opacity: 0.75;\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-divider {\n      height: 1px;\n      background-color: ' + (t.border + (';\n      margin: 1rem 0;\n    }\n\n    .sidebar-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-bottom: 0.4rem;\n    }\n\n    .nav-links,\n    .org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .nav-link {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.86rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .nav-link:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .nav-link.active {\n      color: ' + (t.accent + (';\n      border-left-color: ' + (t.accent + (';\n      background-color: ' + (t.surface + (';\n    }\n\n    .sidebar-spacer {\n      flex-grow: 1;\n    }\n\n    .sidebar-footer {\n      display: flex;\n      flex-direction: column;\n      gap: 0.5rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .theme-toggle {\n      background: none;\n      border: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.78rem;\n      padding: 0.3rem 0.6rem;\n      border-radius: 4px;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease, border-color 0.15s ease;\n      width: 100%;\n    }\n\n    .theme-toggle:hover {\n      color: ' + (t.fg + (';\n      border-color: ' + (t.accent + (';\n    }\n\n    .commit-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.commit-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    /* ── Main Content ────────────────────────────── */\n\n    .main-content {\n      margin-left: 240px;\n      padding: 3.5rem 4rem;\n      flex: 1;\n      min-height: 100vh;\n    }\n\n    .main-content h1 {\n      font-size: 1.8rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      margin-top: 0;\n      margin-bottom: 0.5rem;\n      letter-spacing: -0.01em;\n    }\n\n    .main-content h2 {\n      font-size: 0.82rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      margin-top: 2rem;\n      margin-bottom: 0.6rem;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .main-content p {\n      color: ' + (t.fg + (';\n      max-width: 600px;\n      margin-bottom: 1rem;\n      font-size: 0.93rem;\n    }\n\n    /* ── Page footer ────────────────────────────── */\n\n    .page-footer {\n      margin-top: 4rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .footer-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.footer-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    .footer-pcb {\n      display: block;\n      max-width: 340px;\n      height: auto;\n      margin-top: 0.5rem;\n      opacity: 0.8;\n    }\n\n    .footer-gifs {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 0.25rem;\n      margin-bottom: 0.75rem;\n    }\n\n    .footer-gifs img {\n      height: 31px;\n      image-rendering: pixelated;\n    }\n\n    /* ── About page ─────────────────────────────── */\n\n    .about-content {\n      max-width: 640px;\n    }\n\n    .about-para {\n      margin-bottom: 1rem;\n      line-height: 1.8;\n      font-size: 0.93rem;\n    }\n\n    .about-quote {\n      border-left: 2px solid ' + (t.accent + (';\n      padding: 0.75rem 1.25rem;\n      margin: 1.5rem 0;\n      background-color: ' + (t.surface + (';\n      border-radius: 0 4px 4px 0;\n    }\n\n    .quote-text {\n      font-size: 0.88rem;\n      color: ' + (t.muted + (';\n      margin: 0;\n      font-style: italic;\n      line-height: 1.7;\n      max-width: 100%;\n    }\n\n    .quote-attribution {\n      font-size: 0.75rem;\n      color: ' + (t.muted + (';\n      opacity: 0.75;\n      margin-top: 0.5rem;\n      margin-bottom: 0;\n    }\n\n    .contact-links {\n      display: flex;\n      flex-direction: column;\n      gap: 0.1rem;\n      margin-top: 0.5rem;\n    }\n\n    .contact-item {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.88rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .contact-item::before {\n      content: "→ ";\n      color: ' + (t.accent + (';\n    }\n\n    .contact-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    /* ── Mobile top bar ─────────────────────────── */\n\n    .mobile-topbar {\n      display: none;\n      position: sticky;\n      top: 0;\n      z-index: 200;\n      background-color: ' + (t.sidebarBg + (';\n      border-bottom: 1px solid ' + (t.border + (';\n      padding: 0.75rem 1.25rem;\n      align-items: center;\n      justify-content: space-between;\n      width: 100%;\n    }\n\n    .mobile-site-name {\n      font-size: 0.95rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-menu-toggle {\n      background: none;\n      border: none;\n      color: ' + (t.fg + (';\n      font-size: 1.3rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      line-height: 1;\n    }\n\n    .sr-only {\n      position: absolute;\n      width: 1px;\n      height: 1px;\n      padding: 0;\n      margin: -1px;\n      overflow: hidden;\n      clip: rect(0, 0, 0, 0);\n      white-space: nowrap;\n      border: 0;\n    }\n\n    /* ── Mobile menu ────────────────────────────── */\n\n    .mobile-menu-wrapper {\n      position: fixed;\n      inset: 0;\n      z-index: 300;\n    }\n\n    .mobile-menu-backdrop {\n      position: absolute;\n      inset: 0;\n      background-color: rgba(0, 0, 0, 0.5);\n    }\n\n    .mobile-menu-panel {\n      position: absolute;\n      top: 0;\n      right: 0;\n      width: 280px;\n      height: 100%;\n      overflow-y: auto;\n      background-color: ' + (t.sidebarBg + (';\n      border-left: 1px solid ' + (t.border + (';\n      padding: 1.5rem 1.25rem;\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-menu-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 1.25rem;\n    }\n\n    .mobile-menu-title {\n      font-size: 0.7rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .close-mobile-menu {\n      background: none;\n      border: none;\n      color: ' + (t.muted + (';\n      font-size: 1rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      transition: color 0.15s ease;\n    }\n\n    .close-mobile-menu:hover {\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-nav-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-top: 1.25rem;\n      margin-bottom: 0.4rem;\n    }\n\n    .mobile-nav-links,\n    .mobile-org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-nav-item {\n      display: block;\n      padding: 0.5rem 0.6rem;\n      font-size: 0.9rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .mobile-nav-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .mobile-mode-toggle {\n      margin-top: auto;\n      background: none;\n      border: none;\n      border-top: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.8rem;\n      padding: 0.75rem 0.6rem 0.4rem;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease;\n    }\n\n    .mobile-mode-toggle:hover {\n      color: ' + (t.fg + (';\n    }\n\n    /* ── Responsive ─────────────────────────────── */\n\n    .mobile-menu-location {\n      font-size: 0.7rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.15rem;\n      opacity: 0.75;\n    }\n\n    .mobile-nav-item.active {\n      color: ' + (t.accent + (';\n      border-left-color: ' + (t.accent + (';\n      background-color: ' + (t.surface + ';\n    }\n\n    @media (max-width: 768px) {\n      .layout {\n        flex-direction: column;\n      }\n\n      .sidebar {\n        display: none;\n      }\n\n      .mobile-topbar {\n        display: flex;\n      }\n\n      .main-content {\n        margin-left: 0;\n        padding: 1.75rem 1.25rem;\n        max-width: 100%;\n      }\n    }\n\n    @media (min-width: 769px) and (max-width: 1100px) {\n      .sidebar {\n        width: 200px;\n      }\n\n      .main-content {\n        margin-left: 200px;\n        padding: 2.5rem 2.5rem;\n      }\n    }\n    ')))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$json$Json$Encode$string = _Json_wrap;
@@ -6737,15 +7074,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$html$Html$Events$on,
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
-};
-var $author$project$Main$parseUrl = function (url) {
-	var _v0 = A2($elm$url$Url$Parser$parse, $author$project$Main$routeParser, url);
-	if (_v0.$ === 'Just') {
-		var page = _v0.a;
-		return page;
-	} else {
-		return $author$project$Main$NotFound;
-	}
 };
 var $elm$html$Html$Attributes$rel = _VirtualDom_attribute('rel');
 var $elm$html$Html$span = _VirtualDom_node('span');
@@ -7038,16 +7366,6 @@ var $author$project$About$view = A2(
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text('Although I was born in the United States, I have lived most of my life in a suburban mountain/hot-spring area in Beitou, Taipei City. I spent most of my time wasting money in the electronics district and taking the Metro.')
-				])),
-			A2(
-			$elm$html$Html$p,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('about-para')
-				]),
-			_List_fromArray(
-				[
 					$elm$html$Html$text('With that time I am able to build this (and a multitude of other things) in a cave, with a scrappy ThinkPad.')
 				])),
 			A2(
@@ -7059,6 +7377,16 @@ var $author$project$About$view = A2(
 			_List_fromArray(
 				[
 					$elm$html$Html$text('I enjoy being an otaku (watching anime, vtubers, reading manga, listening to vocaloid, etc.), reading, playing video games, wasting time on the world\'s LAN, and cycling.')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('about-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Although I was born in the United States, I have lived most of my life in a suburban mountain/hot-spring area in Beitou, Taipei City. I spent most of my time wasting money in the electronics district and taking the Metro.')
 				])),
 			A2(
 			$elm$html$Html$p,
