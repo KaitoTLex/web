@@ -616,7 +616,7 @@ buildCss colorMode =
     }
 
     .sidebar-identity {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
     }
 
     .sidebar-name {

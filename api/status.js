@@ -1,15 +1,17 @@
 // Vercel KV is optional — falls back to current-only if not configured.
 let kv = null;
 try {
-  const mod = require('@vercel/kv');
-  kv = mod.kv;
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    const mod = require('@vercel/kv');
+    kv = mod.kv;
+  }
 } catch (_) {}
 
 const SERVICES = [
   'code.functor.systems',
   'matrix.functor.systems',
   'slop.kaitotlex.engineering',
-  'log.kaitotlex.systems',
+  'yap.kaitotlex.systems',
   'missioncontrol.kaitotlex.systems',
   'functor.mit.edu',
 ];
