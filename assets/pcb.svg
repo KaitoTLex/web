@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 90">
+  <g opacity="0.75" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- ── Copper traces ── -->
+    <g stroke="#c4a0c8" stroke-width="2" fill="none">
+      <!-- Top rail -->
+      <line x1="0"   y1="15" x2="280" y2="15"/>
+      <!-- Bottom rail -->
+      <line x1="0"   y1="75" x2="280" y2="75"/>
+
+      <!-- Vertical pillars -->
+      <line x1="60"  y1="15" x2="60"  y2="75"/>
+      <line x1="140" y1="15" x2="140" y2="75"/>
+      <line x1="220" y1="15" x2="220" y2="75"/>
+
+      <!-- Mid-rail segments with 45° joins -->
+      <line x1="0"   y1="45" x2="60"  y2="45"/>
+      <!-- 45° from (60,45) up to top rail at (90,15) -->
+      <line x1="60"  y1="45" x2="90"  y2="15"/>
+      <!-- 45° from bottom rail (140,75) up to mid at (170,45) -->
+      <line x1="140" y1="75" x2="170" y2="45"/>
+      <line x1="170" y1="45" x2="220" y2="45"/>
+      <!-- 45° from (220,45) up to top rail at (250,15) -->
+      <line x1="220" y1="45" x2="250" y2="15"/>
+
+      <!-- Stubs going off-edge (board continues...) -->
+      <line x1="60"  y1="15" x2="60"  y2="0"/>
+      <line x1="140" y1="75" x2="140" y2="90"/>
+      <line x1="220" y1="15" x2="220" y2="0"/>
+
+      <!-- Right-side pad stubs to connector -->
+      <line x1="280" y1="15" x2="318" y2="15"/>
+      <line x1="280" y1="33" x2="318" y2="33"/>
+      <line x1="280" y1="57" x2="318" y2="57"/>
+      <line x1="280" y1="75" x2="318" y2="75"/>
+    </g>
+
+    <!-- ── Vias (annular rings) ── -->
+    <circle cx="60"  cy="15" r="5.5" fill="#c4a0c8"/><circle cx="60"  cy="15" r="2.8" fill="#1e1c2e"/>
+    <circle cx="60"  cy="75" r="5.5" fill="#c4a0c8"/><circle cx="60"  cy="75" r="2.8" fill="#1e1c2e"/>
+    <circle cx="60"  cy="45" r="5.5" fill="#c4a0c8"/><circle cx="60"  cy="45" r="2.8" fill="#1e1c2e"/>
+    <circle cx="140" cy="15" r="5.5" fill="#c4a0c8"/><circle cx="140" cy="15" r="2.8" fill="#1e1c2e"/>
+    <circle cx="140" cy="75" r="5.5" fill="#c4a0c8"/><circle cx="140" cy="75" r="2.8" fill="#1e1c2e"/>
+    <circle cx="170" cy="45" r="5.5" fill="#c4a0c8"/><circle cx="170" cy="45" r="2.8" fill="#1e1c2e"/>
+    <circle cx="220" cy="15" r="5.5" fill="#c4a0c8"/><circle cx="220" cy="15" r="2.8" fill="#1e1c2e"/>
+    <circle cx="220" cy="75" r="5.5" fill="#c4a0c8"/><circle cx="220" cy="75" r="2.8" fill="#1e1c2e"/>
+    <circle cx="220" cy="45" r="5.5" fill="#c4a0c8"/><circle cx="220" cy="45" r="2.8" fill="#1e1c2e"/>
+    <circle cx="280" cy="15" r="5.5" fill="#c4a0c8"/><circle cx="280" cy="15" r="2.8" fill="#1e1c2e"/>
+    <circle cx="280" cy="75" r="5.5" fill="#c4a0c8"/><circle cx="280" cy="75" r="2.8" fill="#1e1c2e"/>
+
+    <!-- ── THT pad outer rings on corner vias ── -->
+    <circle cx="60"  cy="15" r="9"   fill="none" stroke="#9e9ab8" stroke-width="1"/>
+    <circle cx="60"  cy="75" r="9"   fill="none" stroke="#9e9ab8" stroke-width="1"/>
+    <circle cx="220" cy="15" r="9"   fill="none" stroke="#9e9ab8" stroke-width="1"/>
+    <circle cx="220" cy="75" r="9"   fill="none" stroke="#9e9ab8" stroke-width="1"/>
+
+    <!-- ── Edge connector SMD pads ── -->
+    <rect x="318" y="10"  width="20" height="9" rx="1.5" fill="#9e9ab8"/>
+    <rect x="318" y="28"  width="20" height="9" rx="1.5" fill="#9e9ab8"/>
+    <rect x="318" y="52"  width="20" height="9" rx="1.5" fill="#9e9ab8"/>
+    <rect x="318" y="70"  width="20" height="9" rx="1.5" fill="#9e9ab8"/>
+
+    <!-- ── 0402 passive between pillars ── -->
+    <rect x="96"  y="10"  width="14" height="7" rx="1.5" fill="#9e9ab8"/>
+    <rect x="114" y="10"  width="14" height="7" rx="1.5" fill="#9e9ab8"/>
+    <line x1="110" y1="13.5" x2="114" y2="13.5" stroke="#c4a0c8" stroke-width="1.5"/>
+
+    <!-- ── IC body silkscreen ── -->
+    <rect x="270" y="25" width="8" height="40" rx="2"
+          fill="none" stroke="#3d3a52" stroke-width="1" stroke-dasharray="3,2"/>
+
+  </g>
+</svg>
