@@ -79,7 +79,8 @@ jobs:
         run: cp -r cont dist/cont
 
       - name: Copy status data
-        run: cp status.json dist/status.json
+        run: |
+          [ -f status.json ] && cp status.json dist/status.json || echo '{"history":[]}' > dist/status.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

@@ -1,0 +1,81 @@
+name: Hourly status cron
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Probe services and update status.json
+        run: |
+          cat > /tmp/probe.js << 'EOF'
+          const fs = require('fs');
+
+          const SERVICES = [
+            'code.functor.systems',
+            'matrix.functor.systems',
+            'slop.kaitotlex.engineering',
+            'yap.kaitotlex.systems',
+            'missioncontrol.kaitotlex.systems',
+            'functor.mit.edu',
+          ];
+
+          async function probe(hostname) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 8000);
+            try {
+              const r = await fetch(`https://${hostname}`, {
+                method: 'HEAD',
+                signal: controller.signal,
+                redirect: 'follow',
+              });
+              clearTimeout(timer);
+              return r.status < 500 ? 'online' : 'degraded';
+            } catch {
+              clearTimeout(timer);
+              return 'offline';
+            }
+          }
+
+          async function main() {
+            const statuses = {};
+            await Promise.all(SERVICES.map(async (s) => {
+              statuses[s] = await probe(s);
+            }));
+
+            const now = new Date();
+            now.setUTCMinutes(0, 0, 0);
+            now.setUTCSeconds(0, 0);
+
+            const existing = JSON.parse(fs.readFileSync('status.json', 'utf8'));
+            const history = existing.history || [];
+
+            history.push({ timestamp: now.toISOString(), statuses });
+            while (history.length > 12) history.shift();
+
+            fs.writeFileSync('status.json', JSON.stringify({ history }, null, 2) + '\n');
+          }
+
+          main().catch((e) => { console.error(e); process.exit(1); });
+          EOF
+          node /tmp/probe.js
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add status.json
+          git diff --staged --quiet || git commit -m "[skip ci] update status.json"
+          git push
