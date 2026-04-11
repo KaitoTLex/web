@@ -3,6 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'status.json'
 
 permissions:
   contents: read
@@ -75,6 +77,9 @@ jobs:
 
       - name: Copy static assets
         run: cp -r cont dist/cont
+
+      - name: Copy status data
+        run: cp status.json dist/status.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

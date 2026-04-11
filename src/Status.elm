@@ -75,7 +75,7 @@ snapshotDecoder =
 fetchApi : (Result Http.Error (List StatusSnapshot) -> msg) -> Cmd msg
 fetchApi toMsg =
     Http.get
-        { url = "/api/status"
+        { url = "/status.json"
         , expect =
             Http.expectJson toMsg
                 (Decode.field "history" (Decode.list snapshotDecoder))

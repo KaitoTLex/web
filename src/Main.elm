@@ -7,7 +7,6 @@ import Home
 import Html exposing (Html, a, button, div, h1, img, node, p, span, text)
 import Html.Attributes exposing (alt, class, href, rel, src, type_)
 import Html.Events exposing (onClick, stopPropagationOn)
-import Http
 import Json.Decode as Decode
 import Projects
 import Status
@@ -55,14 +54,6 @@ type alias Model =
     }
 
 
-fetchMeta : Cmd Msg
-fetchMeta =
-    Http.get
-        { url = "/api/meta"
-        , expect = Http.expectJson MetaResult (Decode.field "sha" Decode.string)
-        }
-
-
 init : () -> Url.Url -> Key -> ( Model, Cmd Msg )
 init _ url key =
     let
@@ -89,10 +80,7 @@ init _ url key =
             else
                 Status.StatusIdle
       }
-    , Cmd.batch
-        [ fetchMeta
-        , if onStatusPage then Status.fetchApi StatusApiResult else Cmd.none
-        ]
+    , if onStatusPage then Status.fetchApi StatusApiResult else Cmd.none
     )
 
 
@@ -107,7 +95,6 @@ type Msg
     | NoOp
     | StatusApiResult (Result Http.Error (List Status.StatusSnapshot))
     | RefreshStatuses
-    | MetaResult (Result Http.Error String)
     | Tick Time.Posix
 
 
@@ -173,7 +160,7 @@ update msg model =
                             Status.StatusLoaded history
 
                         Err _ ->
-                            Status.StatusFailed "could not reach /api/status"
+                            Status.StatusFailed "could not reach /status.json"
               }
             , Cmd.none
             )
@@ -182,18 +169,6 @@ update msg model =
             ( { model | statusState = Status.StatusLoading }
             , Status.fetchApi StatusApiResult
             )
-
-        MetaResult result ->
-            case result of
-                Ok sha ->
-                    if String.isEmpty sha then
-                        ( model, Cmd.none )
-
-                    else
-                        ( { model | commitHash = sha }, Cmd.none )
-
-                Err _ ->
-                    ( model, Cmd.none )
 
         Tick _ ->
             ( model, Status.fetchApi StatusApiResult )
