@@ -17,7 +17,7 @@ import Url.Parser as Parser exposing (Parser, oneOf, s, top)
 import VirtualDom
 
 
-main : Program () Model Msg
+main : Program Int Model Msg
 main =
     Browser.application
         { init = init
@@ -52,11 +52,12 @@ type alias Model =
     , commitHash : String
     , mobileMenuOpen : Bool
     , statusState : Status.StatusState
+    , tzOffset : Int
     }
 
 
-init : () -> Url.Url -> Key -> ( Model, Cmd Msg )
-init _ url key =
+init : Int -> Url.Url -> Key -> ( Model, Cmd Msg )
+init tzOffset url key =
     let
         initialPage =
             case Parser.parse routeParser url of
@@ -80,6 +81,7 @@ init _ url key =
 
             else
                 Status.StatusIdle
+      , tzOffset = tzOffset
       }
     , if onStatusPage then Status.fetchApi StatusApiResult else Cmd.none
     )
@@ -408,7 +410,7 @@ viewPage page model =
             Projects.viewProjects
 
         StatusPage ->
-            Status.view model.statusState RefreshStatuses
+            Status.view model.tzOffset model.statusState RefreshStatuses
 
         NotFound ->
             div []

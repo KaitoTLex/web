@@ -75,7 +75,7 @@ snapshotDecoder =
 fetchApi : (Result Http.Error (List StatusSnapshot) -> msg) -> Cmd msg
 fetchApi toMsg =
     Http.get
-        { url = "/status.json"
+        { url = "https://raw.githubusercontent.com/KaitoTLex/web/main/status.json"
         , expect =
             Http.expectJson toMsg
                 (Decode.field "history" (Decode.list snapshotDecoder))
@@ -85,13 +85,36 @@ fetchApi toMsg =
 -- VIEW HELPERS
 
 
-{-| Extract "HH:MM" from an ISO-8601 timestamp like "2025-04-09T10:00:00.000Z"
+{-| Convert a UTC ISO-8601 timestamp to local "HH:MM".
+tzOffset is JS Date.getTimezoneOffset() — minutes where UTC+5:30 → -330.
+local = utc - tzOffset (in minutes).
 -}
-hourLabel : String -> String
-hourLabel ts =
-    ts
-        |> String.dropLeft 11
-        |> String.left 5
+hourLabel : Int -> String -> String
+hourLabel tzOffset ts =
+    let
+        utcH =
+            ts |> String.slice 11 13 |> String.toInt |> Maybe.withDefault 0
+
+        utcM =
+            ts |> String.slice 14 16 |> String.toInt |> Maybe.withDefault 0
+
+        localTotal =
+            modBy 1440 (utcH * 60 + utcM - tzOffset + 1440)
+
+        h =
+            localTotal // 60
+
+        m =
+            modBy 60 localTotal
+
+        pad n =
+            if n < 10 then
+                "0" ++ String.fromInt n
+
+            else
+                String.fromInt n
+    in
+    pad h ++ ":" ++ pad m
 
 
 {-| Most recent non-null status for a service across the history list.
@@ -121,8 +144,8 @@ segmentBg status =
             "var(--border-color)"
 
 
-viewSegment : List StatusSnapshot -> String -> Int -> Html msg
-viewSegment history serviceName idx =
+viewSegment : Int -> List StatusSnapshot -> String -> Int -> Html msg
+viewSegment tzOffset history serviceName idx =
     let
         snapshot =
             history |> List.drop idx |> List.head
@@ -136,7 +159,7 @@ viewSegment history serviceName idx =
             snapshot |> Maybe.map .timestamp |> Maybe.withDefault ""
 
         tooltipText =
-            hourLabel ts ++ " — " ++ Maybe.withDefault "no data" serviceStatus
+            hourLabel tzOffset ts ++ " — " ++ Maybe.withDefault "no data" serviceStatus
     in
     div
         [ class "ribbon-segment"
@@ -146,14 +169,14 @@ viewSegment history serviceName idx =
         []
 
 
-viewTicks : List StatusSnapshot -> Html msg
-viewTicks history =
+viewTicks : Int -> List StatusSnapshot -> Html msg
+viewTicks tzOffset history =
     let
         tickAt i =
             history
                 |> List.drop i
                 |> List.head
-                |> Maybe.map (.timestamp >> hourLabel)
+                |> Maybe.map (.timestamp >> hourLabel tzOffset)
                 |> Maybe.withDefault ""
     in
     if List.isEmpty history then
@@ -168,8 +191,8 @@ viewTicks history =
             ]
 
 
-viewServiceCard : Bool -> List StatusSnapshot -> ServiceInfo -> Html msg
-viewServiceCard isLoading history info =
+viewServiceCard : Int -> Bool -> List StatusSnapshot -> ServiceInfo -> Html msg
+viewServiceCard tzOffset isLoading history info =
     let
         currentStatus =
             if isLoading then
@@ -227,7 +250,7 @@ viewServiceCard isLoading history info =
                 List.repeat 12 (div [ class "ribbon-segment placeholder" ] [])
 
             else
-                List.indexedMap (\i _ -> viewSegment history info.name i) history
+                List.indexedMap (\i _ -> viewSegment tzOffset history info.name i) history
     in
     div [ class "status-card" ]
         [ div [ class "card-header" ]
@@ -239,12 +262,12 @@ viewServiceCard isLoading history info =
             ]
         , p [ class "service-description" ] [ text info.description ]
         , div [ class "history-ribbon" ] ribbonSegments
-        , viewTicks history
+        , viewTicks tzOffset history
         ]
 
 
-view : StatusState -> msg -> Html msg
-view state refreshMsg =
+view : Int -> StatusState -> msg -> Html msg
+view tzOffset state refreshMsg =
     let
         ( isLoading, history ) =
             case state of
@@ -266,7 +289,7 @@ view state refreshMsg =
             , button [ class "status-refresh", onClick refreshMsg ] [ text "[ refresh ]" ]
             ]
         , div [ class "status-grid" ]
-            (List.map (viewServiceCard isLoading history) serviceInfoList)
+            (List.map (viewServiceCard tzOffset isLoading history) serviceInfoList)
         ]
 
 
