@@ -7,6 +7,7 @@ import Home
 import Html exposing (Html, a, button, div, h1, img, node, p, span, text)
 import Html.Attributes exposing (alt, class, href, rel, src, type_)
 import Html.Events exposing (onClick, stopPropagationOn)
+import Http
 import Json.Decode as Decode
 import Projects
 import Status
