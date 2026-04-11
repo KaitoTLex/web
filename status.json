@@ -1,1 +1,15 @@
-{"history":[]}
+{
+  "history": [
+    {
+      "timestamp": "2026-04-11T19:00:00.000Z",
+      "statuses": {
+        "code.functor.systems": "online",
+        "slop.kaitotlex.engineering": "online",
+        "yap.kaitotlex.systems": "online",
+        "missioncontrol.kaitotlex.systems": "online",
+        "matrix.functor.systems": "online",
+        "functor.mit.edu": "online"
+      }
+    }
+  ]
+}
