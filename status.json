@@ -10,6 +10,17 @@
         "matrix.functor.systems": "online",
         "functor.mit.edu": "online"
       }
+    },
+    {
+      "timestamp": "2026-04-11T20:00:00.000Z",
+      "statuses": {
+        "yap.kaitotlex.systems": "online",
+        "functor.mit.edu": "online",
+        "matrix.functor.systems": "online",
+        "code.functor.systems": "online",
+        "slop.kaitotlex.engineering": "online",
+        "missioncontrol.kaitotlex.systems": "online"
+      }
     }
   ]
 }
