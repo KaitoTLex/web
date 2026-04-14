@@ -1,17 +1,6 @@
 {
   "history": [
     {
-      "timestamp": "2026-04-14T07:00:00.000Z",
-      "statuses": {
-        "yap.kaitotlex.systems": "online",
-        "slop.kaitotlex.engineering": "online",
-        "code.functor.systems": "online",
-        "functor.mit.edu": "online",
-        "matrix.functor.systems": "online",
-        "missioncontrol.kaitotlex.systems": "online"
-      }
-    },
-    {
       "timestamp": "2026-04-14T08:00:00.000Z",
       "statuses": {
         "yap.kaitotlex.systems": "online",
@@ -130,6 +119,17 @@
         "slop.kaitotlex.engineering": "online",
         "code.functor.systems": "online",
         "missioncontrol.kaitotlex.systems": "online"
+      }
+    },
+    {
+      "timestamp": "2026-04-14T19:00:00.000Z",
+      "statuses": {
+        "yap.kaitotlex.systems": "online",
+        "slop.kaitotlex.engineering": "online",
+        "code.functor.systems": "online",
+        "missioncontrol.kaitotlex.systems": "online",
+        "matrix.functor.systems": "online",
+        "functor.mit.edu": "online"
       }
     }
   ]
