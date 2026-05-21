@@ -76,7 +76,7 @@ jobs:
         run: cp CNAME dist/CNAME
 
       - name: Copy static assets
-        run: cp -r cont dist/cont
+        run: cp -r cont dist/cont && cp -r assets dist/assets
 
       - name: Copy status data
         run: |
