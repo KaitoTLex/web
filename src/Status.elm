@@ -42,8 +42,8 @@ serviceInfoList =
     , { name = "matrix.functor.systems"
       , description = "Matrix federation homelab service hosted on a VPS"
       }
-    , { name = "slop.kaitotlex.engineering"
-      , description = "AgentSwarm™ openclaw instance, hosted on anton(Danville, CA)"
+    , { name = "ichika.kaitotlex.engineering"
+      , description = "the Ichika instance, for synthesising and implementing FPGA bitstream remotely"
       }
     , { name = "yap.kaitotlex.systems"
       , description = "(planned) blog, hosted on github pages"
