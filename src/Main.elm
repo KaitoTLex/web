@@ -6,7 +6,7 @@ import Browser.Navigation exposing (Key)
 import Gallery
 import Home
 import Html exposing (Html, a, button, div, h1, img, node, p, span, text)
-import Html.Attributes exposing (alt, class, href, rel, src, type_)
+import Html.Attributes exposing (alt, attribute, class, href, rel, src, type_)
 import Html.Events exposing (onClick, stopPropagationOn)
 import Http
 import Json.Decode as Decode
@@ -14,12 +14,12 @@ import Projects
 import Status
 import Time
 import Url
-import Url.Parser as Parser exposing (Parser, oneOf, s, top)
+import Url.Parser as Parser exposing ((</>), Parser, oneOf, s, top)
 import VirtualDom
 import Xiangqi
 
 
-main : Program Int Model Msg
+main : Program Decode.Value Model Msg
 main =
     Browser.application
         { init = init
@@ -60,9 +60,13 @@ type alias Model =
     }
 
 
-init : Int -> Url.Url -> Key -> ( Model, Cmd Msg )
-init tzOffset url key =
+init : Decode.Value -> Url.Url -> Key -> ( Model, Cmd Msg )
+init flags url key =
     let
+        tzOffset =
+            Decode.decodeValue Decode.int flags
+                |> Result.withDefault 0
+
         initialPage =
             case Parser.parse routeParser url of
                 Just page ->
@@ -204,14 +208,14 @@ navItems =
     , ( "/status", "status" )
     , ( "https://eexiv.functor.systems/author/wlin", "personal research" )
     , ( "https://yap.kaitotlex.systems", "log" )
-    , ( "/cont/cv.pdf", "download cv" )
+    , ( "/assets/main.pdf", "download cv" )
     ]
 
 
 orgItems : List ( String, String )
 orgItems =
     [ ( "https://functor.systems/", "functor.systems" )
-    , ( "https://inlabs.kaitotlex.systems", "InLabs" )
+    -- , ( "https://inlabs.kaitotlex.systems", "InLabs" )
     ]
 
 
@@ -274,20 +278,27 @@ viewSidebar colorMode commitHash currentPage =
 
         navLinkItem ( url, label ) =
             a
-                [ href url
-                , class
+                ([ href url
+                 , class
                     (if isActiveLink currentPage url then
                         "nav-link active"
 
                      else
                         "nav-link"
                     )
-                ]
+                 ]
+                    ++ (if url == "/assets/main.pdf" then
+                            [ attribute "download" "Ren-Lin-CV.pdf" ]
+
+                        else
+                            []
+                       )
+                )
                 [ text label ]
     in
     div [ class "sidebar" ]
         [ div [ class "sidebar-identity" ]
-            [ div [ class "sidebar-name" ] [ text "Ren Lin" ]
+            [ div [ class "sidebar-name" ] [ text "Ren Lin (林敬宴)" ]
             , div [ class "sidebar-tagline" ] [ text "kaitotlex.systems" ]
             , div [ class "sidebar-location" ] [ img [ src "/assets/pcb.svg", alt "pcb traces"] [] ]
             ]
@@ -314,6 +325,7 @@ viewSidebar colorMode commitHash currentPage =
                     )
                 ]
             , commitDisplay
+            , p [ class "analytics-disclaimer" ] [ text "This site uses Simple Analytics, which does not track you or leave cookies." ]
             ]
         ]
 
@@ -323,15 +335,22 @@ viewMobileMenu colorMode currentPage =
     let
         mobileNavItem ( url, label ) =
             a
-                [ href url
-                , class
+                ([ href url
+                 , class
                     (if isActiveLink currentPage url then
                         "mobile-nav-item active"
 
                      else
                         "mobile-nav-item"
                     )
-                ]
+                 ]
+                    ++ (if url == "/assets/main.pdf" then
+                            [ attribute "download" "Ren-Lin-CV.pdf" ]
+
+                        else
+                            []
+                       )
+                )
                 [ text label ]
     in
     div [ class "mobile-menu-wrapper" ]
@@ -342,7 +361,7 @@ viewMobileMenu colorMode currentPage =
             ]
             [ div [ class "mobile-menu-header" ]
                 [ div []
-                    [ span [ class "mobile-menu-title" ] [ text "Ren Lin" ]
+                    [ span [ class "mobile-menu-title" ] [ text "Ren Lin (林敬宴)" ]
                     , div [ class "mobile-menu-location" ] [ img [ src "/assets/pcb.svg", alt "pcb traces" ] [] ]
                     ]
                 , button [ class "close-mobile-menu", onClick ToggleMobileMenu ] [ text "✕" ]
@@ -397,15 +416,18 @@ viewPageFooter commitHash =
             , img [ src "/assets/gif/tetris.gif", alt "tetris" ] []
             ]
         -- , img [ src "/assets/pcb.svg", alt "pcb traces", class "footer-pcb" ] []
-        , if isPlaceholder then
-            span [ class "footer-hash" ] [ text ("src: " ++ shortHash) ]
+        , div [ class "footer-meta" ]
+            [ if isPlaceholder then
+                span [ class "footer-hash" ] [ text ("src: " ++ shortHash) ]
 
-          else
-            a
-                [ href ("https://github.com/KaitoTLex/web/commit/" ++ commitHash)
-                , class "footer-hash"
-                ]
-                [ text ("src: " ++ shortHash) ]
+              else
+                a
+                    [ href ("https://github.com/KaitoTLex/web/commit/" ++ commitHash)
+                    , class "footer-hash"
+                    ]
+                    [ text ("src: " ++ shortHash) ]
+            , span [ class "analytics-disclaimer" ] [ text "This site uses Simple Analytics, which does not track you or leave cookies." ]
+            ]
         ]
 
 
@@ -457,7 +479,7 @@ view model =
         , Projects.cssStyles
         , div [ class "layout" ]
             [ div [ class "mobile-topbar" ]
-                [ span [ class "mobile-site-name" ] [ text "Ren Lin" ]
+                [ span [ class "mobile-site-name" ] [ text "Ren Lin (林敬宴)" ]
                 , button [ class "mobile-menu-toggle", onClick ToggleMobileMenu ]
                     [ text "☰"
                     , span [ class "sr-only" ] [ text "Menu" ]
@@ -495,6 +517,8 @@ routeParser : Parser (Page -> a) a
 routeParser =
     oneOf
         [ Parser.map Home top
+        , Parser.map Home (s "index.html")
+        , Parser.map Home (s "src" </> s "Main.elm")
         , Parser.map AboutPage (s "about")
         , Parser.map ProjectsPage (s "projects")
         , Parser.map GalleryPage (s "gallery")
@@ -730,6 +754,14 @@ buildCss colorMode =
       opacity: 0.65;
     }
 
+    .analytics-disclaimer {
+      margin: 0;
+      color: """ ++ t.muted ++ """;
+      font-size: 0.65rem;
+      line-height: 1.5;
+      opacity: 0.65;
+    }
+
     a.commit-hash:hover {
       color: """ ++ t.linkHover ++ """;
       opacity: 1;
@@ -782,6 +814,17 @@ buildCss colorMode =
       font-size: 0.72rem;
       color: """ ++ t.muted ++ """;
       opacity: 0.65;
+    }
+
+    .footer-meta {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0.4rem 1rem;
+    }
+
+    .footer-meta .analytics-disclaimer {
+      font-size: 0.72rem;
     }
 
     a.footer-hash:hover {
@@ -850,6 +893,39 @@ buildCss colorMode =
       margin-bottom: 1rem;
       line-height: 1.8;
       font-size: 0.93rem;
+    }
+
+    .about-highlight-link {
+      color: """ ++ t.accent ++ """;
+      border-bottom: 1px solid """ ++ t.accent ++ """;
+    }
+
+    .about-highlight-link:hover {
+      color: """ ++ t.linkHover ++ """;
+      border-bottom-color: """ ++ t.linkHover ++ """;
+    }
+
+    .about-hackmit-photo {
+      width: 50%;
+      margin: 4rem 0 0;
+      border: 1px solid """ ++ t.border ++ """;
+      border-radius: 6px;
+      overflow: hidden;
+      background-color: """ ++ t.surface ++ """;
+    }
+
+    .about-hackmit-photo img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .about-hackmit-photo figcaption {
+      padding: 0.85rem 1rem;
+      color: """ ++ t.muted ++ """;
+      font-size: 0.74rem;
+      line-height: 1.6;
+      border-top: 1px solid """ ++ t.border ++ """;
     }
 
     .about-quote {

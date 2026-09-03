@@ -18,7 +18,7 @@ view =
         , h1 [ class "home-heading" ] [ text "oh hi! I am Ren(林敬宴)" ]
         , div [ class "home-divider" ] []
         , p [ class "home-para" ]
-            [ text "I am an undergraduate student at SJSU." ]
+            [ text "I am an undergraduate student at SJSU studying ISE." ]
         , p [ class "home-para" ]
             [ text "I'm a student during the day and an electrical engineer at night. " ]
         , p [ class "home-para" ]

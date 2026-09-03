@@ -9,7 +9,7 @@ viewProjects : Html msg
 viewProjects =
     div [ class "projects-container" ]
         [ h1 [ class "projects-header" ] [ text "Projects" ]
-        , p [ class "projects-subheader" ] [ text "Open source repositories I've created" ]
+        , p [ class "projects-subheader" ] [ text "Repositories I've created" ]
         , div [ class "projects-grid" ]
             (List.map viewRepository kaitoRepositories)
         ]
@@ -33,6 +33,27 @@ kaitoRepositories =
       , language = "Nix"
       , languageColor = "#9e9ab8"
       , readmeExcerpt = "KaitoTLex's EE Optimized FunctorOS (NixOS) configuration, KaitoianOS's spiritual successor"
+      }
+    , { name = "ichika"
+      , url = "https://github.com/KaitoTLex/ichika"
+      , description = "A Nix flake library for remote HDL builds"
+      , language = "Nix"
+      , languageColor = "#7e7eff"
+      , readmeExcerpt = "Send HDL to a remote Vivado build server and run synthesis or implementation without consuming local CPU and memory."
+      }
+    , { name = "minori"
+      , url = "https://github.com/KaitoTLex/minori"
+      , description = "MINI Open RISC-V 5-stage"
+      , language = "SystemVerilog"
+      , languageColor = "#dae1c2"
+      , readmeExcerpt = "An RV32IM_Zicsr five-stage pipelined CPU in SystemVerilog and a learning project for HDL and the RISC-V ISA."
+      }
+    , { name = "jade"
+      , url = "https://github.com/KaitoTLex/jade"
+      , description = "GPGPU HDL"
+      , language = "SystemVerilog"
+      , languageColor = "#dae1c2"
+      , readmeExcerpt = "A general-purpose GPU hardware design project."
       }
     ]
 

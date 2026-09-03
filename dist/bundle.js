@@ -77,7 +77,272 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
   return fun.a === 9 ? fun.f(a, b, c, d, e, f, g, h, i) : fun(a)(b)(c)(d)(e)(f)(g)(h)(i);
 }
 
-console.warn('Compiled in DEV mode. Follow the advice at https://elm-lang.org/0.19.1/optimize for better performance and smaller assets.');
+
+
+
+// EQUALITY
+
+function _Utils_eq(x, y)
+{
+	for (
+		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
+		isEqual && (pair = stack.pop());
+		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
+		)
+	{}
+
+	return isEqual;
+}
+
+function _Utils_eqHelp(x, y, depth, stack)
+{
+	if (x === y)
+	{
+		return true;
+	}
+
+	if (typeof x !== 'object' || x === null || y === null)
+	{
+		typeof x === 'function' && _Debug_crash(5);
+		return false;
+	}
+
+	if (depth > 100)
+	{
+		stack.push(_Utils_Tuple2(x,y));
+		return true;
+	}
+
+	/**_UNUSED/
+	if (x.$ === 'Set_elm_builtin')
+	{
+		x = $elm$core$Set$toList(x);
+		y = $elm$core$Set$toList(y);
+	}
+	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	/**/
+	if (x.$ < 0)
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	for (var key in x)
+	{
+		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+var _Utils_equal = F2(_Utils_eq);
+var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
+
+
+
+// COMPARISONS
+
+// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
+// the particular integer values assigned to LT, EQ, and GT.
+
+function _Utils_cmp(x, y, ord)
+{
+	if (typeof x !== 'object')
+	{
+		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
+	}
+
+	/**_UNUSED/
+	if (x instanceof String)
+	{
+		var a = x.valueOf();
+		var b = y.valueOf();
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+	//*/
+
+	/**/
+	if (typeof x.$ === 'undefined')
+	//*/
+	/**_UNUSED/
+	if (x.$[0] === '#')
+	//*/
+	{
+		return (ord = _Utils_cmp(x.a, y.a))
+			? ord
+			: (ord = _Utils_cmp(x.b, y.b))
+				? ord
+				: _Utils_cmp(x.c, y.c);
+	}
+
+	// traverse conses until end of a list or a mismatch
+	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
+	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
+}
+
+var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
+var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
+var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
+var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
+
+var _Utils_compare = F2(function(x, y)
+{
+	var n = _Utils_cmp(x, y);
+	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
+});
+
+
+// COMMON VALUES
+
+var _Utils_Tuple0 = 0;
+var _Utils_Tuple0_UNUSED = { $: '#0' };
+
+function _Utils_Tuple2(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2_UNUSED(a, b) { return { $: '#2', a: a, b: b }; }
+
+function _Utils_Tuple3(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3_UNUSED(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+
+function _Utils_chr(c) { return c; }
+function _Utils_chr_UNUSED(c) { return new String(c); }
+
+
+// RECORDS
+
+function _Utils_update(oldRecord, updatedFields)
+{
+	var newRecord = {};
+
+	for (var key in oldRecord)
+	{
+		newRecord[key] = oldRecord[key];
+	}
+
+	for (var key in updatedFields)
+	{
+		newRecord[key] = updatedFields[key];
+	}
+
+	return newRecord;
+}
+
+
+// APPEND
+
+var _Utils_append = F2(_Utils_ap);
+
+function _Utils_ap(xs, ys)
+{
+	// append Strings
+	if (typeof xs === 'string')
+	{
+		return xs + ys;
+	}
+
+	// append Lists
+	if (!xs.b)
+	{
+		return ys;
+	}
+	var root = _List_Cons(xs.a, ys);
+	xs = xs.b
+	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		curr = curr.b = _List_Cons(xs.a, ys);
+	}
+	return root;
+}
+
+
+
+var _List_Nil = { $: 0 };
+var _List_Nil_UNUSED = { $: '[]' };
+
+function _List_Cons(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons_UNUSED(hd, tl) { return { $: '::', a: hd, b: tl }; }
+
+
+var _List_cons = F2(_List_Cons);
+
+function _List_fromArray(arr)
+{
+	var out = _List_Nil;
+	for (var i = arr.length; i--; )
+	{
+		out = _List_Cons(arr[i], out);
+	}
+	return out;
+}
+
+function _List_toArray(xs)
+{
+	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		out.push(xs.a);
+	}
+	return out;
+}
+
+var _List_map2 = F3(function(f, xs, ys)
+{
+	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
+	{
+		arr.push(A2(f, xs.a, ys.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map3 = F4(function(f, xs, ys, zs)
+{
+	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A3(f, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map4 = F5(function(f, ws, xs, ys, zs)
+{
+	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
+{
+	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_sortBy = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		return _Utils_cmp(f(a), f(b));
+	}));
+});
+
+var _List_sortWith = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		var ord = A2(f, a, b);
+		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
+	}));
+});
+
 
 
 var _JsArray_empty = [];
@@ -234,12 +499,12 @@ var _JsArray_appendN = F3(function(n, dest, source)
 
 // LOG
 
-var _Debug_log_UNUSED = F2(function(tag, value)
+var _Debug_log = F2(function(tag, value)
 {
 	return value;
 });
 
-var _Debug_log = F2(function(tag, value)
+var _Debug_log_UNUSED = F2(function(tag, value)
 {
 	console.log(tag + ': ' + _Debug_toString(value));
 	return value;
@@ -265,12 +530,12 @@ function _Debug_todoCase(moduleName, region, value)
 
 // TO STRING
 
-function _Debug_toString_UNUSED(value)
+function _Debug_toString(value)
 {
 	return '<internals>';
 }
 
-function _Debug_toString(value)
+function _Debug_toString_UNUSED(value)
 {
 	return _Debug_toAnsiString(false, value);
 }
@@ -455,13 +720,13 @@ function _Debug_toHexDigit(n)
 // CRASH
 
 
-function _Debug_crash_UNUSED(identifier)
+function _Debug_crash(identifier)
 {
 	throw new Error('https://github.com/elm/core/blob/1.0.0/hints/' + identifier + '.md');
 }
 
 
-function _Debug_crash(identifier, fact1, fact2, fact3, fact4)
+function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 {
 	switch(identifier)
 	{
@@ -519,277 +784,12 @@ function _Debug_crash(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.start.line === region.end.line)
+	if (region.af.T === region.an.T)
 	{
-		return 'on line ' + region.start.line;
+		return 'on line ' + region.af.T;
 	}
-	return 'on lines ' + region.start.line + ' through ' + region.end.line;
+	return 'on lines ' + region.af.T + ' through ' + region.an.T;
 }
-
-
-
-// EQUALITY
-
-function _Utils_eq(x, y)
-{
-	for (
-		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
-		isEqual && (pair = stack.pop());
-		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
-		)
-	{}
-
-	return isEqual;
-}
-
-function _Utils_eqHelp(x, y, depth, stack)
-{
-	if (x === y)
-	{
-		return true;
-	}
-
-	if (typeof x !== 'object' || x === null || y === null)
-	{
-		typeof x === 'function' && _Debug_crash(5);
-		return false;
-	}
-
-	if (depth > 100)
-	{
-		stack.push(_Utils_Tuple2(x,y));
-		return true;
-	}
-
-	/**/
-	if (x.$ === 'Set_elm_builtin')
-	{
-		x = $elm$core$Set$toList(x);
-		y = $elm$core$Set$toList(y);
-	}
-	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	/**_UNUSED/
-	if (x.$ < 0)
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	for (var key in x)
-	{
-		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-var _Utils_equal = F2(_Utils_eq);
-var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
-
-
-
-// COMPARISONS
-
-// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
-// the particular integer values assigned to LT, EQ, and GT.
-
-function _Utils_cmp(x, y, ord)
-{
-	if (typeof x !== 'object')
-	{
-		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
-	}
-
-	/**/
-	if (x instanceof String)
-	{
-		var a = x.valueOf();
-		var b = y.valueOf();
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-	//*/
-
-	/**_UNUSED/
-	if (typeof x.$ === 'undefined')
-	//*/
-	/**/
-	if (x.$[0] === '#')
-	//*/
-	{
-		return (ord = _Utils_cmp(x.a, y.a))
-			? ord
-			: (ord = _Utils_cmp(x.b, y.b))
-				? ord
-				: _Utils_cmp(x.c, y.c);
-	}
-
-	// traverse conses until end of a list or a mismatch
-	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
-	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
-}
-
-var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
-var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
-var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
-var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
-
-var _Utils_compare = F2(function(x, y)
-{
-	var n = _Utils_cmp(x, y);
-	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
-});
-
-
-// COMMON VALUES
-
-var _Utils_Tuple0_UNUSED = 0;
-var _Utils_Tuple0 = { $: '#0' };
-
-function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
-
-function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
-
-function _Utils_chr_UNUSED(c) { return c; }
-function _Utils_chr(c) { return new String(c); }
-
-
-// RECORDS
-
-function _Utils_update(oldRecord, updatedFields)
-{
-	var newRecord = {};
-
-	for (var key in oldRecord)
-	{
-		newRecord[key] = oldRecord[key];
-	}
-
-	for (var key in updatedFields)
-	{
-		newRecord[key] = updatedFields[key];
-	}
-
-	return newRecord;
-}
-
-
-// APPEND
-
-var _Utils_append = F2(_Utils_ap);
-
-function _Utils_ap(xs, ys)
-{
-	// append Strings
-	if (typeof xs === 'string')
-	{
-		return xs + ys;
-	}
-
-	// append Lists
-	if (!xs.b)
-	{
-		return ys;
-	}
-	var root = _List_Cons(xs.a, ys);
-	xs = xs.b
-	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		curr = curr.b = _List_Cons(xs.a, ys);
-	}
-	return root;
-}
-
-
-
-var _List_Nil_UNUSED = { $: 0 };
-var _List_Nil = { $: '[]' };
-
-function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
-
-
-var _List_cons = F2(_List_Cons);
-
-function _List_fromArray(arr)
-{
-	var out = _List_Nil;
-	for (var i = arr.length; i--; )
-	{
-		out = _List_Cons(arr[i], out);
-	}
-	return out;
-}
-
-function _List_toArray(xs)
-{
-	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		out.push(xs.a);
-	}
-	return out;
-}
-
-var _List_map2 = F3(function(f, xs, ys)
-{
-	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
-	{
-		arr.push(A2(f, xs.a, ys.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map3 = F4(function(f, xs, ys, zs)
-{
-	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A3(f, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map4 = F5(function(f, ws, xs, ys, zs)
-{
-	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
-{
-	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_sortBy = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		return _Utils_cmp(f(a), f(b));
-	}));
-});
-
-var _List_sortWith = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		var ord = A2(f, a, b);
-		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
-	}));
-});
 
 
 
@@ -1212,7 +1212,7 @@ function _Char_toLocaleLower(char)
 
 
 
-/**/
+/**_UNUSED/
 function _Json_errorToString(error)
 {
 	return $elm$json$Json$Decode$errorToString(error);
@@ -1616,11 +1616,11 @@ var _Json_encode = F2(function(indentLevel, value)
 	return JSON.stringify(_Json_unwrap(value), null, indentLevel) + '';
 });
 
-function _Json_wrap(value) { return { $: 0, a: value }; }
-function _Json_unwrap(value) { return value.a; }
+function _Json_wrap_UNUSED(value) { return { $: 0, a: value }; }
+function _Json_unwrap_UNUSED(value) { return value.a; }
 
-function _Json_wrap_UNUSED(value) { return value; }
-function _Json_unwrap_UNUSED(value) { return value; }
+function _Json_wrap(value) { return value; }
+function _Json_unwrap(value) { return value; }
 
 function _Json_emptyArray() { return []; }
 function _Json_emptyObject() { return {}; }
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.init,
-		impl.update,
-		impl.subscriptions,
+		impl.a1,
+		impl.be,
+		impl.bb,
 		function() { return function() {} }
 	);
 });
@@ -1872,7 +1872,7 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 function _Platform_initialize(flagDecoder, args, init, update, subscriptions, stepperBuilder)
 {
 	var result = A2(_Json_run, flagDecoder, _Json_wrap(args ? args['flags'] : undefined));
-	$elm$core$Result$isOk(result) || _Debug_crash(2 /**/, _Json_errorToString(result.a) /**/);
+	$elm$core$Result$isOk(result) || _Debug_crash(2 /**_UNUSED/, _Json_errorToString(result.a) /**/);
 	var managers = {};
 	var initPair = init(result.a);
 	var model = initPair.a;
@@ -2316,7 +2316,7 @@ function _Platform_setupIncomingPort(name, sendToApp)
 //
 
 
-function _Platform_export_UNUSED(exports)
+function _Platform_export(exports)
 {
 	scope['Elm']
 		? _Platform_mergeExportsProd(scope['Elm'], exports)
@@ -2337,7 +2337,7 @@ function _Platform_mergeExportsProd(obj, exports)
 }
 
 
-function _Platform_export(exports)
+function _Platform_export_UNUSED(exports)
 {
 	scope['Elm']
 		? _Platform_mergeExportsDebug('Elm', scope['Elm'], exports)
@@ -2377,10 +2377,10 @@ var _VirtualDom_init = F4(function(virtualNode, flagDecoder, debugMetadata, args
 {
 	// NOTE: this function needs _Platform_export available to work
 
-	/**_UNUSED/
+	/**/
 	var node = args['node'];
 	//*/
-	/**/
+	/**_UNUSED/
 	var node = args && args['node'] ? args['node'] : _Debug_crash(0);
 	//*/
 
@@ -2655,14 +2655,14 @@ function _VirtualDom_noInnerHtmlOrFormAction(key)
 function _VirtualDom_noJavaScriptUri(value)
 {
 	return _VirtualDom_RE_js.test(value)
-		? /**_UNUSED/''//*//**/'javascript:alert("This is an XSS vector. Please use ports or web components instead.")'//*/
+		? /**/''//*//**_UNUSED/'javascript:alert("This is an XSS vector. Please use ports or web components instead.")'//*/
 		: value;
 }
 
 function _VirtualDom_noJavaScriptOrHtmlUri(value)
 {
 	return _VirtualDom_RE_js_html.test(value)
-		? /**_UNUSED/''//*//**/'javascript:alert("This is an XSS vector. Please use ports or web components instead.")'//*/
+		? /**/''//*//**_UNUSED/'javascript:alert("This is an XSS vector. Please use ports or web components instead.")'//*/
 		: value;
 }
 
@@ -2670,7 +2670,7 @@ function _VirtualDom_noJavaScriptOrHtmlJson(value)
 {
 	return (typeof _Json_unwrap(value) === 'string' && _VirtualDom_RE_js_html.test(_Json_unwrap(value)))
 		? _Json_wrap(
-			/**_UNUSED/''//*//**/'javascript:alert("This is an XSS vector. Please use ports or web components instead.")'//*/
+			/**/''//*//**_UNUSED/'javascript:alert("This is an XSS vector. Please use ports or web components instead.")'//*/
 		) : value;
 }
 
@@ -2719,9 +2719,9 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		message: func(record.message),
-		stopPropagation: record.stopPropagation,
-		preventDefault: record.preventDefault
+		z: func(record.z),
+		ah: record.ah,
+		ad: record.ad
 	}
 });
 
@@ -2989,11 +2989,11 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.message;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.stopPropagation;
+		var message = !tag ? value : tag < 3 ? value.a : value.z;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.ah;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.preventDefault) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.ad) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3943,15 +3943,15 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.init,
-		impl.update,
-		impl.subscriptions,
+		impl.a1,
+		impl.be,
+		impl.bb,
 		function(sendToApp, initialModel) {
-			var view = impl.view;
-			/**_UNUSED/
+			var view = impl.bf;
+			/**/
 			var domNode = args['node'];
 			//*/
-			/**/
+			/**_UNUSED/
 			var domNode = args && args['node'] ? args['node'] : _Debug_crash(0);
 			//*/
 			var currNode = _VirtualDom_virtualize(domNode);
@@ -3979,12 +3979,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.init,
-		impl.update,
-		impl.subscriptions,
+		impl.a1,
+		impl.be,
+		impl.bb,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.setup && impl.setup(sendToApp)
-			var view = impl.view;
+			var divertHrefToApp = impl.ae && impl.ae(sendToApp)
+			var view = impl.bf;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3992,12 +3992,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.body);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.aV);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.title) && (_VirtualDom_doc.title = title = doc.title);
+				(title !== doc.bd) && (_VirtualDom_doc.title = title = doc.bd);
 			});
 		}
 	);
@@ -4053,12 +4053,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.onUrlChange;
-	var onUrlRequest = impl.onUrlRequest;
+	var onUrlChange = impl.a3;
+	var onUrlRequest = impl.a4;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		setup: function(sendToApp)
+		ae: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4074,9 +4074,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.protocol === next.protocol
-							&& curr.host === next.host
-							&& curr.port_.a === next.port_.a
+							&& curr.aB === next.aB
+							&& curr.as === next.as
+							&& curr.ay.a === next.ay.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4084,13 +4084,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		init: function(flags)
+		a1: function(flags)
 		{
-			return A3(impl.init, flags, _Browser_getUrl(), key);
+			return A3(impl.a1, flags, _Browser_getUrl(), key);
 		},
-		view: impl.view,
-		update: impl.update,
-		subscriptions: impl.subscriptions
+		bf: impl.bf,
+		be: impl.be,
+		bb: impl.bb
 	});
 }
 
@@ -4156,17 +4156,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { hidden: 'hidden', change: 'visibilitychange' }
+		? { a$: 'hidden', aW: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { hidden: 'mozHidden', change: 'mozvisibilitychange' }
+		? { a$: 'mozHidden', aW: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { hidden: 'msHidden', change: 'msvisibilitychange' }
+		? { a$: 'msHidden', aW: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { hidden: 'webkitHidden', change: 'webkitvisibilitychange' }
-		: { hidden: 'hidden', change: 'visibilitychange' };
+		? { a$: 'webkitHidden', aW: 'webkitvisibilitychange' }
+		: { a$: 'hidden', aW: 'visibilitychange' };
 }
 
 
@@ -4247,12 +4247,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		scene: _Browser_getScene(),
-		viewport: {
-			x: _Browser_window.pageXOffset,
-			y: _Browser_window.pageYOffset,
-			width: _Browser_doc.documentElement.clientWidth,
-			height: _Browser_doc.documentElement.clientHeight
+		aI: _Browser_getScene(),
+		aO: {
+			aQ: _Browser_window.pageXOffset,
+			aR: _Browser_window.pageYOffset,
+			aP: _Browser_doc.documentElement.clientWidth,
+			ar: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4262,8 +4262,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		width: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		height: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		aP: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		ar: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4286,15 +4286,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			scene: {
-				width: node.scrollWidth,
-				height: node.scrollHeight
+			aI: {
+				aP: node.scrollWidth,
+				ar: node.scrollHeight
 			},
-			viewport: {
-				x: node.scrollLeft,
-				y: node.scrollTop,
-				width: node.clientWidth,
-				height: node.clientHeight
+			aO: {
+				aQ: node.scrollLeft,
+				aR: node.scrollTop,
+				aP: node.clientWidth,
+				ar: node.clientHeight
 			}
 		};
 	});
@@ -4324,18 +4324,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			scene: _Browser_getScene(),
-			viewport: {
-				x: x,
-				y: y,
-				width: _Browser_doc.documentElement.clientWidth,
-				height: _Browser_doc.documentElement.clientHeight
+			aI: _Browser_getScene(),
+			aO: {
+				aQ: x,
+				aR: y,
+				aP: _Browser_doc.documentElement.clientWidth,
+				ar: _Browser_doc.documentElement.clientHeight
 			},
-			element: {
-				x: x + rect.left,
-				y: y + rect.top,
-				width: rect.width,
-				height: rect.height
+			aY: {
+				aQ: x + rect.left,
+				aR: y + rect.top,
+				aP: rect.width,
+				ar: rect.height
 			}
 		};
 	});
@@ -4372,6 +4372,181 @@ function _Browser_load(url)
 }
 
 
+
+// SEND REQUEST
+
+var _Http_toTask = F3(function(router, toTask, request)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		function done(response) {
+			callback(toTask(request.aZ.a(response)));
+		}
+
+		var xhr = new XMLHttpRequest();
+		xhr.addEventListener('error', function() { done($elm$http$Http$NetworkError_); });
+		xhr.addEventListener('timeout', function() { done($elm$http$Http$Timeout_); });
+		xhr.addEventListener('load', function() { done(_Http_toResponse(request.aZ.b, xhr)); });
+		$elm$core$Maybe$isJust(request.aN) && _Http_track(router, xhr, request.aN.a);
+
+		try {
+			xhr.open(request.a2, request.Y, true);
+		} catch (e) {
+			return done($elm$http$Http$BadUrl_(request.Y));
+		}
+
+		_Http_configureRequest(xhr, request);
+
+		request.aV.a && xhr.setRequestHeader('Content-Type', request.aV.a);
+		xhr.send(request.aV.b);
+
+		return function() { xhr.c = true; xhr.abort(); };
+	});
+});
+
+
+// CONFIGURE
+
+function _Http_configureRequest(xhr, request)
+{
+	for (var headers = request.aq; headers.b; headers = headers.b) // WHILE_CONS
+	{
+		xhr.setRequestHeader(headers.a.a, headers.a.b);
+	}
+	xhr.timeout = request.bc.a || 0;
+	xhr.responseType = request.aZ.d;
+	xhr.withCredentials = request.aT;
+}
+
+
+// RESPONSES
+
+function _Http_toResponse(toBody, xhr)
+{
+	return A2(
+		200 <= xhr.status && xhr.status < 300 ? $elm$http$Http$GoodStatus_ : $elm$http$Http$BadStatus_,
+		_Http_toMetadata(xhr),
+		toBody(xhr.response)
+	);
+}
+
+
+// METADATA
+
+function _Http_toMetadata(xhr)
+{
+	return {
+		Y: xhr.responseURL,
+		a9: xhr.status,
+		ba: xhr.statusText,
+		aq: _Http_parseHeaders(xhr.getAllResponseHeaders())
+	};
+}
+
+
+// HEADERS
+
+function _Http_parseHeaders(rawHeaders)
+{
+	if (!rawHeaders)
+	{
+		return $elm$core$Dict$empty;
+	}
+
+	var headers = $elm$core$Dict$empty;
+	var headerPairs = rawHeaders.split('\r\n');
+	for (var i = headerPairs.length; i--; )
+	{
+		var headerPair = headerPairs[i];
+		var index = headerPair.indexOf(': ');
+		if (index > 0)
+		{
+			var key = headerPair.substring(0, index);
+			var value = headerPair.substring(index + 2);
+
+			headers = A3($elm$core$Dict$update, key, function(oldValue) {
+				return $elm$core$Maybe$Just($elm$core$Maybe$isJust(oldValue)
+					? value + ', ' + oldValue.a
+					: value
+				);
+			}, headers);
+		}
+	}
+	return headers;
+}
+
+
+// EXPECT
+
+var _Http_expect = F3(function(type, toBody, toValue)
+{
+	return {
+		$: 0,
+		d: type,
+		b: toBody,
+		a: toValue
+	};
+});
+
+var _Http_mapExpect = F2(function(func, expect)
+{
+	return {
+		$: 0,
+		d: expect.d,
+		b: expect.b,
+		a: function(x) { return func(expect.a(x)); }
+	};
+});
+
+function _Http_toDataView(arrayBuffer)
+{
+	return new DataView(arrayBuffer);
+}
+
+
+// BODY and PARTS
+
+var _Http_emptyBody = { $: 0 };
+var _Http_pair = F2(function(a, b) { return { $: 0, a: a, b: b }; });
+
+function _Http_toFormData(parts)
+{
+	for (var formData = new FormData(); parts.b; parts = parts.b) // WHILE_CONS
+	{
+		var part = parts.a;
+		formData.append(part.a, part.b);
+	}
+	return formData;
+}
+
+var _Http_bytesToBlob = F2(function(mime, bytes)
+{
+	return new Blob([bytes], { type: mime });
+});
+
+
+// PROGRESS
+
+function _Http_track(router, xhr, tracker)
+{
+	// TODO check out lengthComputable on loadstart event
+
+	xhr.upload.addEventListener('progress', function(event) {
+		if (xhr.c) { return; }
+		_Scheduler_rawSpawn(A2($elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, $elm$http$Http$Sending({
+			a8: event.loaded,
+			aK: event.total
+		}))));
+	});
+	xhr.addEventListener('progress', function(event) {
+		if (xhr.c) { return; }
+		_Scheduler_rawSpawn(A2($elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, $elm$http$Http$Receiving({
+			a6: event.loaded,
+			aK: event.lengthComputable ? $elm$core$Maybe$Just(event.total) : $elm$core$Maybe$Nothing
+		}))));
+	});
+}
+
 function _Url_percentEncode(string)
 {
 	return encodeURIComponent(string);
@@ -4387,42 +4562,67 @@ function _Url_percentDecode(string)
 	{
 		return $elm$core$Maybe$Nothing;
 	}
-}var $author$project$Main$LinkClicked = function (a) {
-	return {$: 'LinkClicked', a: a};
+}
+
+
+function _Time_now(millisToPosix)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(millisToPosix(Date.now())));
+	});
+}
+
+var _Time_setInterval = F2(function(interval, task)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
+		return function() { clearInterval(id); };
+	});
+});
+
+function _Time_here()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(
+			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
+		));
+	});
+}
+
+
+function _Time_getZoneName()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		try
+		{
+			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		}
+		catch (e)
+		{
+			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
+		}
+		callback(_Scheduler_succeed(name));
+	});
+}
+var $author$project$Main$LinkClicked = function (a) {
+	return {$: 0, a: a};
 };
 var $author$project$Main$UrlChanged = function (a) {
-	return {$: 'UrlChanged', a: a};
+	return {$: 1, a: a};
 };
+var $elm$core$Basics$EQ = 1;
+var $elm$core$Basics$GT = 2;
+var $elm$core$Basics$LT = 0;
 var $elm$core$List$cons = _List_cons;
-var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
-var $elm$core$Array$foldr = F3(
-	function (func, baseCase, _v0) {
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (node.$ === 'SubTree') {
-					var subTree = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
-				}
-			});
-		return A3(
-			$elm$core$Elm$JsArray$foldr,
-			helper,
-			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
-			tree);
-	});
-var $elm$core$Array$toList = function (array) {
-	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
-};
 var $elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
 		while (true) {
-			if (t.$ === 'RBEmpty_elm_builtin') {
+			if (t.$ === -2) {
 				return acc;
 			} else {
 				var key = t.b;
@@ -4467,39 +4667,60 @@ var $elm$core$Dict$keys = function (dict) {
 		dict);
 };
 var $elm$core$Set$toList = function (_v0) {
-	var dict = _v0.a;
+	var dict = _v0;
 	return $elm$core$Dict$keys(dict);
 };
-var $elm$core$Basics$EQ = {$: 'EQ'};
-var $elm$core$Basics$GT = {$: 'GT'};
-var $elm$core$Basics$LT = {$: 'LT'};
+var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
+var $elm$core$Array$foldr = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (!node.$) {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldr,
+			helper,
+			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
+			tree);
+	});
+var $elm$core$Array$toList = function (array) {
+	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
+};
 var $elm$core$Result$Err = function (a) {
-	return {$: 'Err', a: a};
+	return {$: 1, a: a};
 };
 var $elm$json$Json$Decode$Failure = F2(
 	function (a, b) {
-		return {$: 'Failure', a: a, b: b};
+		return {$: 3, a: a, b: b};
 	});
 var $elm$json$Json$Decode$Field = F2(
 	function (a, b) {
-		return {$: 'Field', a: a, b: b};
+		return {$: 0, a: a, b: b};
 	});
 var $elm$json$Json$Decode$Index = F2(
 	function (a, b) {
-		return {$: 'Index', a: a, b: b};
+		return {$: 1, a: a, b: b};
 	});
 var $elm$core$Result$Ok = function (a) {
-	return {$: 'Ok', a: a};
+	return {$: 0, a: a};
 };
 var $elm$json$Json$Decode$OneOf = function (a) {
-	return {$: 'OneOf', a: a};
+	return {$: 2, a: a};
 };
-var $elm$core$Basics$False = {$: 'False'};
+var $elm$core$Basics$False = 1;
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
-	return {$: 'Just', a: a};
+	return {$: 0, a: a};
 };
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
+var $elm$core$Maybe$Nothing = {$: 1};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -4624,12 +4845,12 @@ var $elm$json$Json$Decode$errorToStringHelp = F2(
 		errorToStringHelp:
 		while (true) {
 			switch (error.$) {
-				case 'Field':
+				case 0:
 					var f = error.a;
 					var err = error.b;
 					var isSimple = function () {
 						var _v1 = $elm$core$String$uncons(f);
-						if (_v1.$ === 'Nothing') {
+						if (_v1.$ === 1) {
 							return false;
 						} else {
 							var _v2 = _v1.a;
@@ -4644,7 +4865,7 @@ var $elm$json$Json$Decode$errorToStringHelp = F2(
 					error = $temp$error;
 					context = $temp$context;
 					continue errorToStringHelp;
-				case 'Index':
+				case 1:
 					var i = error.a;
 					var err = error.b;
 					var indexName = '[' + ($elm$core$String$fromInt(i) + ']');
@@ -4653,7 +4874,7 @@ var $elm$json$Json$Decode$errorToStringHelp = F2(
 					error = $temp$error;
 					context = $temp$context;
 					continue errorToStringHelp;
-				case 'OneOf':
+				case 2:
 					var errors = error.a;
 					if (!errors.b) {
 						return 'Ran into a Json.Decode.oneOf with no possibilities' + function () {
@@ -4717,7 +4938,7 @@ var $elm$json$Json$Decode$errorToStringHelp = F2(
 var $elm$core$Array$branchFactor = 32;
 var $elm$core$Array$Array_elm_builtin = F4(
 	function (a, b, c, d) {
-		return {$: 'Array_elm_builtin', a: a, b: b, c: c, d: d};
+		return {$: 0, a: a, b: b, c: c, d: d};
 	});
 var $elm$core$Elm$JsArray$empty = _JsArray_empty;
 var $elm$core$Basics$ceiling = _Basics_ceiling;
@@ -4732,7 +4953,7 @@ var $elm$core$Array$shiftStep = $elm$core$Basics$ceiling(
 var $elm$core$Array$empty = A4($elm$core$Array$Array_elm_builtin, 0, $elm$core$Array$shiftStep, $elm$core$Elm$JsArray$empty, $elm$core$Elm$JsArray$empty);
 var $elm$core$Elm$JsArray$initialize = _JsArray_initialize;
 var $elm$core$Array$Leaf = function (a) {
-	return {$: 'Leaf', a: a};
+	return {$: 1, a: a};
 };
 var $elm$core$Basics$apL = F2(
 	function (f, x) {
@@ -4752,7 +4973,7 @@ var $elm$core$Basics$max = F2(
 	});
 var $elm$core$Basics$mul = _Basics_mul;
 var $elm$core$Array$SubTree = function (a) {
-	return {$: 'SubTree', a: a};
+	return {$: 0, a: a};
 };
 var $elm$core$Elm$JsArray$initializeFromList = _JsArray_initializeFromList;
 var $elm$core$Array$compressNodes = F2(
@@ -4799,25 +5020,25 @@ var $elm$core$Array$treeFromBuilder = F2(
 	});
 var $elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.nodeListSize) {
+		if (!builder.b) {
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.tail),
+				$elm$core$Elm$JsArray$length(builder.d),
 				$elm$core$Array$shiftStep,
 				$elm$core$Elm$JsArray$empty,
-				builder.tail);
+				builder.d);
 		} else {
-			var treeLen = builder.nodeListSize * $elm$core$Array$branchFactor;
+			var treeLen = builder.b * $elm$core$Array$branchFactor;
 			var depth = $elm$core$Basics$floor(
 				A2($elm$core$Basics$logBase, $elm$core$Array$branchFactor, treeLen - 1));
-			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.nodeList) : builder.nodeList;
-			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.nodeListSize);
+			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.e) : builder.e;
+			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.b);
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.tail) + treeLen,
+				$elm$core$Elm$JsArray$length(builder.d) + treeLen,
 				A2($elm$core$Basics$max, 5, depth * $elm$core$Array$shiftStep),
 				tree,
-				builder.tail);
+				builder.d);
 		}
 	});
 var $elm$core$Basics$idiv = _Basics_idiv;
@@ -4830,7 +5051,7 @@ var $elm$core$Array$initializeHelp = F5(
 				return A2(
 					$elm$core$Array$builderToArray,
 					false,
-					{nodeList: nodeList, nodeListSize: (len / $elm$core$Array$branchFactor) | 0, tail: tail});
+					{e: nodeList, b: (len / $elm$core$Array$branchFactor) | 0, d: tail});
 			} else {
 				var leaf = $elm$core$Array$Leaf(
 					A3($elm$core$Elm$JsArray$initialize, $elm$core$Array$branchFactor, fromIndex, fn));
@@ -4860,47 +5081,44 @@ var $elm$core$Array$initialize = F2(
 			return A5($elm$core$Array$initializeHelp, fn, initialFromIndex, len, _List_Nil, tail);
 		}
 	});
-var $elm$core$Basics$True = {$: 'True'};
+var $elm$core$Basics$True = 0;
 var $elm$core$Result$isOk = function (result) {
-	if (result.$ === 'Ok') {
+	if (!result.$) {
 		return true;
 	} else {
 		return false;
 	}
 };
-var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$map = _Json_map1;
 var $elm$json$Json$Decode$map2 = _Json_map2;
 var $elm$json$Json$Decode$succeed = _Json_succeed;
 var $elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 	switch (handler.$) {
-		case 'Normal':
+		case 0:
 			return 0;
-		case 'MayStopPropagation':
+		case 1:
 			return 1;
-		case 'MayPreventDefault':
+		case 2:
 			return 2;
 		default:
 			return 3;
 	}
 };
 var $elm$browser$Browser$External = function (a) {
-	return {$: 'External', a: a};
+	return {$: 1, a: a};
 };
 var $elm$browser$Browser$Internal = function (a) {
-	return {$: 'Internal', a: a};
+	return {$: 0, a: a};
 };
 var $elm$core$Basics$identity = function (x) {
 	return x;
 };
-var $elm$browser$Browser$Dom$NotFound = function (a) {
-	return {$: 'NotFound', a: a};
-};
-var $elm$url$Url$Http = {$: 'Http'};
-var $elm$url$Url$Https = {$: 'Https'};
+var $elm$browser$Browser$Dom$NotFound = $elm$core$Basics$identity;
+var $elm$url$Url$Http = 0;
+var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {fragment: fragment, host: host, path: path, port_: port_, protocol: protocol, query: query};
+		return {ap: fragment, as: host, aw: path, ay: port_, aB: protocol, aC: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -4936,7 +5154,7 @@ var $elm$url$Url$chompBeforePath = F5(
 					var i = _v0.a;
 					var _v1 = $elm$core$String$toInt(
 						A2($elm$core$String$dropLeft, i + 1, str));
-					if (_v1.$ === 'Nothing') {
+					if (_v1.$ === 1) {
 						return $elm$core$Maybe$Nothing;
 					} else {
 						var port_ = _v1;
@@ -5019,26 +5237,24 @@ var $elm$core$String$startsWith = _String_startsWith;
 var $elm$url$Url$fromString = function (str) {
 	return A2($elm$core$String$startsWith, 'http://', str) ? A2(
 		$elm$url$Url$chompAfterProtocol,
-		$elm$url$Url$Http,
+		0,
 		A2($elm$core$String$dropLeft, 7, str)) : (A2($elm$core$String$startsWith, 'https://', str) ? A2(
 		$elm$url$Url$chompAfterProtocol,
-		$elm$url$Url$Https,
+		1,
 		A2($elm$core$String$dropLeft, 8, str)) : $elm$core$Maybe$Nothing);
 };
 var $elm$core$Basics$never = function (_v0) {
 	never:
 	while (true) {
-		var nvr = _v0.a;
+		var nvr = _v0;
 		var $temp$_v0 = nvr;
 		_v0 = $temp$_v0;
 		continue never;
 	}
 };
-var $elm$core$Task$Perform = function (a) {
-	return {$: 'Perform', a: a};
-};
+var $elm$core$Task$Perform = $elm$core$Basics$identity;
 var $elm$core$Task$succeed = _Scheduler_succeed;
-var $elm$core$Task$init = $elm$core$Task$succeed(_Utils_Tuple0);
+var $elm$core$Task$init = $elm$core$Task$succeed(0);
 var $elm$core$List$foldrHelper = F4(
 	function (fn, acc, ctr, ls) {
 		if (!ls.b) {
@@ -5144,7 +5360,7 @@ var $elm$core$Task$sequence = function (tasks) {
 var $elm$core$Platform$sendToApp = _Platform_sendToApp;
 var $elm$core$Task$spawnCmd = F2(
 	function (router, _v0) {
-		var task = _v0.a;
+		var task = _v0;
 		return _Scheduler_spawn(
 			A2(
 				$elm$core$Task$andThen,
@@ -5156,7 +5372,7 @@ var $elm$core$Task$onEffects = F3(
 		return A2(
 			$elm$core$Task$map,
 			function (_v0) {
-				return _Utils_Tuple0;
+				return 0;
 			},
 			$elm$core$Task$sequence(
 				A2(
@@ -5166,81 +5382,107 @@ var $elm$core$Task$onEffects = F3(
 	});
 var $elm$core$Task$onSelfMsg = F3(
 	function (_v0, _v1, _v2) {
-		return $elm$core$Task$succeed(_Utils_Tuple0);
+		return $elm$core$Task$succeed(0);
 	});
 var $elm$core$Task$cmdMap = F2(
 	function (tagger, _v0) {
-		var task = _v0.a;
-		return $elm$core$Task$Perform(
-			A2($elm$core$Task$map, tagger, task));
+		var task = _v0;
+		return A2($elm$core$Task$map, tagger, task);
 	});
 _Platform_effectManagers['Task'] = _Platform_createManager($elm$core$Task$init, $elm$core$Task$onEffects, $elm$core$Task$onSelfMsg, $elm$core$Task$cmdMap);
 var $elm$core$Task$command = _Platform_leaf('Task');
 var $elm$core$Task$perform = F2(
 	function (toMessage, task) {
 		return $elm$core$Task$command(
-			$elm$core$Task$Perform(
-				A2($elm$core$Task$map, toMessage, task)));
+			A2($elm$core$Task$map, toMessage, task));
 	});
 var $elm$browser$Browser$application = _Browser_application;
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $author$project$Main$SystemMode = {$: 'SystemMode'};
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$Main$init = F3(
-	function (flags, url, key) {
-		return _Utils_Tuple2(
-			{colorMode: $author$project$Main$SystemMode, commitHash: 'GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER', explicitMode: $elm$core$Maybe$Nothing, key: key, mobileMenuOpen: false, systemPrefersDark: flags.prefersDark, url: url},
-			$elm$core$Platform$Cmd$none);
+var $author$project$Main$DarkMode = 1;
+var $author$project$Main$NotFound = 6;
+var $author$project$Main$StatusApiResult = function (a) {
+	return {$: 5, a: a};
+};
+var $author$project$Status$StatusIdle = {$: 0};
+var $author$project$Status$StatusLoading = {$: 1};
+var $author$project$Main$StatusPage = 5;
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $elm$http$Http$BadStatus_ = F2(
+	function (a, b) {
+		return {$: 3, a: a, b: b};
 	});
-var $author$project$Main$WindowResized = {$: 'WindowResized'};
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$browser$Browser$Events$Window = {$: 'Window'};
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$browser$Browser$Events$MySub = F3(
-	function (a, b, c) {
-		return {$: 'MySub', a: a, b: b, c: c};
+var $elm$http$Http$BadUrl_ = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$http$Http$GoodStatus_ = F2(
+	function (a, b) {
+		return {$: 4, a: a, b: b};
 	});
-var $elm$browser$Browser$Events$State = F2(
-	function (subs, pids) {
-		return {pids: pids, subs: subs};
-	});
-var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
+var $elm$http$Http$NetworkError_ = {$: 2};
+var $elm$http$Http$Receiving = function (a) {
+	return {$: 1, a: a};
+};
+var $elm$http$Http$Sending = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$http$Http$Timeout_ = {$: 1};
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $elm$browser$Browser$Events$init = $elm$core$Task$succeed(
-	A2($elm$browser$Browser$Events$State, _List_Nil, $elm$core$Dict$empty));
-var $elm$browser$Browser$Events$nodeToKey = function (node) {
-	if (node.$ === 'Document') {
-		return 'd_';
+var $elm$core$Maybe$isJust = function (maybe) {
+	if (!maybe.$) {
+		return true;
 	} else {
-		return 'w_';
+		return false;
 	}
 };
-var $elm$browser$Browser$Events$addKey = function (sub) {
-	var node = sub.a;
-	var name = sub.b;
-	return _Utils_Tuple2(
-		_Utils_ap(
-			$elm$browser$Browser$Events$nodeToKey(node),
-			name),
-		sub);
-};
-var $elm$core$Dict$Black = {$: 'Black'};
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$core$Basics$compare = _Utils_compare;
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === -2) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1) {
+					case 0:
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 1:
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var $elm$core$Dict$Black = 1;
 var $elm$core$Dict$RBNode_elm_builtin = F5(
 	function (a, b, c, d, e) {
-		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
+		return {$: -1, a: a, b: b, c: c, d: d, e: e};
 	});
-var $elm$core$Dict$Red = {$: 'Red'};
+var $elm$core$Dict$Red = 0;
 var $elm$core$Dict$balance = F5(
 	function (color, key, value, left, right) {
-		if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Red')) {
+		if ((right.$ === -1) && (!right.a)) {
 			var _v1 = right.a;
 			var rK = right.b;
 			var rV = right.c;
 			var rLeft = right.d;
 			var rRight = right.e;
-			if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
+			if ((left.$ === -1) && (!left.a)) {
 				var _v3 = left.a;
 				var lK = left.b;
 				var lV = left.c;
@@ -5248,22 +5490,22 @@ var $elm$core$Dict$balance = F5(
 				var lRight = left.e;
 				return A5(
 					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Red,
+					0,
 					key,
 					value,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rLeft, rRight));
+					A5($elm$core$Dict$RBNode_elm_builtin, 1, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, 1, rK, rV, rLeft, rRight));
 			} else {
 				return A5(
 					$elm$core$Dict$RBNode_elm_builtin,
 					color,
 					rK,
 					rV,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, left, rLeft),
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, key, value, left, rLeft),
 					rRight);
 			}
 		} else {
-			if ((((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) && (left.d.$ === 'RBNode_elm_builtin')) && (left.d.a.$ === 'Red')) {
+			if ((((left.$ === -1) && (!left.a)) && (left.d.$ === -1)) && (!left.d.a)) {
 				var _v5 = left.a;
 				var lK = left.b;
 				var lV = left.c;
@@ -5276,21 +5518,20 @@ var $elm$core$Dict$balance = F5(
 				var lRight = left.e;
 				return A5(
 					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Red,
+					0,
 					lK,
 					lV,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, lRight, right));
+					A5($elm$core$Dict$RBNode_elm_builtin, 1, llK, llV, llLeft, llRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, 1, key, value, lRight, right));
 			} else {
 				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
 			}
 		}
 	});
-var $elm$core$Basics$compare = _Utils_compare;
 var $elm$core$Dict$insertHelp = F3(
 	function (key, value, dict) {
-		if (dict.$ === 'RBEmpty_elm_builtin') {
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
+		if (dict.$ === -2) {
+			return A5($elm$core$Dict$RBNode_elm_builtin, 0, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
 		} else {
 			var nColor = dict.a;
 			var nKey = dict.b;
@@ -5298,8 +5539,8 @@ var $elm$core$Dict$insertHelp = F3(
 			var nLeft = dict.d;
 			var nRight = dict.e;
 			var _v1 = A2($elm$core$Basics$compare, key, nKey);
-			switch (_v1.$) {
-				case 'LT':
+			switch (_v1) {
+				case 0:
 					return A5(
 						$elm$core$Dict$balance,
 						nColor,
@@ -5307,7 +5548,7 @@ var $elm$core$Dict$insertHelp = F3(
 						nValue,
 						A3($elm$core$Dict$insertHelp, key, value, nLeft),
 						nRight);
-				case 'EQ':
+				case 1:
 					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
 				default:
 					return A5(
@@ -5323,17 +5564,640 @@ var $elm$core$Dict$insertHelp = F3(
 var $elm$core$Dict$insert = F3(
 	function (key, value, dict) {
 		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
-		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
+		if ((_v0.$ === -1) && (!_v0.a)) {
 			var _v1 = _v0.a;
 			var k = _v0.b;
 			var v = _v0.c;
 			var l = _v0.d;
 			var r = _v0.e;
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
+			return A5($elm$core$Dict$RBNode_elm_builtin, 1, k, v, l, r);
 		} else {
 			var x = _v0;
 			return x;
 		}
+	});
+var $elm$core$Dict$getMin = function (dict) {
+	getMin:
+	while (true) {
+		if ((dict.$ === -1) && (dict.d.$ === -1)) {
+			var left = dict.d;
+			var $temp$dict = left;
+			dict = $temp$dict;
+			continue getMin;
+		} else {
+			return dict;
+		}
+	}
+};
+var $elm$core$Dict$moveRedLeft = function (dict) {
+	if (((dict.$ === -1) && (dict.d.$ === -1)) && (dict.e.$ === -1)) {
+		if ((dict.e.d.$ === -1) && (!dict.e.d.a)) {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v1 = dict.d;
+			var lClr = _v1.a;
+			var lK = _v1.b;
+			var lV = _v1.c;
+			var lLeft = _v1.d;
+			var lRight = _v1.e;
+			var _v2 = dict.e;
+			var rClr = _v2.a;
+			var rK = _v2.b;
+			var rV = _v2.c;
+			var rLeft = _v2.d;
+			var _v3 = rLeft.a;
+			var rlK = rLeft.b;
+			var rlV = rLeft.c;
+			var rlL = rLeft.d;
+			var rlR = rLeft.e;
+			var rRight = _v2.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				0,
+				rlK,
+				rlV,
+				A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					1,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, lK, lV, lLeft, lRight),
+					rlL),
+				A5($elm$core$Dict$RBNode_elm_builtin, 1, rK, rV, rlR, rRight));
+		} else {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v4 = dict.d;
+			var lClr = _v4.a;
+			var lK = _v4.b;
+			var lV = _v4.c;
+			var lLeft = _v4.d;
+			var lRight = _v4.e;
+			var _v5 = dict.e;
+			var rClr = _v5.a;
+			var rK = _v5.b;
+			var rV = _v5.c;
+			var rLeft = _v5.d;
+			var rRight = _v5.e;
+			if (clr === 1) {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					1,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					1,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, rK, rV, rLeft, rRight));
+			}
+		}
+	} else {
+		return dict;
+	}
+};
+var $elm$core$Dict$moveRedRight = function (dict) {
+	if (((dict.$ === -1) && (dict.d.$ === -1)) && (dict.e.$ === -1)) {
+		if ((dict.d.d.$ === -1) && (!dict.d.d.a)) {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v1 = dict.d;
+			var lClr = _v1.a;
+			var lK = _v1.b;
+			var lV = _v1.c;
+			var _v2 = _v1.d;
+			var _v3 = _v2.a;
+			var llK = _v2.b;
+			var llV = _v2.c;
+			var llLeft = _v2.d;
+			var llRight = _v2.e;
+			var lRight = _v1.e;
+			var _v4 = dict.e;
+			var rClr = _v4.a;
+			var rK = _v4.b;
+			var rV = _v4.c;
+			var rLeft = _v4.d;
+			var rRight = _v4.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				0,
+				lK,
+				lV,
+				A5($elm$core$Dict$RBNode_elm_builtin, 1, llK, llV, llLeft, llRight),
+				A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					1,
+					k,
+					v,
+					lRight,
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, rK, rV, rLeft, rRight)));
+		} else {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v5 = dict.d;
+			var lClr = _v5.a;
+			var lK = _v5.b;
+			var lV = _v5.c;
+			var lLeft = _v5.d;
+			var lRight = _v5.e;
+			var _v6 = dict.e;
+			var rClr = _v6.a;
+			var rK = _v6.b;
+			var rV = _v6.c;
+			var rLeft = _v6.d;
+			var rRight = _v6.e;
+			if (clr === 1) {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					1,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					1,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, 0, rK, rV, rLeft, rRight));
+			}
+		}
+	} else {
+		return dict;
+	}
+};
+var $elm$core$Dict$removeHelpPrepEQGT = F7(
+	function (targetKey, dict, color, key, value, left, right) {
+		if ((left.$ === -1) && (!left.a)) {
+			var _v1 = left.a;
+			var lK = left.b;
+			var lV = left.c;
+			var lLeft = left.d;
+			var lRight = left.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				color,
+				lK,
+				lV,
+				lLeft,
+				A5($elm$core$Dict$RBNode_elm_builtin, 0, key, value, lRight, right));
+		} else {
+			_v2$2:
+			while (true) {
+				if ((right.$ === -1) && (right.a === 1)) {
+					if (right.d.$ === -1) {
+						if (right.d.a === 1) {
+							var _v3 = right.a;
+							var _v4 = right.d;
+							var _v5 = _v4.a;
+							return $elm$core$Dict$moveRedRight(dict);
+						} else {
+							break _v2$2;
+						}
+					} else {
+						var _v6 = right.a;
+						var _v7 = right.d;
+						return $elm$core$Dict$moveRedRight(dict);
+					}
+				} else {
+					break _v2$2;
+				}
+			}
+			return dict;
+		}
+	});
+var $elm$core$Dict$removeMin = function (dict) {
+	if ((dict.$ === -1) && (dict.d.$ === -1)) {
+		var color = dict.a;
+		var key = dict.b;
+		var value = dict.c;
+		var left = dict.d;
+		var lColor = left.a;
+		var lLeft = left.d;
+		var right = dict.e;
+		if (lColor === 1) {
+			if ((lLeft.$ === -1) && (!lLeft.a)) {
+				var _v3 = lLeft.a;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					color,
+					key,
+					value,
+					$elm$core$Dict$removeMin(left),
+					right);
+			} else {
+				var _v4 = $elm$core$Dict$moveRedLeft(dict);
+				if (_v4.$ === -1) {
+					var nColor = _v4.a;
+					var nKey = _v4.b;
+					var nValue = _v4.c;
+					var nLeft = _v4.d;
+					var nRight = _v4.e;
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						$elm$core$Dict$removeMin(nLeft),
+						nRight);
+				} else {
+					return $elm$core$Dict$RBEmpty_elm_builtin;
+				}
+			}
+		} else {
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				color,
+				key,
+				value,
+				$elm$core$Dict$removeMin(left),
+				right);
+		}
+	} else {
+		return $elm$core$Dict$RBEmpty_elm_builtin;
+	}
+};
+var $elm$core$Dict$removeHelp = F2(
+	function (targetKey, dict) {
+		if (dict.$ === -2) {
+			return $elm$core$Dict$RBEmpty_elm_builtin;
+		} else {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			if (_Utils_cmp(targetKey, key) < 0) {
+				if ((left.$ === -1) && (left.a === 1)) {
+					var _v4 = left.a;
+					var lLeft = left.d;
+					if ((lLeft.$ === -1) && (!lLeft.a)) {
+						var _v6 = lLeft.a;
+						return A5(
+							$elm$core$Dict$RBNode_elm_builtin,
+							color,
+							key,
+							value,
+							A2($elm$core$Dict$removeHelp, targetKey, left),
+							right);
+					} else {
+						var _v7 = $elm$core$Dict$moveRedLeft(dict);
+						if (_v7.$ === -1) {
+							var nColor = _v7.a;
+							var nKey = _v7.b;
+							var nValue = _v7.c;
+							var nLeft = _v7.d;
+							var nRight = _v7.e;
+							return A5(
+								$elm$core$Dict$balance,
+								nColor,
+								nKey,
+								nValue,
+								A2($elm$core$Dict$removeHelp, targetKey, nLeft),
+								nRight);
+						} else {
+							return $elm$core$Dict$RBEmpty_elm_builtin;
+						}
+					}
+				} else {
+					return A5(
+						$elm$core$Dict$RBNode_elm_builtin,
+						color,
+						key,
+						value,
+						A2($elm$core$Dict$removeHelp, targetKey, left),
+						right);
+				}
+			} else {
+				return A2(
+					$elm$core$Dict$removeHelpEQGT,
+					targetKey,
+					A7($elm$core$Dict$removeHelpPrepEQGT, targetKey, dict, color, key, value, left, right));
+			}
+		}
+	});
+var $elm$core$Dict$removeHelpEQGT = F2(
+	function (targetKey, dict) {
+		if (dict.$ === -1) {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			if (_Utils_eq(targetKey, key)) {
+				var _v1 = $elm$core$Dict$getMin(right);
+				if (_v1.$ === -1) {
+					var minKey = _v1.b;
+					var minValue = _v1.c;
+					return A5(
+						$elm$core$Dict$balance,
+						color,
+						minKey,
+						minValue,
+						left,
+						$elm$core$Dict$removeMin(right));
+				} else {
+					return $elm$core$Dict$RBEmpty_elm_builtin;
+				}
+			} else {
+				return A5(
+					$elm$core$Dict$balance,
+					color,
+					key,
+					value,
+					left,
+					A2($elm$core$Dict$removeHelp, targetKey, right));
+			}
+		} else {
+			return $elm$core$Dict$RBEmpty_elm_builtin;
+		}
+	});
+var $elm$core$Dict$remove = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$removeHelp, key, dict);
+		if ((_v0.$ === -1) && (!_v0.a)) {
+			var _v1 = _v0.a;
+			var k = _v0.b;
+			var v = _v0.c;
+			var l = _v0.d;
+			var r = _v0.e;
+			return A5($elm$core$Dict$RBNode_elm_builtin, 1, k, v, l, r);
+		} else {
+			var x = _v0;
+			return x;
+		}
+	});
+var $elm$core$Dict$update = F3(
+	function (targetKey, alter, dictionary) {
+		var _v0 = alter(
+			A2($elm$core$Dict$get, targetKey, dictionary));
+		if (!_v0.$) {
+			var value = _v0.a;
+			return A3($elm$core$Dict$insert, targetKey, value, dictionary);
+		} else {
+			return A2($elm$core$Dict$remove, targetKey, dictionary);
+		}
+	});
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $elm$http$Http$expectStringResponse = F2(
+	function (toMsg, toResult) {
+		return A3(
+			_Http_expect,
+			'',
+			$elm$core$Basics$identity,
+			A2($elm$core$Basics$composeR, toResult, toMsg));
+	});
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (!result.$) {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
+var $elm$http$Http$BadBody = function (a) {
+	return {$: 4, a: a};
+};
+var $elm$http$Http$BadStatus = function (a) {
+	return {$: 3, a: a};
+};
+var $elm$http$Http$BadUrl = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$http$Http$NetworkError = {$: 2};
+var $elm$http$Http$Timeout = {$: 1};
+var $elm$http$Http$resolve = F2(
+	function (toResult, response) {
+		switch (response.$) {
+			case 0:
+				var url = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadUrl(url));
+			case 1:
+				return $elm$core$Result$Err($elm$http$Http$Timeout);
+			case 2:
+				return $elm$core$Result$Err($elm$http$Http$NetworkError);
+			case 3:
+				var metadata = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadStatus(metadata.a9));
+			default:
+				var body = response.b;
+				return A2(
+					$elm$core$Result$mapError,
+					$elm$http$Http$BadBody,
+					toResult(body));
+		}
+	});
+var $elm$http$Http$expectJson = F2(
+	function (toMsg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			toMsg,
+			$elm$http$Http$resolve(
+				function (string) {
+					return A2(
+						$elm$core$Result$mapError,
+						$elm$json$Json$Decode$errorToString,
+						A2($elm$json$Json$Decode$decodeString, decoder, string));
+				}));
+	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$http$Http$emptyBody = _Http_emptyBody;
+var $elm$http$Http$Request = function (a) {
+	return {$: 1, a: a};
+};
+var $elm$http$Http$State = F2(
+	function (reqs, subs) {
+		return {aF: reqs, aL: subs};
+	});
+var $elm$http$Http$init = $elm$core$Task$succeed(
+	A2($elm$http$Http$State, $elm$core$Dict$empty, _List_Nil));
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$core$Process$spawn = _Scheduler_spawn;
+var $elm$http$Http$updateReqs = F3(
+	function (router, cmds, reqs) {
+		updateReqs:
+		while (true) {
+			if (!cmds.b) {
+				return $elm$core$Task$succeed(reqs);
+			} else {
+				var cmd = cmds.a;
+				var otherCmds = cmds.b;
+				if (!cmd.$) {
+					var tracker = cmd.a;
+					var _v2 = A2($elm$core$Dict$get, tracker, reqs);
+					if (_v2.$ === 1) {
+						var $temp$router = router,
+							$temp$cmds = otherCmds,
+							$temp$reqs = reqs;
+						router = $temp$router;
+						cmds = $temp$cmds;
+						reqs = $temp$reqs;
+						continue updateReqs;
+					} else {
+						var pid = _v2.a;
+						return A2(
+							$elm$core$Task$andThen,
+							function (_v3) {
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A2($elm$core$Dict$remove, tracker, reqs));
+							},
+							$elm$core$Process$kill(pid));
+					}
+				} else {
+					var req = cmd.a;
+					return A2(
+						$elm$core$Task$andThen,
+						function (pid) {
+							var _v4 = req.aN;
+							if (_v4.$ === 1) {
+								return A3($elm$http$Http$updateReqs, router, otherCmds, reqs);
+							} else {
+								var tracker = _v4.a;
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A3($elm$core$Dict$insert, tracker, pid, reqs));
+							}
+						},
+						$elm$core$Process$spawn(
+							A3(
+								_Http_toTask,
+								router,
+								$elm$core$Platform$sendToApp(router),
+								req)));
+				}
+			}
+		}
+	});
+var $elm$http$Http$onEffects = F4(
+	function (router, cmds, subs, state) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (reqs) {
+				return $elm$core$Task$succeed(
+					A2($elm$http$Http$State, reqs, subs));
+			},
+			A3($elm$http$Http$updateReqs, router, cmds, state.aF));
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (!_v0.$) {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$http$Http$maybeSend = F4(
+	function (router, desiredTracker, progress, _v0) {
+		var actualTracker = _v0.a;
+		var toMsg = _v0.b;
+		return _Utils_eq(desiredTracker, actualTracker) ? $elm$core$Maybe$Just(
+			A2(
+				$elm$core$Platform$sendToApp,
+				router,
+				toMsg(progress))) : $elm$core$Maybe$Nothing;
+	});
+var $elm$http$Http$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var tracker = _v0.a;
+		var progress = _v0.b;
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$filterMap,
+					A3($elm$http$Http$maybeSend, router, tracker, progress),
+					state.aL)));
+	});
+var $elm$http$Http$Cancel = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$http$Http$cmdMap = F2(
+	function (func, cmd) {
+		if (!cmd.$) {
+			var tracker = cmd.a;
+			return $elm$http$Http$Cancel(tracker);
+		} else {
+			var r = cmd.a;
+			return $elm$http$Http$Request(
+				{
+					aT: r.aT,
+					aV: r.aV,
+					aZ: A2(_Http_mapExpect, func, r.aZ),
+					aq: r.aq,
+					a2: r.a2,
+					bc: r.bc,
+					aN: r.aN,
+					Y: r.Y
+				});
+		}
+	});
+var $elm$http$Http$MySub = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var $elm$http$Http$subMap = F2(
+	function (func, _v0) {
+		var tracker = _v0.a;
+		var toMsg = _v0.b;
+		return A2(
+			$elm$http$Http$MySub,
+			tracker,
+			A2($elm$core$Basics$composeR, toMsg, func));
+	});
+_Platform_effectManagers['Http'] = _Platform_createManager($elm$http$Http$init, $elm$http$Http$onEffects, $elm$http$Http$onSelfMsg, $elm$http$Http$cmdMap, $elm$http$Http$subMap);
+var $elm$http$Http$command = _Platform_leaf('Http');
+var $elm$http$Http$subscription = _Platform_leaf('Http');
+var $elm$http$Http$request = function (r) {
+	return $elm$http$Http$command(
+		$elm$http$Http$Request(
+			{aT: false, aV: r.aV, aZ: r.aZ, aq: r.aq, a2: r.a2, bc: r.bc, aN: r.aN, Y: r.Y}));
+};
+var $elm$http$Http$get = function (r) {
+	return $elm$http$Http$request(
+		{aV: $elm$http$Http$emptyBody, aZ: r.aZ, aq: _List_Nil, a2: 'GET', bc: $elm$core$Maybe$Nothing, aN: $elm$core$Maybe$Nothing, Y: r.Y});
+};
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $author$project$Status$StatusSnapshot = F2(
+	function (timestamp, statuses) {
+		return {ag: statuses, ai: timestamp};
 	});
 var $elm$core$Dict$fromList = function (assocs) {
 	return A3(
@@ -5347,12 +6211,384 @@ var $elm$core$Dict$fromList = function (assocs) {
 		$elm$core$Dict$empty,
 		assocs);
 };
-var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
+var $elm$json$Json$Decode$dict = function (decoder) {
+	return A2(
+		$elm$json$Json$Decode$map,
+		$elm$core$Dict$fromList,
+		$elm$json$Json$Decode$keyValuePairs(decoder));
+};
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$nullable = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
+			]));
+};
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Status$snapshotDecoder = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Status$StatusSnapshot,
+	A2($elm$json$Json$Decode$field, 'timestamp', $elm$json$Json$Decode$string),
+	A2(
+		$elm$json$Json$Decode$field,
+		'statuses',
+		$elm$json$Json$Decode$nullable(
+			$elm$json$Json$Decode$dict($elm$json$Json$Decode$string))));
+var $author$project$Status$fetchApi = function (toMsg) {
+	return $elm$http$Http$get(
+		{
+			aZ: A2(
+				$elm$http$Http$expectJson,
+				toMsg,
+				A2(
+					$elm$json$Json$Decode$field,
+					'history',
+					$elm$json$Json$Decode$list($author$project$Status$snapshotDecoder))),
+			Y: 'https://raw.githubusercontent.com/KaitoTLex/web/main/status.json'
+		});
+};
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$url$Url$Parser$State = F5(
+	function (visited, unvisited, params, frag, value) {
+		return {D: frag, E: params, B: unvisited, w: value, H: visited};
+	});
+var $elm$url$Url$Parser$getFirstMatch = function (states) {
+	getFirstMatch:
+	while (true) {
+		if (!states.b) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var state = states.a;
+			var rest = states.b;
+			var _v1 = state.B;
+			if (!_v1.b) {
+				return $elm$core$Maybe$Just(state.w);
+			} else {
+				if ((_v1.a === '') && (!_v1.b.b)) {
+					return $elm$core$Maybe$Just(state.w);
+				} else {
+					var $temp$states = rest;
+					states = $temp$states;
+					continue getFirstMatch;
+				}
+			}
+		}
+	}
+};
+var $elm$url$Url$Parser$removeFinalEmpty = function (segments) {
+	if (!segments.b) {
+		return _List_Nil;
+	} else {
+		if ((segments.a === '') && (!segments.b.b)) {
+			return _List_Nil;
+		} else {
+			var segment = segments.a;
+			var rest = segments.b;
+			return A2(
+				$elm$core$List$cons,
+				segment,
+				$elm$url$Url$Parser$removeFinalEmpty(rest));
+		}
+	}
+};
+var $elm$url$Url$Parser$preparePath = function (path) {
+	var _v0 = A2($elm$core$String$split, '/', path);
+	if (_v0.b && (_v0.a === '')) {
+		var segments = _v0.b;
+		return $elm$url$Url$Parser$removeFinalEmpty(segments);
+	} else {
+		var segments = _v0;
+		return $elm$url$Url$Parser$removeFinalEmpty(segments);
+	}
+};
+var $elm$url$Url$Parser$addToParametersHelp = F2(
+	function (value, maybeList) {
+		if (maybeList.$ === 1) {
+			return $elm$core$Maybe$Just(
+				_List_fromArray(
+					[value]));
+		} else {
+			var list = maybeList.a;
+			return $elm$core$Maybe$Just(
+				A2($elm$core$List$cons, value, list));
+		}
+	});
+var $elm$url$Url$percentDecode = _Url_percentDecode;
+var $elm$url$Url$Parser$addParam = F2(
+	function (segment, dict) {
+		var _v0 = A2($elm$core$String$split, '=', segment);
+		if ((_v0.b && _v0.b.b) && (!_v0.b.b.b)) {
+			var rawKey = _v0.a;
+			var _v1 = _v0.b;
+			var rawValue = _v1.a;
+			var _v2 = $elm$url$Url$percentDecode(rawKey);
+			if (_v2.$ === 1) {
+				return dict;
+			} else {
+				var key = _v2.a;
+				var _v3 = $elm$url$Url$percentDecode(rawValue);
+				if (_v3.$ === 1) {
+					return dict;
+				} else {
+					var value = _v3.a;
+					return A3(
+						$elm$core$Dict$update,
+						key,
+						$elm$url$Url$Parser$addToParametersHelp(value),
+						dict);
+				}
+			}
+		} else {
+			return dict;
+		}
+	});
+var $elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
+	if (maybeQuery.$ === 1) {
+		return $elm$core$Dict$empty;
+	} else {
+		var qry = maybeQuery.a;
+		return A3(
+			$elm$core$List$foldr,
+			$elm$url$Url$Parser$addParam,
+			$elm$core$Dict$empty,
+			A2($elm$core$String$split, '&', qry));
+	}
+};
+var $elm$url$Url$Parser$parse = F2(
+	function (_v0, url) {
+		var parser = _v0;
+		return $elm$url$Url$Parser$getFirstMatch(
+			parser(
+				A5(
+					$elm$url$Url$Parser$State,
+					_List_Nil,
+					$elm$url$Url$Parser$preparePath(url.aw),
+					$elm$url$Url$Parser$prepareQuery(url.aC),
+					url.ap,
+					$elm$core$Basics$identity)));
+	});
+var $author$project$Main$AboutPage = 1;
+var $author$project$Main$GalleryPage = 3;
+var $author$project$Main$Home = 0;
+var $author$project$Main$ProjectsPage = 2;
+var $author$project$Main$XiangqiPage = 4;
+var $elm$url$Url$Parser$Parser = $elm$core$Basics$identity;
+var $elm$url$Url$Parser$mapState = F2(
+	function (func, _v0) {
+		var value = _v0.w;
+		var frag = _v0.D;
+		var params = _v0.E;
+		var unvisited = _v0.B;
+		var visited = _v0.H;
+		return A5(
+			$elm$url$Url$Parser$State,
+			visited,
+			unvisited,
+			params,
+			frag,
+			func(value));
+	});
+var $elm$url$Url$Parser$map = F2(
+	function (subValue, _v0) {
+		var parseArg = _v0;
+		return function (_v1) {
+			var value = _v1.w;
+			var frag = _v1.D;
+			var params = _v1.E;
+			var unvisited = _v1.B;
+			var visited = _v1.H;
+			return A2(
+				$elm$core$List$map,
+				$elm$url$Url$Parser$mapState(value),
+				parseArg(
+					A5($elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
+		};
+	});
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $elm$core$List$concatMap = F2(
+	function (f, list) {
+		return $elm$core$List$concat(
+			A2($elm$core$List$map, f, list));
+	});
+var $elm$url$Url$Parser$oneOf = function (parsers) {
+	return function (state) {
+		return A2(
+			$elm$core$List$concatMap,
+			function (_v0) {
+				var parser = _v0;
+				return parser(state);
+			},
+			parsers);
+	};
+};
+var $elm$url$Url$Parser$s = function (str) {
+	return function (_v0) {
+		var value = _v0.w;
+		var frag = _v0.D;
+		var params = _v0.E;
+		var unvisited = _v0.B;
+		var visited = _v0.H;
+		if (!unvisited.b) {
+			return _List_Nil;
+		} else {
+			var next = unvisited.a;
+			var rest = unvisited.b;
+			return _Utils_eq(next, str) ? _List_fromArray(
+				[
+					A5(
+					$elm$url$Url$Parser$State,
+					A2($elm$core$List$cons, next, visited),
+					rest,
+					params,
+					frag,
+					value)
+				]) : _List_Nil;
+		}
+	};
+};
+var $elm$url$Url$Parser$slash = F2(
+	function (_v0, _v1) {
+		var parseBefore = _v0;
+		var parseAfter = _v1;
+		return function (state) {
+			return A2(
+				$elm$core$List$concatMap,
+				parseAfter,
+				parseBefore(state));
+		};
+	});
+var $elm$url$Url$Parser$top = function (state) {
+	return _List_fromArray(
+		[state]);
+};
+var $author$project$Main$routeParser = $elm$url$Url$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2($elm$url$Url$Parser$map, 0, $elm$url$Url$Parser$top),
+			A2(
+			$elm$url$Url$Parser$map,
+			0,
+			$elm$url$Url$Parser$s('index.html')),
+			A2(
+			$elm$url$Url$Parser$map,
+			0,
+			A2(
+				$elm$url$Url$Parser$slash,
+				$elm$url$Url$Parser$s('src'),
+				$elm$url$Url$Parser$s('Main.elm'))),
+			A2(
+			$elm$url$Url$Parser$map,
+			1,
+			$elm$url$Url$Parser$s('about')),
+			A2(
+			$elm$url$Url$Parser$map,
+			2,
+			$elm$url$Url$Parser$s('projects')),
+			A2(
+			$elm$url$Url$Parser$map,
+			3,
+			$elm$url$Url$Parser$s('gallery')),
+			A2(
+			$elm$url$Url$Parser$map,
+			4,
+			$elm$url$Url$Parser$s('xiangqi')),
+			A2(
+			$elm$url$Url$Parser$map,
+			5,
+			$elm$url$Url$Parser$s('status'))
+		]));
+var $elm$core$Result$withDefault = F2(
+	function (def, result) {
+		if (!result.$) {
+			var a = result.a;
+			return a;
+		} else {
+			return def;
+		}
+	});
+var $author$project$Main$init = F3(
+	function (flags, url, key) {
+		var tzOffset = A2(
+			$elm$core$Result$withDefault,
+			0,
+			A2($elm$json$Json$Decode$decodeValue, $elm$json$Json$Decode$int, flags));
+		var initialPage = function () {
+			var _v0 = A2($elm$url$Url$Parser$parse, $author$project$Main$routeParser, url);
+			if (!_v0.$) {
+				var page = _v0.a;
+				return page;
+			} else {
+				return 6;
+			}
+		}();
+		var onStatusPage = initialPage === 5;
+		return _Utils_Tuple2(
+			{
+				C: 1,
+				_: 'GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER',
+				aa: key,
+				M: false,
+				G: onStatusPage ? $author$project$Status$StatusLoading : $author$project$Status$StatusIdle,
+				aj: tzOffset,
+				Y: url
+			},
+			onStatusPage ? $author$project$Status$fetchApi($author$project$Main$StatusApiResult) : $elm$core$Platform$Cmd$none);
+	});
+var $author$project$Main$Tick = function (a) {
+	return {$: 7, a: a};
+};
+var $elm$time$Time$Every = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var $elm$time$Time$State = F2(
+	function (taggers, processes) {
+		return {aA: processes, aM: taggers};
+	});
+var $elm$time$Time$init = $elm$core$Task$succeed(
+	A2($elm$time$Time$State, $elm$core$Dict$empty, $elm$core$Dict$empty));
+var $elm$time$Time$addMySub = F2(
+	function (_v0, state) {
+		var interval = _v0.a;
+		var tagger = _v0.b;
+		var _v1 = A2($elm$core$Dict$get, interval, state);
+		if (_v1.$ === 1) {
+			return A3(
+				$elm$core$Dict$insert,
+				interval,
+				_List_fromArray(
+					[tagger]),
+				state);
+		} else {
+			var taggers = _v1.a;
+			return A3(
+				$elm$core$Dict$insert,
+				interval,
+				A2($elm$core$List$cons, tagger, taggers),
+				state);
+		}
+	});
 var $elm$core$Dict$foldl = F3(
 	function (func, acc, dict) {
 		foldl:
 		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
+			if (dict.$ === -2) {
 				return acc;
 			} else {
 				var key = dict.b;
@@ -5434,208 +6670,189 @@ var $elm$core$Dict$merge = F6(
 			intermediateResult,
 			leftovers);
 	});
-var $elm$browser$Browser$Events$Event = F2(
-	function (key, event) {
-		return {event: event, key: key};
+var $elm$time$Time$Name = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$time$Time$Offset = function (a) {
+	return {$: 1, a: a};
+};
+var $elm$time$Time$Zone = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
 	});
-var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
-var $elm$browser$Browser$Events$spawn = F3(
-	function (router, key, _v0) {
-		var node = _v0.a;
-		var name = _v0.b;
-		var actualNode = function () {
-			if (node.$ === 'Document') {
-				return _Browser_doc;
-			} else {
-				return _Browser_window;
-			}
-		}();
-		return A2(
-			$elm$core$Task$map,
-			function (value) {
-				return _Utils_Tuple2(key, value);
-			},
-			A3(
-				_Browser_on,
-				actualNode,
-				name,
-				function (event) {
-					return A2(
-						$elm$core$Platform$sendToSelf,
-						router,
-						A2($elm$browser$Browser$Events$Event, key, event));
-				}));
+var $elm$time$Time$customZone = $elm$time$Time$Zone;
+var $elm$time$Time$setInterval = _Time_setInterval;
+var $elm$time$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		if (!intervals.b) {
+			return $elm$core$Task$succeed(processes);
+		} else {
+			var interval = intervals.a;
+			var rest = intervals.b;
+			var spawnTimer = $elm$core$Process$spawn(
+				A2(
+					$elm$time$Time$setInterval,
+					interval,
+					A2($elm$core$Platform$sendToSelf, router, interval)));
+			var spawnRest = function (id) {
+				return A3(
+					$elm$time$Time$spawnHelp,
+					router,
+					rest,
+					A3($elm$core$Dict$insert, interval, id, processes));
+			};
+			return A2($elm$core$Task$andThen, spawnRest, spawnTimer);
+		}
 	});
-var $elm$core$Dict$union = F2(
-	function (t1, t2) {
-		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
-	});
-var $elm$browser$Browser$Events$onEffects = F3(
-	function (router, subs, state) {
-		var stepRight = F3(
-			function (key, sub, _v6) {
-				var deads = _v6.a;
-				var lives = _v6.b;
-				var news = _v6.c;
+var $elm$time$Time$onEffects = F3(
+	function (router, subs, _v0) {
+		var processes = _v0.aA;
+		var rightStep = F3(
+			function (_v6, id, _v7) {
+				var spawns = _v7.a;
+				var existing = _v7.b;
+				var kills = _v7.c;
 				return _Utils_Tuple3(
-					deads,
-					lives,
+					spawns,
+					existing,
 					A2(
-						$elm$core$List$cons,
-						A3($elm$browser$Browser$Events$spawn, router, key, sub),
-						news));
+						$elm$core$Task$andThen,
+						function (_v5) {
+							return kills;
+						},
+						$elm$core$Process$kill(id)));
 			});
-		var stepLeft = F3(
-			function (_v4, pid, _v5) {
-				var deads = _v5.a;
-				var lives = _v5.b;
-				var news = _v5.c;
+		var newTaggers = A3($elm$core$List$foldl, $elm$time$Time$addMySub, $elm$core$Dict$empty, subs);
+		var leftStep = F3(
+			function (interval, taggers, _v4) {
+				var spawns = _v4.a;
+				var existing = _v4.b;
+				var kills = _v4.c;
 				return _Utils_Tuple3(
-					A2($elm$core$List$cons, pid, deads),
-					lives,
-					news);
+					A2($elm$core$List$cons, interval, spawns),
+					existing,
+					kills);
 			});
-		var stepBoth = F4(
-			function (key, pid, _v2, _v3) {
-				var deads = _v3.a;
-				var lives = _v3.b;
-				var news = _v3.c;
+		var bothStep = F4(
+			function (interval, taggers, id, _v3) {
+				var spawns = _v3.a;
+				var existing = _v3.b;
+				var kills = _v3.c;
 				return _Utils_Tuple3(
-					deads,
-					A3($elm$core$Dict$insert, key, pid, lives),
-					news);
+					spawns,
+					A3($elm$core$Dict$insert, interval, id, existing),
+					kills);
 			});
-		var newSubs = A2($elm$core$List$map, $elm$browser$Browser$Events$addKey, subs);
-		var _v0 = A6(
+		var _v1 = A6(
 			$elm$core$Dict$merge,
-			stepLeft,
-			stepBoth,
-			stepRight,
-			state.pids,
-			$elm$core$Dict$fromList(newSubs),
-			_Utils_Tuple3(_List_Nil, $elm$core$Dict$empty, _List_Nil));
-		var deadPids = _v0.a;
-		var livePids = _v0.b;
-		var makeNewPids = _v0.c;
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			processes,
+			_Utils_Tuple3(
+				_List_Nil,
+				$elm$core$Dict$empty,
+				$elm$core$Task$succeed(0)));
+		var spawnList = _v1.a;
+		var existingDict = _v1.b;
+		var killTask = _v1.c;
 		return A2(
 			$elm$core$Task$andThen,
-			function (pids) {
+			function (newProcesses) {
 				return $elm$core$Task$succeed(
-					A2(
-						$elm$browser$Browser$Events$State,
-						newSubs,
-						A2(
-							$elm$core$Dict$union,
-							livePids,
-							$elm$core$Dict$fromList(pids))));
+					A2($elm$time$Time$State, newTaggers, newProcesses));
 			},
 			A2(
 				$elm$core$Task$andThen,
-				function (_v1) {
-					return $elm$core$Task$sequence(makeNewPids);
+				function (_v2) {
+					return A3($elm$time$Time$spawnHelp, router, spawnList, existingDict);
 				},
-				$elm$core$Task$sequence(
-					A2($elm$core$List$map, $elm$core$Process$kill, deadPids))));
+				killTask));
 	});
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (_v0.$ === 'Just') {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
+var $elm$time$Time$Posix = $elm$core$Basics$identity;
+var $elm$time$Time$millisToPosix = $elm$core$Basics$identity;
+var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
+var $elm$time$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _v0 = A2($elm$core$Dict$get, interval, state.aM);
+		if (_v0.$ === 1) {
+			return $elm$core$Task$succeed(state);
 		} else {
-			return xs;
+			var taggers = _v0.a;
+			var tellTaggers = function (time) {
+				return $elm$core$Task$sequence(
+					A2(
+						$elm$core$List$map,
+						function (tagger) {
+							return A2(
+								$elm$core$Platform$sendToApp,
+								router,
+								tagger(time));
+						},
+						taggers));
+			};
+			return A2(
+				$elm$core$Task$andThen,
+				function (_v1) {
+					return $elm$core$Task$succeed(state);
+				},
+				A2($elm$core$Task$andThen, tellTaggers, $elm$time$Time$now));
 		}
 	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
 	});
-var $elm$browser$Browser$Events$onSelfMsg = F3(
-	function (router, _v0, state) {
-		var event = _v0.event;
-		var key = _v0.key;
-		var toMessage = function (_v2) {
-			var subKey = _v2.a;
-			var _v3 = _v2.b;
-			var node = _v3.a;
-			var name = _v3.b;
-			var decoder = _v3.c;
-			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : $elm$core$Maybe$Nothing;
-		};
-		var messages = A2($elm$core$List$filterMap, toMessage, state.subs);
+var $elm$time$Time$subMap = F2(
+	function (f, _v0) {
+		var interval = _v0.a;
+		var tagger = _v0.b;
 		return A2(
-			$elm$core$Task$andThen,
-			function (_v1) {
-				return $elm$core$Task$succeed(state);
-			},
-			$elm$core$Task$sequence(
-				A2(
-					$elm$core$List$map,
-					$elm$core$Platform$sendToApp(router),
-					messages)));
+			$elm$time$Time$Every,
+			interval,
+			A2($elm$core$Basics$composeL, f, tagger));
 	});
-var $elm$browser$Browser$Events$subMap = F2(
-	function (func, _v0) {
-		var node = _v0.a;
-		var name = _v0.b;
-		var decoder = _v0.c;
-		return A3(
-			$elm$browser$Browser$Events$MySub,
-			node,
-			name,
-			A2($elm$json$Json$Decode$map, func, decoder));
+_Platform_effectManagers['Time'] = _Platform_createManager($elm$time$Time$init, $elm$time$Time$onEffects, $elm$time$Time$onSelfMsg, 0, $elm$time$Time$subMap);
+var $elm$time$Time$subscription = _Platform_leaf('Time');
+var $elm$time$Time$every = F2(
+	function (interval, tagger) {
+		return $elm$time$Time$subscription(
+			A2($elm$time$Time$Every, interval, tagger));
 	});
-_Platform_effectManagers['Browser.Events'] = _Platform_createManager($elm$browser$Browser$Events$init, $elm$browser$Browser$Events$onEffects, $elm$browser$Browser$Events$onSelfMsg, 0, $elm$browser$Browser$Events$subMap);
-var $elm$browser$Browser$Events$subscription = _Platform_leaf('Browser.Events');
-var $elm$browser$Browser$Events$on = F3(
-	function (node, name, decoder) {
-		return $elm$browser$Browser$Events$subscription(
-			A3($elm$browser$Browser$Events$MySub, node, name, decoder));
-	});
-var $elm$browser$Browser$Events$onResize = function (func) {
-	return A3(
-		$elm$browser$Browser$Events$on,
-		$elm$browser$Browser$Events$Window,
-		'resize',
-		A2(
-			$elm$json$Json$Decode$field,
-			'target',
-			A3(
-				$elm$json$Json$Decode$map2,
-				func,
-				A2($elm$json$Json$Decode$field, 'innerWidth', $elm$json$Json$Decode$int),
-				A2($elm$json$Json$Decode$field, 'innerHeight', $elm$json$Json$Decode$int))));
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Main$parseUrl = function (url) {
+	var _v0 = A2($elm$url$Url$Parser$parse, $author$project$Main$routeParser, url);
+	if (!_v0.$) {
+		var page = _v0.a;
+		return page;
+	} else {
+		return 6;
+	}
 };
-var $author$project$Main$SystemThemeChanged = function (a) {
-	return {$: 'SystemThemeChanged', a: a};
-};
-var $author$project$Main$systemThemeChanged = _Platform_incomingPort('systemThemeChanged', $elm$json$Json$Decode$bool);
-var $author$project$Main$systemThemeListener = $author$project$Main$systemThemeChanged($author$project$Main$SystemThemeChanged);
 var $author$project$Main$subscriptions = function (model) {
-	return $elm$core$Platform$Sub$batch(
-		_List_fromArray(
-			[
-				$elm$browser$Browser$Events$onResize(
-				F2(
-					function (_v0, _v1) {
-						return $author$project$Main$WindowResized;
-					})),
-				$author$project$Main$systemThemeListener
-			]));
+	var _v0 = $author$project$Main$parseUrl(model.Y);
+	if (_v0 === 5) {
+		return A2($elm$time$Time$every, 60 * 1000, $author$project$Main$Tick);
+	} else {
+		return $elm$core$Platform$Sub$none;
+	}
 };
-var $author$project$Main$DarkMode = {$: 'DarkMode'};
-var $author$project$Main$LightMode = {$: 'LightMode'};
+var $author$project$Main$LightMode = 0;
+var $author$project$Status$StatusFailed = function (a) {
+	return {$: 3, a: a};
+};
+var $author$project$Status$StatusLoaded = function (a) {
+	return {$: 2, a: a};
+};
 var $elm$browser$Browser$Navigation$load = _Browser_load;
 var $elm$core$Basics$not = _Basics_not;
 var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var $elm$url$Url$addPort = F2(
 	function (maybePort, starter) {
-		if (maybePort.$ === 'Nothing') {
+		if (maybePort.$ === 1) {
 			return starter;
 		} else {
 			var port_ = maybePort.a;
@@ -5644,7 +6861,7 @@ var $elm$url$Url$addPort = F2(
 	});
 var $elm$url$Url$addPrefixed = F3(
 	function (prefix, maybeSegment, starter) {
-		if (maybeSegment.$ === 'Nothing') {
+		if (maybeSegment.$ === 1) {
 			return starter;
 		} else {
 			var segment = maybeSegment.a;
@@ -5655,8 +6872,8 @@ var $elm$url$Url$addPrefixed = F3(
 	});
 var $elm$url$Url$toString = function (url) {
 	var http = function () {
-		var _v0 = url.protocol;
-		if (_v0.$ === 'Http') {
+		var _v0 = url.aB;
+		if (!_v0) {
 			return 'http://';
 		} else {
 			return 'https://';
@@ -5665,128 +6882,115 @@ var $elm$url$Url$toString = function (url) {
 	return A3(
 		$elm$url$Url$addPrefixed,
 		'#',
-		url.fragment,
+		url.ap,
 		A3(
 			$elm$url$Url$addPrefixed,
 			'?',
-			url.query,
+			url.aC,
 			_Utils_ap(
 				A2(
 					$elm$url$Url$addPort,
-					url.port_,
-					_Utils_ap(http, url.host)),
-				url.path)));
+					url.ay,
+					_Utils_ap(http, url.as)),
+				url.aw)));
 };
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
-			case 'LinkClicked':
+			case 0:
 				var urlRequest = msg.a;
-				if (urlRequest.$ === 'Internal') {
+				if (!urlRequest.$) {
 					var url = urlRequest.a;
 					return _Utils_Tuple2(
 						model,
 						A2(
 							$elm$browser$Browser$Navigation$pushUrl,
-							model.key,
+							model.aa,
 							$elm$url$Url$toString(url)));
 				} else {
-					var href = urlRequest.a;
+					var href_ = urlRequest.a;
 					return _Utils_Tuple2(
 						model,
-						$elm$browser$Browser$Navigation$load(href));
+						$elm$browser$Browser$Navigation$load(href_));
 				}
-			case 'UrlChanged':
+			case 1:
 				var url = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{url: url}),
-					$elm$core$Platform$Cmd$none);
-			case 'ToggleColorMode':
-				var newMode = function () {
-					var _v6 = model.explicitMode;
-					if (_v6.$ === 'Just') {
-						switch (_v6.a.$) {
-							case 'LightMode':
-								var _v7 = _v6.a;
-								return $author$project$Main$DarkMode;
-							case 'DarkMode':
-								var _v8 = _v6.a;
-								return $author$project$Main$LightMode;
-							default:
-								var _v9 = _v6.a;
-								return _Utils_eq(model.colorMode, $author$project$Main$LightMode) ? $author$project$Main$DarkMode : $author$project$Main$LightMode;
-						}
+				var newPage = function () {
+					var _v2 = A2($elm$url$Url$Parser$parse, $author$project$Main$routeParser, url);
+					if (!_v2.$) {
+						var page = _v2.a;
+						return page;
 					} else {
-						var _v10 = model.colorMode;
-						switch (_v10.$) {
-							case 'LightMode':
-								return $author$project$Main$DarkMode;
-							case 'DarkMode':
-								return $author$project$Main$LightMode;
-							default:
-								return model.systemPrefersDark ? $author$project$Main$LightMode : $author$project$Main$DarkMode;
-						}
+						return 6;
 					}
 				}();
-				var newExplicitMode = function () {
-					var _v2 = model.explicitMode;
-					if (_v2.$ === 'Just') {
-						switch (_v2.a.$) {
-							case 'LightMode':
-								var _v3 = _v2.a;
-								return $elm$core$Maybe$Just($author$project$Main$DarkMode);
-							case 'DarkMode':
-								var _v4 = _v2.a;
-								return $elm$core$Maybe$Just($author$project$Main$LightMode);
-							default:
-								var _v5 = _v2.a;
-								return $elm$core$Maybe$Just($author$project$Main$SystemMode);
-						}
-					} else {
-						return $elm$core$Maybe$Just(newMode);
-					}
-				}();
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{colorMode: newMode, explicitMode: newExplicitMode}),
-					$elm$core$Platform$Cmd$none);
-			case 'ToggleMobileMenu':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{mobileMenuOpen: !model.mobileMenuOpen}),
-					$elm$core$Platform$Cmd$none);
-			case 'NoOp':
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-			case 'SystemThemeChanged':
-				var prefersDark = msg.a;
-				var newMode = prefersDark ? $author$project$Main$DarkMode : $author$project$Main$LightMode;
+				var onStatusPage = newPage === 5;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							colorMode: function () {
-								var _v11 = model.explicitMode;
-								if (_v11.$ === 'Just') {
-									return model.colorMode;
+							M: false,
+							G: onStatusPage ? $author$project$Status$StatusLoading : model.G,
+							Y: url
+						}),
+					onStatusPage ? $author$project$Status$fetchApi($author$project$Main$StatusApiResult) : $elm$core$Platform$Cmd$none);
+			case 2:
+				var newMode = (model.C === 1) ? 0 : 1;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{C: newMode}),
+					$elm$core$Platform$Cmd$none);
+			case 3:
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{M: !model.M}),
+					$elm$core$Platform$Cmd$none);
+			case 4:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			case 5:
+				var result = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							G: function () {
+								if (!result.$) {
+									var history = result.a;
+									return $author$project$Status$StatusLoaded(history);
 								} else {
-									return newMode;
+									return $author$project$Status$StatusFailed('could not reach /status.json');
 								}
-							}(),
-							systemPrefersDark: prefersDark
+							}()
 						}),
 					$elm$core$Platform$Cmd$none);
+			case 6:
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{G: $author$project$Status$StatusLoading}),
+					$author$project$Status$fetchApi($author$project$Main$StatusApiResult));
 			default:
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				return _Utils_Tuple2(
+					model,
+					$author$project$Status$fetchApi($author$project$Main$StatusApiResult));
 		}
 	});
-var $author$project$Main$NoOp = {$: 'NoOp'};
-var $author$project$Main$ToggleColorMode = {$: 'ToggleColorMode'};
-var $author$project$Main$ToggleMobileMenu = {$: 'ToggleMobileMenu'};
-var $elm$html$Html$a = _VirtualDom_node('a');
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$Main$ToggleMobileMenu = {$: 3};
+var $author$project$Main$themeFor = function (colorMode) {
+	if (colorMode === 1) {
+		return {f: '#c4a0c8', Z: '#1e1c2e', g: '#3d3a52', m: '#e8e6f0', y: '#b8b4cc', q: '#d4d1e5', a: '#9e9ab8', P: '#252334', r: '#2d2b3d'};
+	} else {
+		return {f: '#7c78a8', Z: '#f7f6fc', g: '#d8d5ea', m: '#1e1c2e', y: '#5a5780', q: '#3d3a5e', a: '#6b6785', P: '#eeebf8', r: '#ffffff'};
+	}
+};
+var $author$project$Main$buildCss = function (colorMode) {
+	var t = $author$project$Main$themeFor(colorMode);
+	return '\n    @import url(\'https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap\');\n\n    *, *::before, *::after {\n      box-sizing: border-box;\n    }\n\n    html {\n      scroll-behavior: smooth;\n    }\n\n    html, body {\n      margin: 0;\n      padding: 0;\n      height: 100%;\n    }\n\n    :root {\n      --border-color: ' + (t.g + (';\n      --surface-color: ' + (t.r + (';\n      --accent-color: ' + (t.f + (';\n      --muted-color: ' + (t.a + (';\n      --text-color: ' + (t.m + (';\n      --link-color: ' + (t.y + (';\n      --link-hover-color: ' + (t.q + (';\n    }\n\n    body {\n      font-family: \'Fira Code\', monospace;\n      background-color: ' + (t.Z + (';\n      color: ' + (t.m + (';\n      font-size: 15px;\n      line-height: 1.7;\n      transition: background-color 0.25s ease, color 0.25s ease;\n    }\n\n    a {\n      color: ' + (t.y + (';\n      text-decoration: none;\n      transition: color 0.15s ease;\n    }\n\n    a:hover {\n      color: ' + (t.q + (';\n    }\n\n    /* ── Layout ─────────────────────────────────── */\n\n    .layout {\n      display: flex;\n      min-height: 100vh;\n      position: relative;\n    }\n\n    /* ── Sidebar ─────────────────────────────────── */\n\n    .sidebar {\n      position: fixed;\n      left: 0;\n      top: 0;\n      width: 240px;\n      height: 100vh;\n      overflow-y: auto;\n      display: flex;\n      flex-direction: column;\n      background-color: ' + (t.P + (';\n      border-right: 1px solid ' + (t.g + (';\n      padding: 2rem 1.5rem;\n      z-index: 100;\n      transition: background-color 0.25s ease;\n    }\n\n    .sidebar-identity {\n      margin-bottom: 1rem;\n    }\n\n    .sidebar-name {\n      font-size: 1.05rem;\n      font-weight: 600;\n      color: ' + (t.m + (';\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-tagline {\n      font-size: 0.78rem;\n      color: ' + (t.a + (';\n      margin-top: 0.25rem;\n    }\n\n    .sidebar-location {\n      font-size: 0.7rem;\n      color: ' + (t.a + (';\n      margin-top: 0.3rem;\n      opacity: 0.75;\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-divider {\n      height: 1px;\n      background-color: ' + (t.g + (';\n      margin: 1rem 0;\n    }\n\n    .sidebar-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.a + (';\n      margin-bottom: 0.4rem;\n    }\n\n    .nav-links,\n    .org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .nav-link {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.86rem;\n      color: ' + (t.y + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .nav-link:hover {\n      color: ' + (t.q + (';\n      background-color: ' + (t.r + (';\n      border-left-color: ' + (t.f + (';\n    }\n\n    .nav-link.active {\n      color: ' + (t.f + (';\n      border-left-color: ' + (t.f + (';\n      background-color: ' + (t.r + (';\n    }\n\n    .sidebar-spacer {\n      flex-grow: 1;\n    }\n\n    .sidebar-footer {\n      display: flex;\n      flex-direction: column;\n      gap: 0.5rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.g + (';\n    }\n\n    .theme-toggle {\n      background: none;\n      border: 1px solid ' + (t.g + (';\n      color: ' + (t.a + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.78rem;\n      padding: 0.3rem 0.6rem;\n      border-radius: 4px;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease, border-color 0.15s ease;\n      width: 100%;\n    }\n\n    .theme-toggle:hover {\n      color: ' + (t.m + (';\n      border-color: ' + (t.f + (';\n    }\n\n    .commit-hash {\n      font-size: 0.72rem;\n      color: ' + (t.a + (';\n      opacity: 0.65;\n    }\n\n    .analytics-disclaimer {\n      margin: 0;\n      color: ' + (t.a + (';\n      font-size: 0.65rem;\n      line-height: 1.5;\n      opacity: 0.65;\n    }\n\n    a.commit-hash:hover {\n      color: ' + (t.q + (';\n      opacity: 1;\n    }\n\n    /* ── Main Content ────────────────────────────── */\n\n    .main-content {\n      margin-left: 240px;\n      padding: 3.5rem 4rem;\n      flex: 1;\n      min-height: 100vh;\n    }\n\n    .main-content h1 {\n      font-size: 1.8rem;\n      font-weight: 600;\n      color: ' + (t.m + (';\n      margin-top: 0;\n      margin-bottom: 0.5rem;\n      letter-spacing: -0.01em;\n    }\n\n    .main-content h2 {\n      font-size: 0.82rem;\n      font-weight: 500;\n      color: ' + (t.a + (';\n      margin-top: 2rem;\n      margin-bottom: 0.6rem;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .main-content p {\n      color: ' + (t.m + (';\n      max-width: 600px;\n      margin-bottom: 1rem;\n      font-size: 0.93rem;\n    }\n\n    /* ── Page footer ────────────────────────────── */\n\n    .page-footer {\n      margin-top: 4rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.g + (';\n    }\n\n    .footer-hash {\n      font-size: 0.72rem;\n      color: ' + (t.a + (';\n      opacity: 0.65;\n    }\n\n    .footer-meta {\n      display: flex;\n      align-items: baseline;\n      flex-wrap: wrap;\n      gap: 0.4rem 1rem;\n    }\n\n    .footer-meta .analytics-disclaimer {\n      font-size: 0.72rem;\n    }\n\n    a.footer-hash:hover {\n      color: ' + (t.q + (';\n      opacity: 1;\n    }\n\n    .footer-pcb {\n      display: block;\n      max-width: 340px;\n      height: auto;\n      margin-top: 0.5rem;\n      opacity: 0.8;\n    }\n\n    .footer-gifs {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 0.25rem;\n      margin-bottom: 0.75rem;\n    }\n\n    .footer-gifs img {\n      height: 31px;\n      image-rendering: pixelated;\n    }\n\n    /* ── About page ─────────────────────────────── */\n\n    .about-content {\n      max-width: 1080px;\n    }\n\n    .about-layout {\n      display: grid;\n      grid-template-columns: minmax(0, 640px) minmax(260px, 380px);\n      gap: clamp(2rem, 5vw, 5rem);\n      align-items: start;\n    }\n\n    .about-photo {\n      margin: 0;\n      position: sticky;\n      top: 3.5rem;\n      border: 1px solid ' + (t.g + (';\n      border-radius: 6px;\n      overflow: hidden;\n      background-color: ' + (t.r + (';\n    }\n\n    .about-photo img {\n      display: block;\n      width: 100%;\n      height: auto;\n    }\n\n    .about-photo figcaption {\n      padding: 0.85rem 1rem;\n      color: ' + (t.a + (';\n      font-size: 0.74rem;\n      line-height: 1.6;\n      border-top: 1px solid ' + (t.g + (';\n    }\n\n    .about-para {\n      margin-bottom: 1rem;\n      line-height: 1.8;\n      font-size: 0.93rem;\n    }\n\n    .about-highlight-link {\n      color: ' + (t.f + (';\n      border-bottom: 1px solid ' + (t.f + (';\n    }\n\n    .about-highlight-link:hover {\n      color: ' + (t.q + (';\n      border-bottom-color: ' + (t.q + (';\n    }\n\n    .about-hackmit-photo {\n      width: 50%;\n      margin: 4rem 0 0;\n      border: 1px solid ' + (t.g + (';\n      border-radius: 6px;\n      overflow: hidden;\n      background-color: ' + (t.r + (';\n    }\n\n    .about-hackmit-photo img {\n      display: block;\n      width: 100%;\n      height: auto;\n    }\n\n    .about-hackmit-photo figcaption {\n      padding: 0.85rem 1rem;\n      color: ' + (t.a + (';\n      font-size: 0.74rem;\n      line-height: 1.6;\n      border-top: 1px solid ' + (t.g + (';\n    }\n\n    .about-quote {\n      border-left: 2px solid ' + (t.f + (';\n      padding: 0.75rem 1.25rem;\n      margin: 1.5rem 0;\n      background-color: ' + (t.r + (';\n      border-radius: 0 4px 4px 0;\n    }\n\n    .quote-text {\n      font-size: 0.88rem;\n      color: ' + (t.a + (';\n      margin: 0;\n      font-style: italic;\n      line-height: 1.7;\n      max-width: 100%;\n    }\n\n    .quote-attribution {\n      font-size: 0.75rem;\n      color: ' + (t.a + (';\n      opacity: 0.75;\n      margin-top: 0.5rem;\n      margin-bottom: 0;\n    }\n\n    .contact-links {\n      display: flex;\n      flex-direction: column;\n      gap: 0.1rem;\n      margin-top: 0.5rem;\n    }\n\n    .contact-item {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.88rem;\n      color: ' + (t.y + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .contact-item::before {\n      content: "→ ";\n      color: ' + (t.f + (';\n    }\n\n    .contact-item:hover {\n      color: ' + (t.q + (';\n      background-color: ' + (t.r + (';\n      border-left-color: ' + (t.f + (';\n    }\n\n    /* ── Mobile top bar ─────────────────────────── */\n\n    .mobile-topbar {\n      display: none;\n      position: sticky;\n      top: 0;\n      z-index: 200;\n      background-color: ' + (t.P + (';\n      border-bottom: 1px solid ' + (t.g + (';\n      padding: 0.75rem 1.25rem;\n      align-items: center;\n      justify-content: space-between;\n      width: 100%;\n    }\n\n    .mobile-site-name {\n      font-size: 0.95rem;\n      font-weight: 600;\n      color: ' + (t.m + (';\n    }\n\n    .mobile-menu-toggle {\n      background: none;\n      border: none;\n      color: ' + (t.m + (';\n      font-size: 1.3rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      line-height: 1;\n    }\n\n    .sr-only {\n      position: absolute;\n      width: 1px;\n      height: 1px;\n      padding: 0;\n      margin: -1px;\n      overflow: hidden;\n      clip: rect(0, 0, 0, 0);\n      white-space: nowrap;\n      border: 0;\n    }\n\n    /* ── Mobile menu ────────────────────────────── */\n\n    .mobile-menu-wrapper {\n      position: fixed;\n      inset: 0;\n      z-index: 300;\n    }\n\n    .mobile-menu-backdrop {\n      position: absolute;\n      inset: 0;\n      background-color: rgba(0, 0, 0, 0.5);\n    }\n\n    .mobile-menu-panel {\n      position: absolute;\n      top: 0;\n      right: 0;\n      width: 280px;\n      height: 100%;\n      overflow-y: auto;\n      background-color: ' + (t.P + (';\n      border-left: 1px solid ' + (t.g + (';\n      padding: 1.5rem 1.25rem;\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-menu-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 1.25rem;\n    }\n\n    .mobile-menu-title {\n      font-size: 0.7rem;\n      font-weight: 500;\n      color: ' + (t.a + (';\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .close-mobile-menu {\n      background: none;\n      border: none;\n      color: ' + (t.a + (';\n      font-size: 1rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      transition: color 0.15s ease;\n    }\n\n    .close-mobile-menu:hover {\n      color: ' + (t.m + (';\n    }\n\n    .mobile-nav-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.a + (';\n      margin-top: 1.25rem;\n      margin-bottom: 0.4rem;\n    }\n\n    .mobile-nav-links,\n    .mobile-org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-nav-item {\n      display: block;\n      padding: 0.5rem 0.6rem;\n      font-size: 0.9rem;\n      color: ' + (t.y + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .mobile-nav-item:hover {\n      color: ' + (t.q + (';\n      background-color: ' + (t.r + (';\n      border-left-color: ' + (t.f + (';\n    }\n\n    .mobile-mode-toggle {\n      margin-top: auto;\n      background: none;\n      border: none;\n      border-top: 1px solid ' + (t.g + (';\n      color: ' + (t.a + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.8rem;\n      padding: 0.75rem 0.6rem 0.4rem;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease;\n    }\n\n    .mobile-mode-toggle:hover {\n      color: ' + (t.m + (';\n    }\n\n    /* ── Responsive ─────────────────────────────── */\n\n    .mobile-menu-location {\n      font-size: 0.7rem;\n      color: ' + (t.a + (';\n      margin-top: 0.15rem;\n      opacity: 0.75;\n    }\n\n    .mobile-nav-item.active {\n      color: ' + (t.f + (';\n      border-left-color: ' + (t.f + (';\n      background-color: ' + (t.r + ';\n    }\n\n    @media (max-width: 768px) {\n      .layout {\n        flex-direction: column;\n      }\n\n      .sidebar {\n        display: none;\n      }\n\n      .mobile-topbar {\n        display: flex;\n      }\n\n      .main-content {\n        margin-left: 0;\n        padding: 1.75rem 1.25rem;\n        max-width: 100%;\n      }\n\n      .about-layout {\n        grid-template-columns: 1fr;\n        gap: 1.5rem;\n      }\n\n      .about-photo {\n        position: static;\n        max-width: 520px;\n      }\n    }\n\n    @media (min-width: 769px) and (max-width: 1100px) {\n      .sidebar {\n        width: 200px;\n      }\n\n      .main-content {\n        margin-left: 200px;\n        padding: 2.5rem 2.5rem;\n      }\n    }\n    ')))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+};
+var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5795,36 +6999,6 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			key,
 			$elm$json$Json$Encode$string(string));
 	});
-var $elm$html$Html$Attributes$alt = $elm$html$Html$Attributes$stringProperty('alt');
-var $elm$virtual_dom$VirtualDom$attribute = F2(
-	function (key, value) {
-		return A2(
-			_VirtualDom_attribute,
-			_VirtualDom_noOnOrFormAction(key),
-			_VirtualDom_noJavaScriptOrHtmlUri(value));
-	});
-var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
-var $author$project$Main$buildCss = function (model) {
-	var linkHover = '#817c95';
-	var effectiveMode = function () {
-		var _v0 = model.explicitMode;
-		if (_v0.$ === 'Just') {
-			var mode = _v0.a;
-			return mode;
-		} else {
-			return model.systemPrefersDark ? $author$project$Main$DarkMode : $author$project$Main$LightMode;
-		}
-	}();
-	var linkColor = _Utils_eq(effectiveMode, $author$project$Main$DarkMode) ? '#a39fb6' : '#5f5974';
-	var sidebarBorder = _Utils_eq(effectiveMode, $author$project$Main$DarkMode) ? '#5f5974' : '#817c95';
-	var text = _Utils_eq(effectiveMode, $author$project$Main$DarkMode) ? '#c5c2d6' : '#3d3653';
-	var buttonText = _Utils_eq(effectiveMode, $author$project$Main$DarkMode) ? '#c5c2d6' : '#3d3653';
-	var buttonBg = _Utils_eq(effectiveMode, $author$project$Main$DarkMode) ? '#5f5974' : '#817c95';
-	var brandingBg = _Utils_eq(effectiveMode, $author$project$Main$DarkMode) ? '#4e4864' : '#a39fb6';
-	var bg = _Utils_eq(effectiveMode, $author$project$Main$DarkMode) ? '#3d3653' : '#c5c2d6';
-	return '\n    @import url(\'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap\');\n    \n    :root {\n      --english-violet: #3d3653;\n      --english-violet-2: #423b58;\n      --english-violet-3: #463f5c;\n      --english-violet-4: #4e4864;\n      --ultra-violet: #5f5974;\n      --cool-gray: #817c95;\n      --rose-quartz: #a39fb6;\n      --french-gray: #c5c2d6;\n    }\n    \n    body {\n      font-family: \'Fira Code\', monospace;\n      background-color: ' + (bg + (';\n      color: ' + (text + (';\n      line-height: 1.6;\n      margin: 0;\n      padding: 0;\n      min-height: 100vh;\n      transition: background-color 0.3s ease, color 0.3s ease;\n    }\n    \n    a {\n      color: ' + (linkColor + (';\n      text-decoration: none;\n      transition: all 0.2s ease;\n    }\n    \n    a:hover {\n      color: ' + (linkHover + (';\n    }\n    \n    .container {\n      max-width: 1200px;\n      margin: 0 auto;\n      padding: 2rem;\n      display: flex;\n      flex-direction: column;\n      min-height: 100vh;\n    }\n    \n    .branding {\n      background-color: ' + (brandingBg + (';\n      padding: 1rem;\n      text-align: center;\n      position: sticky;\n      top: 0;\n      z-index: 100;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      gap: 0.5rem;\n    }\n    \n    .logo {\n      display: flex;\n      align-items: center;\n    }\n    \n    .content-wrapper {\n      display: grid;\n      grid-template-columns: 1fr 3fr;\n      gap: 2rem;\n      margin-top: 2rem;\n      flex-grow: 1;\n    }\n    \n    .sidebar {\n      border-right: 1px solid ' + (sidebarBorder + (';\n      padding-right: 2rem;\n    }\n    \n    .main-content {\n      padding: 1rem 0;\n    }\n    \n    h1, h2, h3 {\n      color: ' + (text + (';\n      margin-top: 1.5rem;\n    }\n    \n    .nav-links, .org-links {\n      display: flex;\n      flex-direction: column;\n    }\n    \n    .nav-links a, .org-links a {\n      display: block;\n      padding: 0.75rem 0;\n    }\n    \n    .contact-links {\n      display: flex;\n      flex-direction: column;\n      gap: 0.75rem;\n      margin-top: 1rem;\n    }\n    \n    .contact-item {\n      display: block;\n    }\n    \n    /* Responsive image styling */\n    .responsive-image {\n      max-width: 100%;\n      height: auto;\n      display: block;\n      margin: 1.5rem auto;\n      border-radius: 8px;\n      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);\n    }\n    \n    @media (max-width: 768px) {\n      .responsive-image {\n        margin: 1rem auto;\n        max-width: 95%;\n      }\n    }\n    \n    .mobile-menu-toggle {\n      display: none;\n      background: none;\n      border: none;\n      color: currentColor;\n      font-size: 1.5rem;\n      cursor: pointer;\n      margin-left: auto;\n      position: relative;\n      z-index: 1001;\n    }\n    \n    .mobile-menu-overlay {\n      position: fixed;\n      top: 0;\n      left: 0;\n      width: 100%;\n      height: 100%;\n      background-color: rgba(0, 0, 0, 0.5);\n      z-index: 999;\n      display: flex;\n      align-items: flex-start;\n      justify-content: flex-end;\n    }\n    \n    .mobile-menu {\n      background-color: ' + (bg + (';\n      width: 80%;\n      max-width: 400px;\n      height: 100%;\n      padding: 1.5rem;\n      overflow-y: auto;\n      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);\n    }\n    \n    .mobile-menu-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 1.5rem;\n    }\n    \n    .mobile-nav-links, .mobile-org-links {\n      display: flex;\n      flex-direction: column;\n      margin-top: 1rem;\n    }\n    \n    .mobile-nav-item {\n      padding: 1.25rem 0;\n      border-bottom: 1px solid ' + (sidebarBorder + (';\n      font-size: 1.2rem;\n      line-height: 1.4;\n    }\n    \n    .close-mobile-menu {\n      background: none;\n      border: none;\n      color: currentColor;\n      font-size: 1.2rem;\n      cursor: pointer;\n      padding: 0.25rem 0.5rem;\n    }\n    \n    .copyright-footer {\n      text-align: center;\n      padding: 1.5rem 0;\n      font-size: 0.85rem;\n      opacity: 0.7;\n      border-top: 1px solid ' + (sidebarBorder + (';\n      margin-top: auto;\n    }\n    \n    .copyright-footer a {\n      color: ' + (linkColor + (';\n      text-decoration: underline;\n    }\n    \n    .copyright-footer a:hover {\n      color: ' + (linkHover + (';\n      text-decoration: underline;\n    }\n    \n    .mode-toggle {\n      background-color: ' + (buttonBg + (';\n      color: ' + (buttonText + (';\n      border: none;\n      padding: 0.75rem 1.5rem;\n      border-radius: 4px;\n      cursor: pointer;\n      z-index: 1000;\n      display: inline-flex;\n      align-items: center;\n      gap: 0.5rem;\n      transition: all 0.3s ease;\n      box-shadow: 0 2px 5px rgba(0,0,0,0.2);\n      margin-top: 1rem;\n    }\n    \n    .mode-toggle:hover {\n      background-color: ' + (linkHover + ';\n      transform: translateY(-2px);\n    }\n    \n    @media (max-width: 768px) {\n      :root {\n        --font-size-base: 16px;\n        --font-size-h1: 1.8rem;\n        --font-size-h2: 1.4rem;\n        --font-size-body: 1.1rem;\n        --spacing-unit: 1rem;\n      }\n      \n      .container {\n        padding: 1rem;\n      }\n      \n      .branding {\n        padding: 0.75rem;\n        flex-direction: column;\n        align-items: flex-start;\n      }\n      \n      .mobile-menu-toggle {\n        display: block;\n      }\n      \n      .content-wrapper {\n        grid-template-columns: 1fr;\n        margin-top: 1rem;\n      }\n      \n      .sidebar {\n        display: none;\n      }\n      \n      .mobile-menu-overlay {\n        display: flex;\n      }\n      \n      .mobile-menu {\n        width: 90%;\n        padding: 1.5rem;\n      }\n      \n      .mobile-nav-links, .mobile-org-links {\n        gap: 1rem;\n      }\n      \n      .mobile-nav-item {\n        padding: 1.25rem 0;\n        font-size: 1.2rem;\n        line-height: 1.4;\n      }\n      \n      .main-content {\n        padding: 1rem 0.5rem;\n      }\n      \n      h1 {\n        font-size: var(--font-size-h1);\n      }\n      \n      h2 {\n        font-size: var(--font-size-h2);\n        margin-top: 1.5rem;\n      }\n      \n      p {\n        font-size: var(--font-size-body);\n        line-height: 1.6;\n      }\n      \n      .nav-links a, .org-links a {\n        padding: 1rem 0;\n        font-size: 1.1rem;\n      }\n      \n      .mode-toggle {\n        padding: 0.75rem 1.25rem;\n        font-size: 1rem;\n        margin-top: 1.5rem;\n      }\n      \n      .copyright-footer {\n        padding: 1.25rem 0;\n        font-size: 0.95rem;\n      }\n    }\n    ')))))))))))))))))))))))))))));
-};
-var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$virtual_dom$VirtualDom$node = function (tag) {
 	return _VirtualDom_node(
@@ -5842,7 +7016,25 @@ var $author$project$Main$css = function (cssContent) {
 				$elm$html$Html$text(cssContent)
 			]));
 };
-var $author$project$Projects$css = '\n    .projects-container {\n      max-width: 1200px;\n      margin: 0 auto;\n      padding: 2rem;\n    }\n    \n    .projects-header {\n      font-size: 2.5rem;\n      margin-bottom: 0.5rem;\n    }\n    \n    .projects-subheader {\n      font-size: 1.2rem;\n      margin-bottom: 2rem;\n    }\n    \n    .projects-grid {\n      display: grid;\n      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));\n      gap: 1.5rem;\n    }\n    \n    .repository-card {\n      border-radius: 8px;\n      overflow: hidden;\n      box-shadow: 0 2px 10px rgba(0,0,0,0.1);\n      transition: transform 0.2s ease, box-shadow 0.2s ease;\n    }\n    \n    .repository-card:hover {\n      transform: translateY(-5px);\n      box-shadow: 0 5px 15px rgba(0,0,0,0.15);\n    }\n    \n    .repository-header {\n      padding: 1.5rem;\n      border-bottom: 1px solid var(--sidebar-border);\n    }\n    \n    .repo-title {\n      text-decoration: none;\n      font-size: 1.5rem;\n      display: inline-block;\n    }\n    \n    .repo-title:hover {\n      text-decoration: underline;\n    }\n    \n    .repo-meta {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-top: 0.5rem;\n      flex-wrap: wrap;\n      gap: 0.5rem;\n    }\n    \n    .repo-description {\n      font-size: 0.95rem;\n      flex: 1;\n      margin-right: 1rem;\n    }\n    \n    .language-badge {\n      display: flex;\n      align-items: center;\n      border-radius: 20px;\n      padding: 0.25rem 0.75rem;\n      font-size: 0.85rem;\n    }\n    \n    .language-dot {\n      display: inline-block;\n      width: 10px;\n      height: 10px;\n      border-radius: 50%;\n      margin-right: 0.5rem;\n    }\n    \n    .repository-content {\n      padding: 1.5rem;\n    }\n    \n    .read-more {\n      display: inline-block;\n      text-decoration: none;\n      margin-top: 0.5rem;\n      font-weight: 500;\n    }\n    \n    .read-more:hover {\n      text-decoration: underline;\n    }\n    \n    @media (max-width: 768px) {\n      .projects-grid {\n        grid-template-columns: 1fr;\n      }\n      \n      .repo-description {\n        margin-right: 0;\n      }\n    }\n    ';
+var $author$project$Gallery$css = '\n    .gallery-content {\n      max-width: 1120px;\n    }\n\n    .gallery-intro {\n      color: var(--muted-color) !important;\n      margin-bottom: 2rem !important;\n    }\n\n    .gallery-grid {\n      display: grid;\n      grid-template-columns: repeat(2, minmax(0, 1fr));\n      gap: 1.25rem;\n      align-items: start;\n    }\n\n    .gallery-item {\n      margin: 0;\n      min-width: 0;\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      overflow: hidden;\n      background: var(--surface-color);\n    }\n\n    .gallery-featured {\n      grid-column: span 2;\n      display: grid;\n      grid-template-columns: minmax(0, 1.65fr) minmax(220px, 0.6fr);\n      align-items: stretch;\n    }\n\n    .gallery-image-link {\n      display: block;\n      overflow: hidden;\n      background: var(--border-color);\n    }\n\n    .gallery-item img {\n      display: block;\n      width: 100%;\n      height: 310px;\n      object-fit: cover;\n      transition: transform 0.3s ease, opacity 0.3s ease;\n    }\n\n    .gallery-featured img {\n      height: min(68vh, 660px);\n      object-position: center 62%;\n    }\n\n    .gallery-image-link:hover img {\n      transform: scale(1.012);\n      opacity: 0.92;\n    }\n\n    .gallery-item figcaption {\n      padding: 0.8rem 1rem;\n      color: var(--muted-color);\n      font-size: 0.76rem;\n      line-height: 1.6;\n    }\n\n    .gallery-featured figcaption {\n      display: flex;\n      flex-direction: column;\n      justify-content: flex-end;\n      padding: 1.5rem;\n      color: var(--text-color);\n      font-size: 0.88rem;\n      border-left: 1px solid var(--border-color);\n    }\n\n    .gallery-feature-label {\n      color: var(--accent-color);\n      font-size: 0.68rem;\n      letter-spacing: 0.1em;\n      text-transform: uppercase;\n      margin-bottom: 0.6rem;\n    }\n\n    @media (max-width: 768px) {\n      .gallery-grid {\n        grid-template-columns: 1fr;\n      }\n\n      .gallery-featured {\n        grid-column: span 1;\n        display: block;\n      }\n\n      .gallery-featured img,\n      .gallery-item img {\n        height: auto;\n        max-height: none;\n      }\n\n      .gallery-featured figcaption {\n        border-left: 0;\n        border-top: 1px solid var(--border-color);\n      }\n    }\n    ';
+var $author$project$Gallery$cssStyles = A3(
+	$elm$virtual_dom$VirtualDom$node,
+	'style',
+	_List_Nil,
+	_List_fromArray(
+		[
+			$elm$html$Html$text($author$project$Gallery$css)
+		]));
+var $author$project$Home$css = '\n    .home-content {\n      max-width: 1040px;\n    }\n\n    .home-hero-image {\n      display: block;\n      width: 100%;\n      height: clamp(180px, 28vw, 320px);\n      object-fit: cover;\n      object-position: center;\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      margin-bottom: 2rem;\n    }\n\n    .home-heading {\n      font-size: 4rem;\n      font-weight: 300;\n      color: var(--text-color);\n      margin: 0 0 0.25rem;\n      letter-spacing: -0.02em;\n      line-height: 1.1;\n    }\n\n    .home-divider {\n      width: 3rem;\n      height: 1px;\n      background-color: var(--accent-color);\n      margin: 2rem 0;\n      opacity: 0.6;\n    }\n\n    .home-lead {\n      font-size: 1rem;\n      line-height: 1.8;\n      color: var(--text-color);\n      margin-bottom: 1.25rem;\n      max-width: 580px;\n    }\n\n    .home-para {\n      font-size: 0.9rem;\n      line-height: 1.8;\n      color: var(--muted-color);\n      margin-bottom: 1rem;\n      max-width: 580px;\n    }\n\n    @media (max-width: 768px) {\n      .home-heading {\n        font-size: 2.8rem;\n      }\n    }\n    ';
+var $author$project$Home$cssStyles = A3(
+	$elm$virtual_dom$VirtualDom$node,
+	'style',
+	_List_Nil,
+	_List_fromArray(
+		[
+			$elm$html$Html$text($author$project$Home$css)
+		]));
+var $author$project$Projects$css = '\n    .projects-container {\n      max-width: 700px;\n    }\n\n    .projects-header {\n      font-size: 1.8rem;\n      font-weight: 600;\n      margin-top: 0;\n      margin-bottom: 0.3rem;\n    }\n\n    .projects-subheader {\n      font-size: 0.88rem;\n      color: var(--muted-color);\n      margin-bottom: 2rem;\n    }\n\n    .projects-grid {\n      display: grid;\n      grid-template-columns: 1fr;\n      gap: 1rem;\n    }\n\n    .repository-card {\n      background-color: var(--surface-color);\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      overflow: hidden;\n      transition: border-color 0.2s ease, box-shadow 0.2s ease;\n    }\n\n    .repository-card:hover {\n      border-color: var(--accent-color);\n      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);\n    }\n\n    .repository-header {\n      padding: 1.25rem 1.5rem 1rem;\n      border-bottom: 1px solid var(--border-color);\n    }\n\n    .repo-title {\n      font-size: 0.98rem;\n      font-weight: 600;\n      color: var(--link-color);\n      display: inline-block;\n    }\n\n    .repo-title:hover {\n      color: var(--link-hover-color);\n      text-decoration: underline;\n    }\n\n    .repo-meta {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-top: 0.4rem;\n      flex-wrap: wrap;\n      gap: 0.4rem;\n    }\n\n    .repo-description {\n      font-size: 0.82rem;\n      color: var(--muted-color);\n      flex: 1;\n      margin-right: 0.75rem;\n    }\n\n    .language-badge {\n      display: flex;\n      align-items: center;\n      font-size: 0.78rem;\n      color: var(--muted-color);\n      border: 1px solid var(--border-color);\n      border-radius: 20px;\n      padding: 0.15rem 0.6rem;\n      white-space: nowrap;\n    }\n\n    .language-dot {\n      display: inline-block;\n      width: 8px;\n      height: 8px;\n      border-radius: 50%;\n      margin-right: 0.4rem;\n    }\n\n    .repository-content {\n      padding: 1rem 1.5rem 1.25rem;\n    }\n\n    .repository-content p {\n      font-size: 0.88rem;\n      margin-bottom: 0.75rem;\n    }\n\n    .read-more {\n      font-size: 0.82rem;\n      color: var(--accent-color);\n      font-weight: 500;\n    }\n\n    .read-more:hover {\n      color: var(--link-hover-color);\n      text-decoration: underline;\n    }\n\n    @media (max-width: 768px) {\n      .repo-description {\n        margin-right: 0;\n      }\n    }\n    ';
 var $author$project$Projects$cssStyles = A3(
 	$elm$virtual_dom$VirtualDom$node,
 	'style',
@@ -5851,19 +7043,34 @@ var $author$project$Projects$cssStyles = A3(
 		[
 			$elm$html$Html$text($author$project$Projects$css)
 		]));
+var $author$project$Status$css = '\n    .status-container {\n      max-width: 760px;\n    }\n\n    .status-header-row {\n      display: flex;\n      justify-content: space-between;\n      align-items: flex-start;\n      margin-bottom: 2rem;\n    }\n\n    .status-header {\n      font-size: 1.8rem;\n      font-weight: 600;\n      margin-top: 0;\n      margin-bottom: 0.3rem;\n    }\n\n    .status-subheader {\n      font-size: 0.88rem;\n      color: var(--muted-color);\n      margin: 0;\n    }\n\n    .status-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 1rem;\n    }\n\n    .status-card:last-child:nth-child(odd) {\n      grid-column: span 2;\n    }\n\n    .status-card {\n      background-color: var(--surface-color);\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      padding: 1.25rem 1.5rem;\n      transition: border-color 0.2s ease;\n    }\n\n    .status-card:hover {\n      border-color: var(--accent-color);\n    }\n\n    .card-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 0.5rem;\n      gap: 0.5rem;\n    }\n\n    .card-title-row {\n      display: flex;\n      align-items: center;\n      gap: 0.6rem;\n      min-width: 0;\n      flex: 1;\n      overflow: hidden;\n    }\n\n    .status-dot {\n      width: 8px;\n      height: 8px;\n      border-radius: 50%;\n      flex-shrink: 0;\n    }\n\n    .status-dot.online   { background-color: #6db56d; }\n    .status-dot.offline  { background-color: #d46b6b; }\n    .status-dot.degraded { background-color: #d4a46b; }\n\n    .status-dot.checking {\n      background-color: var(--muted-color);\n      animation: status-pulse 1.5s ease-in-out infinite;\n    }\n\n    .status-dot.unknown {\n      background-color: var(--muted-color);\n      opacity: 0.45;\n    }\n\n    @keyframes status-pulse {\n      0%, 100% { opacity: 1; }\n      50%       { opacity: 0.2; }\n    }\n\n    .service-link {\n      font-size: 0.83rem;\n      color: var(--link-color);\n      white-space: nowrap;\n      overflow: hidden;\n      text-overflow: ellipsis;\n      min-width: 0;\n    }\n\n    .service-link:hover {\n      color: var(--link-hover-color);\n    }\n\n    .status-badge {\n      font-size: 0.72rem;\n      color: var(--muted-color);\n      font-family: \'Fira Code\', monospace;\n      white-space: nowrap;\n      flex-shrink: 0;\n    }\n\n    .status-badge.online   { color: #6db56d; }\n    .status-badge.offline  { color: #d46b6b; }\n    .status-badge.degraded { color: #d4a46b; }\n\n    .service-description {\n      font-size: 0.78rem;\n      color: var(--muted-color);\n      margin: 0 0 0.875rem;\n      line-height: 1.55;\n    }\n\n    /* ── Ribbon / line chart ────────────────────────── */\n\n    .history-ribbon {\n      display: flex;\n      gap: 2px;\n      height: 8px;\n      border-radius: 4px;\n      overflow: hidden;\n    }\n\n    .ribbon-segment {\n      flex: 1;\n      cursor: default;\n      transition: opacity 0.12s ease;\n    }\n\n    .ribbon-segment:hover {\n      opacity: 0.65;\n    }\n\n    .ribbon-segment.placeholder {\n      background-color: var(--border-color);\n      animation: status-pulse 2s ease-in-out infinite;\n    }\n\n    /* ── Tick labels ────────────────────────────────── */\n\n    .history-ticks {\n      display: flex;\n      justify-content: space-between;\n      margin-top: 0.3rem;\n    }\n\n    .tick-label {\n      font-size: 0.62rem;\n      color: var(--muted-color);\n      opacity: 0.55;\n      font-family: \'Fira Code\', monospace;\n    }\n\n    /* ── Refresh button ─────────────────────────────── */\n\n    .status-refresh {\n      background: none;\n      border: 1px solid var(--border-color);\n      color: var(--muted-color);\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.78rem;\n      padding: 0.3rem 0.75rem;\n      border-radius: 4px;\n      cursor: pointer;\n      transition: color 0.15s ease, border-color 0.15s ease;\n      align-self: flex-start;\n      margin-top: 0.25rem;\n    }\n\n    .status-refresh:hover {\n      color: var(--text-color);\n      border-color: var(--accent-color);\n    }\n\n    @media (max-width: 768px) {\n      .status-header-row {\n        flex-direction: column;\n        gap: 1rem;\n      }\n\n      .status-grid {\n        grid-template-columns: 1fr;\n      }\n\n      .status-card:last-child:nth-child(odd) {\n        grid-column: span 1;\n      }\n    }\n    ';
+var $author$project$Status$cssStyles = A3(
+	$elm$virtual_dom$VirtualDom$node,
+	'style',
+	_List_Nil,
+	_List_fromArray(
+		[
+			$elm$html$Html$text($author$project$Status$css)
+		]));
+var $author$project$Xiangqi$css = '\n    .xiangqi-content {\n      max-width: 760px;\n    }\n\n    .xiangqi-intro {\n      color: var(--muted-color) !important;\n      margin-bottom: 2rem !important;\n    }\n\n    .xiangqi-board-wrap {\n      position: relative;\n      width: min(100%, 600px);\n      padding: 5.5%;\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      background: #cda66a;\n      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);\n    }\n\n    .xiangqi-board {\n      position: relative;\n      aspect-ratio: 8 / 9;\n      background-color: #d9b777;\n      background-image:\n        repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - 0.5px), #5b4128 calc(12.5% - 0.5px), #5b4128 calc(12.5% + 0.5px)),\n        repeating-linear-gradient(to bottom, transparent 0, transparent calc(11.111% - 0.5px), #5b4128 calc(11.111% - 0.5px), #5b4128 calc(11.111% + 0.5px));\n      border: 1px solid #5b4128;\n    }\n\n    .xiangqi-river {\n      position: absolute;\n      z-index: 1;\n      left: 0;\n      right: 0;\n      top: 44.45%;\n      height: 11.111%;\n      display: flex;\n      align-items: center;\n      justify-content: space-around;\n      background: #d9b777;\n      border-top: 1px solid #5b4128;\n      border-bottom: 1px solid #5b4128;\n      color: #5b4128;\n      font-family: serif;\n      font-size: clamp(0.9rem, 3vw, 1.65rem);\n      letter-spacing: 0.35em;\n    }\n\n    .xiangqi-piece {\n      position: absolute;\n      z-index: 2;\n      width: clamp(27px, 8.5%, 48px);\n      aspect-ratio: 1;\n      transform: translate(-50%, -50%);\n      display: grid;\n      place-items: center;\n      border: 2px solid currentColor;\n      border-radius: 50%;\n      background: #ead29c;\n      font-family: serif;\n      font-size: clamp(0.82rem, 2.6vw, 1.45rem);\n      font-weight: 700;\n      box-shadow: 0 2px 4px rgba(55, 35, 18, 0.42), inset 0 0 0 2px #ead29c, inset 0 0 0 3px currentColor;\n    }\n\n    .xiangqi-piece.black { color: #26211d; }\n    .xiangqi-piece.red { color: #a8322d; }\n\n    .xiangqi-development-banner {\n      position: absolute;\n      z-index: 4;\n      left: -1px;\n      right: -1px;\n      top: 50%;\n      transform: translateY(-50%) rotate(-1.5deg);\n      display: flex;\n      justify-content: center;\n      align-items: baseline;\n      gap: 0.8rem;\n      padding: 1rem;\n      background: rgba(37, 35, 52, 0.96);\n      border: 1px solid var(--accent-color);\n      color: #e8e6f0;\n      font-size: clamp(0.82rem, 2.4vw, 1.05rem);\n      text-transform: uppercase;\n      letter-spacing: 0.08em;\n      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);\n    }\n\n    .development-marker {\n      color: var(--accent-color);\n      font-size: 0.68em;\n    }\n\n    @media (max-width: 520px) {\n      .xiangqi-board-wrap { padding: 7%; }\n      .xiangqi-development-banner { flex-direction: column; align-items: center; gap: 0.15rem; }\n    }\n    ';
+var $author$project$Xiangqi$cssStyles = A3(
+	$elm$virtual_dom$VirtualDom$node,
+	'style',
+	_List_Nil,
+	_List_fromArray(
+		[
+			$elm$html$Html$text($author$project$Xiangqi$css)
+		]));
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$html$Html$footer = _VirtualDom_node('footer');
-var $elm$html$Html$h1 = _VirtualDom_node('h1');
-var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		$elm$html$Html$Attributes$stringProperty,
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
-var $elm$html$Html$img = _VirtualDom_node('img');
+var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
+	return {$: 0, a: a};
 };
 var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var $elm$html$Html$Events$on = F2(
@@ -5879,650 +7086,93 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$html$Html$p = _VirtualDom_node('p');
-var $author$project$Main$NotFound = {$: 'NotFound'};
-var $elm$url$Url$Parser$State = F5(
-	function (visited, unvisited, params, frag, value) {
-		return {frag: frag, params: params, unvisited: unvisited, value: value, visited: visited};
-	});
-var $elm$url$Url$Parser$getFirstMatch = function (states) {
-	getFirstMatch:
-	while (true) {
-		if (!states.b) {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			var state = states.a;
-			var rest = states.b;
-			var _v1 = state.unvisited;
-			if (!_v1.b) {
-				return $elm$core$Maybe$Just(state.value);
-			} else {
-				if ((_v1.a === '') && (!_v1.b.b)) {
-					return $elm$core$Maybe$Just(state.value);
-				} else {
-					var $temp$states = rest;
-					states = $temp$states;
-					continue getFirstMatch;
-				}
-			}
-		}
-	}
-};
-var $elm$url$Url$Parser$removeFinalEmpty = function (segments) {
-	if (!segments.b) {
-		return _List_Nil;
-	} else {
-		if ((segments.a === '') && (!segments.b.b)) {
-			return _List_Nil;
-		} else {
-			var segment = segments.a;
-			var rest = segments.b;
-			return A2(
-				$elm$core$List$cons,
-				segment,
-				$elm$url$Url$Parser$removeFinalEmpty(rest));
-		}
-	}
-};
-var $elm$url$Url$Parser$preparePath = function (path) {
-	var _v0 = A2($elm$core$String$split, '/', path);
-	if (_v0.b && (_v0.a === '')) {
-		var segments = _v0.b;
-		return $elm$url$Url$Parser$removeFinalEmpty(segments);
-	} else {
-		var segments = _v0;
-		return $elm$url$Url$Parser$removeFinalEmpty(segments);
-	}
-};
-var $elm$url$Url$Parser$addToParametersHelp = F2(
-	function (value, maybeList) {
-		if (maybeList.$ === 'Nothing') {
-			return $elm$core$Maybe$Just(
-				_List_fromArray(
-					[value]));
-		} else {
-			var list = maybeList.a;
-			return $elm$core$Maybe$Just(
-				A2($elm$core$List$cons, value, list));
-		}
-	});
-var $elm$url$Url$percentDecode = _Url_percentDecode;
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
-	});
-var $elm$core$Dict$getMin = function (dict) {
-	getMin:
-	while (true) {
-		if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
-			var left = dict.d;
-			var $temp$dict = left;
-			dict = $temp$dict;
-			continue getMin;
-		} else {
-			return dict;
-		}
-	}
-};
-var $elm$core$Dict$moveRedLeft = function (dict) {
-	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
-		if ((dict.e.d.$ === 'RBNode_elm_builtin') && (dict.e.d.a.$ === 'Red')) {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v1 = dict.d;
-			var lClr = _v1.a;
-			var lK = _v1.b;
-			var lV = _v1.c;
-			var lLeft = _v1.d;
-			var lRight = _v1.e;
-			var _v2 = dict.e;
-			var rClr = _v2.a;
-			var rK = _v2.b;
-			var rV = _v2.c;
-			var rLeft = _v2.d;
-			var _v3 = rLeft.a;
-			var rlK = rLeft.b;
-			var rlV = rLeft.c;
-			var rlL = rLeft.d;
-			var rlR = rLeft.e;
-			var rRight = _v2.e;
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				$elm$core$Dict$Red,
-				rlK,
-				rlV,
-				A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					rlL),
-				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rlR, rRight));
-		} else {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v4 = dict.d;
-			var lClr = _v4.a;
-			var lK = _v4.b;
-			var lV = _v4.c;
-			var lLeft = _v4.d;
-			var lRight = _v4.e;
-			var _v5 = dict.e;
-			var rClr = _v5.a;
-			var rK = _v5.b;
-			var rV = _v5.c;
-			var rLeft = _v5.d;
-			var rRight = _v5.e;
-			if (clr.$ === 'Black') {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			}
-		}
-	} else {
-		return dict;
-	}
-};
-var $elm$core$Dict$moveRedRight = function (dict) {
-	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
-		if ((dict.d.d.$ === 'RBNode_elm_builtin') && (dict.d.d.a.$ === 'Red')) {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v1 = dict.d;
-			var lClr = _v1.a;
-			var lK = _v1.b;
-			var lV = _v1.c;
-			var _v2 = _v1.d;
-			var _v3 = _v2.a;
-			var llK = _v2.b;
-			var llV = _v2.c;
-			var llLeft = _v2.d;
-			var llRight = _v2.e;
-			var lRight = _v1.e;
-			var _v4 = dict.e;
-			var rClr = _v4.a;
-			var rK = _v4.b;
-			var rV = _v4.c;
-			var rLeft = _v4.d;
-			var rRight = _v4.e;
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				$elm$core$Dict$Red,
-				lK,
-				lV,
-				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
-				A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					lRight,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight)));
-		} else {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v5 = dict.d;
-			var lClr = _v5.a;
-			var lK = _v5.b;
-			var lV = _v5.c;
-			var lLeft = _v5.d;
-			var lRight = _v5.e;
-			var _v6 = dict.e;
-			var rClr = _v6.a;
-			var rK = _v6.b;
-			var rV = _v6.c;
-			var rLeft = _v6.d;
-			var rRight = _v6.e;
-			if (clr.$ === 'Black') {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			}
-		}
-	} else {
-		return dict;
-	}
-};
-var $elm$core$Dict$removeHelpPrepEQGT = F7(
-	function (targetKey, dict, color, key, value, left, right) {
-		if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
-			var _v1 = left.a;
-			var lK = left.b;
-			var lV = left.c;
-			var lLeft = left.d;
-			var lRight = left.e;
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				color,
-				lK,
-				lV,
-				lLeft,
-				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, lRight, right));
-		} else {
-			_v2$2:
-			while (true) {
-				if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Black')) {
-					if (right.d.$ === 'RBNode_elm_builtin') {
-						if (right.d.a.$ === 'Black') {
-							var _v3 = right.a;
-							var _v4 = right.d;
-							var _v5 = _v4.a;
-							return $elm$core$Dict$moveRedRight(dict);
-						} else {
-							break _v2$2;
-						}
-					} else {
-						var _v6 = right.a;
-						var _v7 = right.d;
-						return $elm$core$Dict$moveRedRight(dict);
-					}
-				} else {
-					break _v2$2;
-				}
-			}
-			return dict;
-		}
-	});
-var $elm$core$Dict$removeMin = function (dict) {
-	if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
-		var color = dict.a;
-		var key = dict.b;
-		var value = dict.c;
-		var left = dict.d;
-		var lColor = left.a;
-		var lLeft = left.d;
-		var right = dict.e;
-		if (lColor.$ === 'Black') {
-			if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
-				var _v3 = lLeft.a;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					color,
-					key,
-					value,
-					$elm$core$Dict$removeMin(left),
-					right);
-			} else {
-				var _v4 = $elm$core$Dict$moveRedLeft(dict);
-				if (_v4.$ === 'RBNode_elm_builtin') {
-					var nColor = _v4.a;
-					var nKey = _v4.b;
-					var nValue = _v4.c;
-					var nLeft = _v4.d;
-					var nRight = _v4.e;
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						$elm$core$Dict$removeMin(nLeft),
-						nRight);
-				} else {
-					return $elm$core$Dict$RBEmpty_elm_builtin;
-				}
-			}
-		} else {
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				color,
-				key,
-				value,
-				$elm$core$Dict$removeMin(left),
-				right);
-		}
-	} else {
-		return $elm$core$Dict$RBEmpty_elm_builtin;
-	}
-};
-var $elm$core$Dict$removeHelp = F2(
-	function (targetKey, dict) {
-		if (dict.$ === 'RBEmpty_elm_builtin') {
-			return $elm$core$Dict$RBEmpty_elm_builtin;
-		} else {
-			var color = dict.a;
-			var key = dict.b;
-			var value = dict.c;
-			var left = dict.d;
-			var right = dict.e;
-			if (_Utils_cmp(targetKey, key) < 0) {
-				if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Black')) {
-					var _v4 = left.a;
-					var lLeft = left.d;
-					if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
-						var _v6 = lLeft.a;
-						return A5(
-							$elm$core$Dict$RBNode_elm_builtin,
-							color,
-							key,
-							value,
-							A2($elm$core$Dict$removeHelp, targetKey, left),
-							right);
-					} else {
-						var _v7 = $elm$core$Dict$moveRedLeft(dict);
-						if (_v7.$ === 'RBNode_elm_builtin') {
-							var nColor = _v7.a;
-							var nKey = _v7.b;
-							var nValue = _v7.c;
-							var nLeft = _v7.d;
-							var nRight = _v7.e;
-							return A5(
-								$elm$core$Dict$balance,
-								nColor,
-								nKey,
-								nValue,
-								A2($elm$core$Dict$removeHelp, targetKey, nLeft),
-								nRight);
-						} else {
-							return $elm$core$Dict$RBEmpty_elm_builtin;
-						}
-					}
-				} else {
-					return A5(
-						$elm$core$Dict$RBNode_elm_builtin,
-						color,
-						key,
-						value,
-						A2($elm$core$Dict$removeHelp, targetKey, left),
-						right);
-				}
-			} else {
-				return A2(
-					$elm$core$Dict$removeHelpEQGT,
-					targetKey,
-					A7($elm$core$Dict$removeHelpPrepEQGT, targetKey, dict, color, key, value, left, right));
-			}
-		}
-	});
-var $elm$core$Dict$removeHelpEQGT = F2(
-	function (targetKey, dict) {
-		if (dict.$ === 'RBNode_elm_builtin') {
-			var color = dict.a;
-			var key = dict.b;
-			var value = dict.c;
-			var left = dict.d;
-			var right = dict.e;
-			if (_Utils_eq(targetKey, key)) {
-				var _v1 = $elm$core$Dict$getMin(right);
-				if (_v1.$ === 'RBNode_elm_builtin') {
-					var minKey = _v1.b;
-					var minValue = _v1.c;
-					return A5(
-						$elm$core$Dict$balance,
-						color,
-						minKey,
-						minValue,
-						left,
-						$elm$core$Dict$removeMin(right));
-				} else {
-					return $elm$core$Dict$RBEmpty_elm_builtin;
-				}
-			} else {
-				return A5(
-					$elm$core$Dict$balance,
-					color,
-					key,
-					value,
-					left,
-					A2($elm$core$Dict$removeHelp, targetKey, right));
-			}
-		} else {
-			return $elm$core$Dict$RBEmpty_elm_builtin;
-		}
-	});
-var $elm$core$Dict$remove = F2(
-	function (key, dict) {
-		var _v0 = A2($elm$core$Dict$removeHelp, key, dict);
-		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
-			var _v1 = _v0.a;
-			var k = _v0.b;
-			var v = _v0.c;
-			var l = _v0.d;
-			var r = _v0.e;
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
-		} else {
-			var x = _v0;
-			return x;
-		}
-	});
-var $elm$core$Dict$update = F3(
-	function (targetKey, alter, dictionary) {
-		var _v0 = alter(
-			A2($elm$core$Dict$get, targetKey, dictionary));
-		if (_v0.$ === 'Just') {
-			var value = _v0.a;
-			return A3($elm$core$Dict$insert, targetKey, value, dictionary);
-		} else {
-			return A2($elm$core$Dict$remove, targetKey, dictionary);
-		}
-	});
-var $elm$url$Url$Parser$addParam = F2(
-	function (segment, dict) {
-		var _v0 = A2($elm$core$String$split, '=', segment);
-		if ((_v0.b && _v0.b.b) && (!_v0.b.b.b)) {
-			var rawKey = _v0.a;
-			var _v1 = _v0.b;
-			var rawValue = _v1.a;
-			var _v2 = $elm$url$Url$percentDecode(rawKey);
-			if (_v2.$ === 'Nothing') {
-				return dict;
-			} else {
-				var key = _v2.a;
-				var _v3 = $elm$url$Url$percentDecode(rawValue);
-				if (_v3.$ === 'Nothing') {
-					return dict;
-				} else {
-					var value = _v3.a;
-					return A3(
-						$elm$core$Dict$update,
-						key,
-						$elm$url$Url$Parser$addToParametersHelp(value),
-						dict);
-				}
-			}
-		} else {
-			return dict;
-		}
-	});
-var $elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
-	if (maybeQuery.$ === 'Nothing') {
-		return $elm$core$Dict$empty;
-	} else {
-		var qry = maybeQuery.a;
-		return A3(
-			$elm$core$List$foldr,
-			$elm$url$Url$Parser$addParam,
-			$elm$core$Dict$empty,
-			A2($elm$core$String$split, '&', qry));
-	}
-};
-var $elm$url$Url$Parser$parse = F2(
-	function (_v0, url) {
-		var parser = _v0.a;
-		return $elm$url$Url$Parser$getFirstMatch(
-			parser(
-				A5(
-					$elm$url$Url$Parser$State,
-					_List_Nil,
-					$elm$url$Url$Parser$preparePath(url.path),
-					$elm$url$Url$Parser$prepareQuery(url.query),
-					url.fragment,
-					$elm$core$Basics$identity)));
-	});
-var $author$project$Main$Home = {$: 'Home'};
-var $author$project$Main$ProjectsPage = {$: 'ProjectsPage'};
-var $elm$url$Url$Parser$Parser = function (a) {
-	return {$: 'Parser', a: a};
-};
-var $elm$url$Url$Parser$mapState = F2(
-	function (func, _v0) {
-		var value = _v0.value;
-		var frag = _v0.frag;
-		var params = _v0.params;
-		var unvisited = _v0.unvisited;
-		var visited = _v0.visited;
-		return A5(
-			$elm$url$Url$Parser$State,
-			visited,
-			unvisited,
-			params,
-			frag,
-			func(value));
-	});
-var $elm$url$Url$Parser$map = F2(
-	function (subValue, _v0) {
-		var parseArg = _v0.a;
-		return $elm$url$Url$Parser$Parser(
-			function (_v1) {
-				var value = _v1.value;
-				var frag = _v1.frag;
-				var params = _v1.params;
-				var unvisited = _v1.unvisited;
-				var visited = _v1.visited;
-				return A2(
-					$elm$core$List$map,
-					$elm$url$Url$Parser$mapState(value),
-					parseArg(
-						A5($elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
-			});
-	});
-var $elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
-		}
-	});
-var $elm$core$List$concat = function (lists) {
-	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
-};
-var $elm$core$List$concatMap = F2(
-	function (f, list) {
-		return $elm$core$List$concat(
-			A2($elm$core$List$map, f, list));
-	});
-var $elm$url$Url$Parser$oneOf = function (parsers) {
-	return $elm$url$Url$Parser$Parser(
-		function (state) {
-			return A2(
-				$elm$core$List$concatMap,
-				function (_v0) {
-					var parser = _v0.a;
-					return parser(state);
-				},
-				parsers);
-		});
-};
-var $elm$url$Url$Parser$s = function (str) {
-	return $elm$url$Url$Parser$Parser(
-		function (_v0) {
-			var value = _v0.value;
-			var frag = _v0.frag;
-			var params = _v0.params;
-			var unvisited = _v0.unvisited;
-			var visited = _v0.visited;
-			if (!unvisited.b) {
-				return _List_Nil;
-			} else {
-				var next = unvisited.a;
-				var rest = unvisited.b;
-				return _Utils_eq(next, str) ? _List_fromArray(
-					[
-						A5(
-						$elm$url$Url$Parser$State,
-						A2($elm$core$List$cons, next, visited),
-						rest,
-						params,
-						frag,
-						value)
-					]) : _List_Nil;
-			}
-		});
-};
-var $elm$url$Url$Parser$top = $elm$url$Url$Parser$Parser(
-	function (state) {
-		return _List_fromArray(
-			[state]);
-	});
-var $author$project$Main$routeParser = $elm$url$Url$Parser$oneOf(
-	_List_fromArray(
-		[
-			A2($elm$url$Url$Parser$map, $author$project$Main$Home, $elm$url$Url$Parser$top),
-			A2(
-			$elm$url$Url$Parser$map,
-			$author$project$Main$Home,
-			$elm$url$Url$Parser$s('about')),
-			A2(
-			$elm$url$Url$Parser$map,
-			$author$project$Main$ProjectsPage,
-			$elm$url$Url$Parser$s('projects'))
-		]));
-var $author$project$Main$parseUrl = function (url) {
-	var _v0 = A2($elm$url$Url$Parser$parse, $author$project$Main$routeParser, url);
-	if (_v0.$ === 'Just') {
-		var page = _v0.a;
-		return page;
-	} else {
-		return $author$project$Main$NotFound;
-	}
-};
+var $elm$html$Html$Attributes$rel = _VirtualDom_attribute('rel');
 var $elm$html$Html$span = _VirtualDom_node('span');
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $author$project$Main$NoOp = {$: 4};
+var $author$project$Main$ToggleColorMode = {$: 2};
+var $elm$html$Html$a = _VirtualDom_node('a');
+var $elm$html$Html$Attributes$alt = $elm$html$Html$Attributes$stringProperty('alt');
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm$html$Html$img = _VirtualDom_node('img');
+var $author$project$Main$isActiveLink = F2(
+	function (currentPage, url) {
+		var _v0 = _Utils_Tuple2(currentPage, url);
+		_v0$6:
+		while (true) {
+			switch (_v0.a) {
+				case 0:
+					if (_v0.b === '/') {
+						var _v1 = _v0.a;
+						return true;
+					} else {
+						break _v0$6;
+					}
+				case 1:
+					if (_v0.b === '/about') {
+						var _v2 = _v0.a;
+						return true;
+					} else {
+						break _v0$6;
+					}
+				case 2:
+					if (_v0.b === '/projects') {
+						var _v3 = _v0.a;
+						return true;
+					} else {
+						break _v0$6;
+					}
+				case 3:
+					if (_v0.b === '/gallery') {
+						var _v4 = _v0.a;
+						return true;
+					} else {
+						break _v0$6;
+					}
+				case 4:
+					if (_v0.b === '/xiangqi') {
+						var _v5 = _v0.a;
+						return true;
+					} else {
+						break _v0$6;
+					}
+				case 5:
+					if (_v0.b === '/status') {
+						var _v6 = _v0.a;
+						return true;
+					} else {
+						break _v0$6;
+					}
+				default:
+					break _v0$6;
+			}
+		}
+		return false;
+	});
+var $author$project$Main$navItems = _List_fromArray(
+	[
+		_Utils_Tuple2('/', 'home'),
+		_Utils_Tuple2('/about', 'about'),
+		_Utils_Tuple2('/projects', 'projects'),
+		_Utils_Tuple2('/gallery', 'gallery'),
+		_Utils_Tuple2('/xiangqi', '象棋'),
+		_Utils_Tuple2('/status', 'status'),
+		_Utils_Tuple2('https://eexiv.functor.systems/author/wlin', 'personal research'),
+		_Utils_Tuple2('https://yap.kaitotlex.systems', 'log'),
+		_Utils_Tuple2('/assets/main.pdf', 'download cv')
+	]);
+var $author$project$Main$orgItems = _List_fromArray(
+	[
+		_Utils_Tuple2('https://functor.systems/', 'functor.systems'),
+		_Utils_Tuple2('https://inlabs.kaitotlex.systems', 'InLabs')
+	]);
 var $elm$html$Html$Attributes$src = function (url) {
 	return A2(
 		$elm$html$Html$Attributes$stringProperty,
@@ -6530,7 +7180,7 @@ var $elm$html$Html$Attributes$src = function (url) {
 		_VirtualDom_noJavaScriptOrHtmlUri(url));
 };
 var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
+	return {$: 1, a: a};
 };
 var $elm$html$Html$Events$stopPropagationOn = F2(
 	function (event, decoder) {
@@ -6539,11 +7189,1342 @@ var $elm$html$Html$Events$stopPropagationOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
 	});
+var $author$project$Main$viewMobileMenu = F2(
+	function (colorMode, currentPage) {
+		var mobileNavItem = function (_v1) {
+			var url = _v1.a;
+			var label = _v1.b;
+			return A2(
+				$elm$html$Html$a,
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href(url),
+							$elm$html$Html$Attributes$class(
+							A2($author$project$Main$isActiveLink, currentPage, url) ? 'mobile-nav-item active' : 'mobile-nav-item')
+						]),
+					(url === '/assets/main.pdf') ? _List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$attribute, 'download', 'Ren-Lin-CV.pdf')
+						]) : _List_Nil),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(label)
+					]));
+		};
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('mobile-menu-wrapper')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('mobile-menu-backdrop'),
+							$elm$html$Html$Events$onClick($author$project$Main$ToggleMobileMenu)
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('mobile-menu-panel'),
+							A2(
+							$elm$html$Html$Events$stopPropagationOn,
+							'click',
+							$elm$json$Json$Decode$succeed(
+								_Utils_Tuple2($author$project$Main$NoOp, true)))
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-menu-header')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('mobile-menu-title')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Ren Lin')
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('mobile-menu-location')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$img,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$src('/assets/pcb.svg'),
+															$elm$html$Html$Attributes$alt('pcb traces')
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('close-mobile-menu'),
+											$elm$html$Html$Events$onClick($author$project$Main$ToggleMobileMenu)
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('✕')
+										]))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-nav-section-label')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('dir')
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-nav-links')
+								]),
+							A2($elm$core$List$map, mobileNavItem, $author$project$Main$navItems)),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-nav-section-label')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('orgs')
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-org-links')
+								]),
+							A2(
+								$elm$core$List$map,
+								function (_v0) {
+									var url = _v0.a;
+									var label = _v0.b;
+									return A2(
+										$elm$html$Html$a,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$href(url),
+												$elm$html$Html$Attributes$class('mobile-nav-item')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text(label)
+											]));
+								},
+								$author$project$Main$orgItems)),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mobile-mode-toggle'),
+									$elm$html$Html$Events$onClick($author$project$Main$ToggleColorMode)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									(colorMode === 1) ? '[ light ]' : '[ dark ]')
+								]))
+						]))
+				]));
+	});
+var $author$project$Main$RefreshStatuses = {$: 6};
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $elm$html$Html$figcaption = _VirtualDom_node('figcaption');
+var $elm$html$Html$figure = _VirtualDom_node('figure');
+var $author$project$About$view = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('about-content')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('about-layout')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('about-copy')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h1,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('more about me...')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Hello, this site is written in collaboration with Claude Code to ensure that I don\'t make spelling or grammar mistakes.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('I am currently a freshman studying Industrial Systems Engineering at '),
+									A2(
+									$elm$html$Html$a,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('about-highlight-link'),
+											$elm$html$Html$Attributes$href('https://www.sjsu.edu/')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('San Jose State University')
+										])),
+									$elm$html$Html$text(', and I intend to study Electrical Engineering here.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('With that time I am able to build this (and a multitude of other things) in a cave, with a scrappy ThinkPad.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('I enjoy being an otaku (watching anime, vtubers, reading manga, listening to vocaloid, etc.), reading, playing video games, wasting time on the world\'s LAN, and cycling.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Although I was born in the United States, I have lived most of my life in a suburban mountain/hot-spring area in Beitou, Taipei City. I spent most of my time wasting money in the electronics district and taking the Metro.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Besides the \"unproductive\" things I enjoy, I hack on electronic devices ranging from deprecated game consoles (like the PS3 or 3DS) to the newest hottest tech (like the Apple M1). I just so happen to be in organizations that require me to roleplay as a smart person among other actually smart people; those organizations being MIT OpenCompute Lab and functor.systems. I also have my own organizations dedicated to doing stupid stuff. I have interest in ASIC design, chip architecture, and aspirations to working at a Fab.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('I don\'t really do software stuff because it\'s way too complex and above my knowledge/intuition; however, I just so happen to be on the winning team at HackMIT 2025.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Because I have to LARP (Live-Action RolePlay) as an intelligent creature, I have found a profound interest, at a high level, in Category Theory, Modal Logic, and Set Theory.')
+								]))
+						])),
+					A2(
+					$elm$html$Html$figure,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('about-photo')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$img,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$src('/assets/DSC_4055.jpg'),
+									$elm$html$Html$Attributes$alt('Black Saab 900 Turbo S driving through Tokyo'),
+									A2($elm$html$Html$Attributes$attribute, 'loading', 'lazy')
+								]),
+							_List_Nil),
+							A2(
+							$elm$html$Html$figcaption,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Featured photo from my trip to Japan in 2026 of a Saab 900 Turbo S.')
+								]))
+						]))
+				])),
+			A2(
+			$elm$html$Html$figure,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('about-hackmit-photo')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$img,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$src('/assets/hackmit.jpeg'),
+							$elm$html$Html$Attributes$alt('Colmena Maps team holding their HackMIT 2025 grand prize check'),
+							A2($elm$html$Html$Attributes$attribute, 'loading', 'lazy')
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$figcaption,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Winning first place at HackMIT 2025 with the Colmena Maps team.')
+						]))
+				]))
+		]));
+var $author$project$Gallery$photos = _List_fromArray(
+	[
+		{k: 'Black Saab 900 Turbo S driving through Tokyo', l: 'Featured photo from my trip to Japan in 2026 of a Saab 900 Turbo S.', h: true, j: 'DSC_4055.jpg'},
+		{k: 'Torii gates at Fushimi Inari shrine', l: 'Fushimi Inari, Kyoto', h: false, j: 'DSC_3666.jpg'},
+		{k: 'Train arriving at a station in Japan', l: 'Local service', h: false, j: 'DSC_3689.jpg'},
+		{k: 'Shinkansen at a station platform', l: 'Departure', h: false, j: 'DSC_3745.jpg'},
+		{k: 'Shinkansen arriving at a station', l: 'Arrival', h: false, j: 'DSC_3765.jpg'},
+		{k: 'Wide view of a Shinkansen station', l: 'In transit', h: false, j: 'DSC_3766.jpg'},
+		{k: 'Crowds and signs in Shibuya at dusk', l: 'Shibuya at dusk', h: false, j: 'DSC_4007.jpg'},
+		{k: 'Tokyo buildings silhouetted against the evening sky', l: 'Last light', h: false, j: 'DSC_4056.jpg'},
+		{k: 'Self-portrait pointing toward Tsutenkaku in Osaka', l: 'Tsutenkaku, Osaka', h: false, j: 'IMG_8976.jpeg'},
+		{k: 'HackMIT hacker badge held in one hand', l: 'HackMIT 2025', h: false, j: 'IMG_0119.jpeg'},
+		{k: 'Drawing of a blue-haired character working on a laptop', l: 'I drew this', h: false, j: 'idrewthis.jpg'}
+	]);
+var $author$project$Gallery$viewPhoto = function (photo) {
+	return A2(
+		$elm$html$Html$figure,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class(
+				photo.h ? 'gallery-item gallery-featured' : 'gallery-item')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$a,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$href('/assets/' + photo.j),
+						$elm$html$Html$Attributes$class('gallery-image-link')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/' + photo.j),
+								$elm$html$Html$Attributes$alt(photo.k),
+								A2(
+								$elm$html$Html$Attributes$attribute,
+								'loading',
+								photo.h ? 'eager' : 'lazy')
+							]),
+						_List_Nil)
+					])),
+				A2(
+				$elm$html$Html$figcaption,
+				_List_Nil,
+				_List_fromArray(
+					[
+						photo.h ? A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('gallery-feature-label')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('featured / japan 2026')
+							])) : $elm$html$Html$text(''),
+						$elm$html$Html$text(photo.l)
+					]))
+			]));
+};
+var $author$project$Gallery$view = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('gallery-content')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h1,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('gallery')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('gallery-intro')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Photographs, travels, and assorted artifacts. Select an image to view it full-size.')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('gallery-grid')
+				]),
+			A2($elm$core$List$map, $author$project$Gallery$viewPhoto, $author$project$Gallery$photos))
+		]));
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $author$project$Home$view = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('home-content')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$img,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$src('/assets/DSC_3766.jpg'),
+					$elm$html$Html$Attributes$alt('Shinkansen arriving at a station in Japan'),
+					$elm$html$Html$Attributes$class('home-hero-image'),
+					A2($elm$html$Html$Attributes$attribute, 'fetchpriority', 'high')
+				]),
+			_List_Nil),
+			A2(
+			$elm$html$Html$h1,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('home-heading')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('oh hi! I am Ren(林敬宴)')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('home-divider')
+				]),
+			_List_Nil),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('home-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('I am an undergraduate student at SJSU studying ISE.')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('home-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('I\'m a student during the day and an electrical engineer at night. ')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('home-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Lately, I\'ve been working on projects relating to Computer Architecture and ASIC design.')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('home-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('I am currently maintaining infra for functor.systems and working in MIT Open-Compute developing hardware, i am also currently building my own RISC-V chip with the vector extension')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('home-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('I aspire to continue education beyond BS/BA in Physics or Electrical Engineering hopefully contributing to premier research facilities in a lab.')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('home-para')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('I am currently drowning in an information soup°❀⋆.ೃ࿔*:･°❀⋆.ೃ࿔*:･')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('home-para')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$p,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('quote-text')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('\"The clear-cut idea of what is meant by proof ... he perhaps did not possess at all; once he had become satisfied of a theorem\'s truth, he had scant interest in proving it to others.\"')
+						])),
+					A2(
+					$elm$html$Html$p,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('quote-attribution')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('— John Littlewood')
+						]))
+				])),
+			A2(
+			$elm$html$Html$h2,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('contact')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('contact-links')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('mailto:renl@kaitotlex.systems'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('email (preferred)')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('https://matrix.to/#/@kaitotlex26:functor.systems'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('matrix')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('https://github.com/kaitotlex'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('github')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('https://bsky.app/profile/kaitotlex.systems'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('bluesky')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('https://www.instagram.com/kaitotlex_'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('instagram')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('https://twitter.com/kaitotlex'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('twitter / x')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('https://osu.ppy.sh/users/26069038'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('osu')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('https://code.functor.system/kaitotlex'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('functor.systems forge')
+						])),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('https://arxiv.org/abs/2204.04549'),
+							$elm$html$Html$Attributes$class('contact-item')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('send through matter-wave field')
+						]))
+				]))
+		]));
+var $author$project$Status$serviceInfoList = _List_fromArray(
+	[
+		{I: 'Forgejo instance where most of the code from functor.systems live on, hosted on anton(Danville, CA)', N: 'code.functor.systems'},
+		{I: 'Matrix federation homelab service hosted on a VPS', N: 'matrix.functor.systems'},
+		{I: 'the Ichika instance, for synthesising and implementing FPGA bitstream remotely', N: 'ichika.kaitotlex.engineering'},
+		{I: '(planned) blog, hosted on github pages', N: 'yap.kaitotlex.systems'},
+		{I: 'status of anton, hosted on anton(Danville, CA)', N: 'missioncontrol.kaitotlex.systems'},
+		{I: 'mirror of functor.systems website, hosted on gallium(Cambridge, MA)', N: 'functor.mit.edu'}
+	]);
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (!maybeValue.$) {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Status$currentStatusFor = F2(
+	function (history, name) {
+		return A2(
+			$elm$core$Maybe$andThen,
+			$elm$core$Dict$get(name),
+			$elm$core$List$head(
+				A2(
+					$elm$core$List$filterMap,
+					function ($) {
+						return $.ag;
+					},
+					$elm$core$List$reverse(history))));
+	});
+var $elm$core$List$isEmpty = function (xs) {
+	if (!xs.b) {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$List$repeatHelp = F3(
+	function (result, n, value) {
+		repeatHelp:
+		while (true) {
+			if (n <= 0) {
+				return result;
+			} else {
+				var $temp$result = A2($elm$core$List$cons, value, result),
+					$temp$n = n - 1,
+					$temp$value = value;
+				result = $temp$result;
+				n = $temp$n;
+				value = $temp$value;
+				continue repeatHelp;
+			}
+		}
+	});
+var $elm$core$List$repeat = F2(
+	function (n, value) {
+		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Status$hourLabel = F2(
+	function (tzOffset, ts) {
+		var utcM = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$String$toInt(
+				A3($elm$core$String$slice, 14, 16, ts)));
+		var utcH = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$String$toInt(
+				A3($elm$core$String$slice, 11, 13, ts)));
+		var pad = function (n) {
+			return (n < 10) ? ('0' + $elm$core$String$fromInt(n)) : $elm$core$String$fromInt(n);
+		};
+		var localTotal = A2($elm$core$Basics$modBy, 1440, (((utcH * 60) + utcM) - tzOffset) + 1440);
+		var m = A2($elm$core$Basics$modBy, 60, localTotal);
+		var h = (localTotal / 60) | 0;
+		return pad(h) + (':' + pad(m));
+	});
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $author$project$Status$segmentBg = function (status) {
+	_v0$3:
+	while (true) {
+		if (!status.$) {
+			switch (status.a) {
+				case 'online':
+					return '#6db56d';
+				case 'degraded':
+					return '#d4a46b';
+				case 'offline':
+					return '#d46b6b';
+				default:
+					break _v0$3;
+			}
+		} else {
+			break _v0$3;
+		}
+	}
+	return 'var(--border-color)';
+};
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
+var $author$project$Status$viewSegment = F4(
+	function (tzOffset, history, serviceName, idx) {
+		var snapshot = $elm$core$List$head(
+			A2($elm$core$List$drop, idx, history));
+		var ts = A2(
+			$elm$core$Maybe$withDefault,
+			'',
+			A2(
+				$elm$core$Maybe$map,
+				function ($) {
+					return $.ai;
+				},
+				snapshot));
+		var serviceStatus = A2(
+			$elm$core$Maybe$andThen,
+			$elm$core$Dict$get(serviceName),
+			A2(
+				$elm$core$Maybe$andThen,
+				function ($) {
+					return $.ag;
+				},
+				snapshot));
+		var tooltipText = A2($author$project$Status$hourLabel, tzOffset, ts) + (' — ' + A2($elm$core$Maybe$withDefault, 'no data', serviceStatus));
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('ribbon-segment'),
+					A2(
+					$elm$html$Html$Attributes$style,
+					'background-color',
+					$author$project$Status$segmentBg(serviceStatus)),
+					$elm$html$Html$Attributes$title(tooltipText)
+				]),
+			_List_Nil);
+	});
+var $author$project$Status$viewTicks = F2(
+	function (tzOffset, history) {
+		var tickAt = function (i) {
+			return A2(
+				$elm$core$Maybe$withDefault,
+				'',
+				A2(
+					$elm$core$Maybe$map,
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.ai;
+						},
+						$author$project$Status$hourLabel(tzOffset)),
+					$elm$core$List$head(
+						A2($elm$core$List$drop, i, history))));
+		};
+		return $elm$core$List$isEmpty(history) ? A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('history-ticks')
+				]),
+			_List_Nil) : A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('history-ticks')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tick-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							tickAt(0))
+						])),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tick-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							tickAt(4))
+						])),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tick-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							tickAt(8))
+						])),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('tick-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							tickAt(11))
+						]))
+				]));
+	});
+var $author$project$Status$viewServiceCard = F4(
+	function (tzOffset, isLoading, history, info) {
+		var ribbonSegments = $elm$core$List$isEmpty(history) ? A2(
+			$elm$core$List$repeat,
+			12,
+			A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ribbon-segment placeholder')
+					]),
+				_List_Nil)) : A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (i, _v2) {
+					return A4($author$project$Status$viewSegment, tzOffset, history, info.N, i);
+				}),
+			history);
+		var currentStatus = isLoading ? $elm$core$Maybe$Nothing : A2($author$project$Status$currentStatusFor, history, info.N);
+		var dotClass = function () {
+			if (isLoading) {
+				return 'status-dot checking';
+			} else {
+				_v1$3:
+				while (true) {
+					if (!currentStatus.$) {
+						switch (currentStatus.a) {
+							case 'online':
+								return 'status-dot online';
+							case 'degraded':
+								return 'status-dot degraded';
+							case 'offline':
+								return 'status-dot offline';
+							default:
+								break _v1$3;
+						}
+					} else {
+						break _v1$3;
+					}
+				}
+				return 'status-dot unknown';
+			}
+		}();
+		var badgeText = isLoading ? 'checking...' : A2($elm$core$Maybe$withDefault, 'unknown', currentStatus);
+		var badgeClass = function () {
+			if (isLoading) {
+				return 'status-badge';
+			} else {
+				_v0$3:
+				while (true) {
+					if (!currentStatus.$) {
+						switch (currentStatus.a) {
+							case 'online':
+								return 'status-badge online';
+							case 'degraded':
+								return 'status-badge degraded';
+							case 'offline':
+								return 'status-badge offline';
+							default:
+								break _v0$3;
+						}
+					} else {
+						break _v0$3;
+					}
+				}
+				return 'status-badge';
+			}
+		}();
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('status-card')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-header')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('card-title-row')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$span,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class(dotClass)
+										]),
+									_List_Nil),
+									A2(
+									$elm$html$Html$a,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$href('https://' + info.N),
+											$elm$html$Html$Attributes$class('service-link')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(info.N)
+										]))
+								])),
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(badgeClass)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(badgeText)
+								]))
+						])),
+					A2(
+					$elm$html$Html$p,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('service-description')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(info.I)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('history-ribbon')
+						]),
+					ribbonSegments),
+					A2($author$project$Status$viewTicks, tzOffset, history)
+				]));
+	});
+var $author$project$Status$view = F3(
+	function (tzOffset, state, refreshMsg) {
+		var _v0 = function () {
+			switch (state.$) {
+				case 1:
+					return _Utils_Tuple2(true, _List_Nil);
+				case 2:
+					var h = state.a;
+					return _Utils_Tuple2(false, h);
+				default:
+					return _Utils_Tuple2(false, _List_Nil);
+			}
+		}();
+		var isLoading = _v0.a;
+		var history = _v0.b;
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('status-container')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('status-header-row')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h1,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('status-header')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('statuses')
+										])),
+									A2(
+									$elm$html$Html$p,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('status-subheader')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('functor.systems members keep making fun of indeterministic reliability from my services so i decided to put this on my personal website')
+										]))
+								])),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('status-refresh'),
+									$elm$html$Html$Events$onClick(refreshMsg)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('[ refresh ]')
+								]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('status-grid')
+						]),
+					A2(
+						$elm$core$List$map,
+						A3($author$project$Status$viewServiceCard, tzOffset, isLoading, history),
+						$author$project$Status$serviceInfoList))
+				]));
+	});
+var $author$project$Xiangqi$Piece = F4(
+	function (label, side, file, rank) {
+		return {j: file, at: label, aD: rank, aJ: side};
+	});
+var $author$project$Xiangqi$pieces = _List_fromArray(
+	[
+		A4($author$project$Xiangqi$Piece, '車', 'black', 0, 0),
+		A4($author$project$Xiangqi$Piece, '馬', 'black', 1, 0),
+		A4($author$project$Xiangqi$Piece, '象', 'black', 2, 0),
+		A4($author$project$Xiangqi$Piece, '士', 'black', 3, 0),
+		A4($author$project$Xiangqi$Piece, '將', 'black', 4, 0),
+		A4($author$project$Xiangqi$Piece, '士', 'black', 5, 0),
+		A4($author$project$Xiangqi$Piece, '象', 'black', 6, 0),
+		A4($author$project$Xiangqi$Piece, '馬', 'black', 7, 0),
+		A4($author$project$Xiangqi$Piece, '車', 'black', 8, 0),
+		A4($author$project$Xiangqi$Piece, '砲', 'black', 1, 2),
+		A4($author$project$Xiangqi$Piece, '砲', 'black', 7, 2),
+		A4($author$project$Xiangqi$Piece, '卒', 'black', 0, 3),
+		A4($author$project$Xiangqi$Piece, '卒', 'black', 2, 3),
+		A4($author$project$Xiangqi$Piece, '卒', 'black', 4, 3),
+		A4($author$project$Xiangqi$Piece, '卒', 'black', 6, 3),
+		A4($author$project$Xiangqi$Piece, '卒', 'black', 8, 3),
+		A4($author$project$Xiangqi$Piece, '兵', 'red', 0, 6),
+		A4($author$project$Xiangqi$Piece, '兵', 'red', 2, 6),
+		A4($author$project$Xiangqi$Piece, '兵', 'red', 4, 6),
+		A4($author$project$Xiangqi$Piece, '兵', 'red', 6, 6),
+		A4($author$project$Xiangqi$Piece, '兵', 'red', 8, 6),
+		A4($author$project$Xiangqi$Piece, '炮', 'red', 1, 7),
+		A4($author$project$Xiangqi$Piece, '炮', 'red', 7, 7),
+		A4($author$project$Xiangqi$Piece, '俥', 'red', 0, 9),
+		A4($author$project$Xiangqi$Piece, '傌', 'red', 1, 9),
+		A4($author$project$Xiangqi$Piece, '相', 'red', 2, 9),
+		A4($author$project$Xiangqi$Piece, '仕', 'red', 3, 9),
+		A4($author$project$Xiangqi$Piece, '帥', 'red', 4, 9),
+		A4($author$project$Xiangqi$Piece, '仕', 'red', 5, 9),
+		A4($author$project$Xiangqi$Piece, '相', 'red', 6, 9),
+		A4($author$project$Xiangqi$Piece, '傌', 'red', 7, 9),
+		A4($author$project$Xiangqi$Piece, '俥', 'red', 8, 9)
+	]);
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $author$project$Xiangqi$viewPiece = function (piece) {
+	return A2(
+		$elm$html$Html$span,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('xiangqi-piece ' + piece.aJ),
+				A2(
+				$elm$html$Html$Attributes$style,
+				'left',
+				$elm$core$String$fromFloat((piece.j / 8) * 100) + '%'),
+				A2(
+				$elm$html$Html$Attributes$style,
+				'top',
+				$elm$core$String$fromFloat((piece.aD / 9) * 100) + '%')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(piece.at)
+			]));
+};
+var $author$project$Xiangqi$view = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('xiangqi-content')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h1,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('象棋')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('xiangqi-intro')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('A small Chinese chess implementation is taking shape here.')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('xiangqi-board-wrap')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('xiangqi-board'),
+							A2($elm$html$Html$Attributes$attribute, 'role', 'img'),
+							A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Chinese chess board in the starting position')
+						]),
+					_Utils_ap(
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('xiangqi-river')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$span,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('楚河')
+											])),
+										A2(
+										$elm$html$Html$span,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('漢界')
+											]))
+									]))
+							]),
+						A2($elm$core$List$map, $author$project$Xiangqi$viewPiece, $author$project$Xiangqi$pieces))),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('xiangqi-development-banner')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('development-marker')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('// status')
+								])),
+							$elm$html$Html$text('currently being developed')
+						]))
+				]))
+		]));
 var $author$project$Projects$kaitoRepositories = _List_fromArray(
 	[
-		{description: 'KaitoTLex\'s Mafuyu themed Hyprland on NixOS', language: 'Nix', languageColor: '#817c95', name: 'KaitoianOS', readmeExcerpt: 'Fully customizable container-based operating system based on NixOS running Hyprland && Hyprscroller.', url: 'https://github.com/KaitoTLex/KaitoianOS'}
+		{I: ' KaitoTLex\'s functorOS configuration, supported for x86-64-linux and aarch64-linux ', K: 'Nix', L: '#9e9ab8', N: 'ame', O: 'KaitoTLex\'s EE Optimized FunctorOS (NixOS) configuration, KaitoianOS\'s spiritual successor', Y: 'https://github.com/KaitoTLex/ame'},
+		{I: 'A Nix flake library for remote HDL builds', K: 'Nix', L: '#7e7eff', N: 'ichika', O: 'Send HDL to a remote Vivado build server and run synthesis or implementation without consuming local CPU and memory.', Y: 'https://github.com/KaitoTLex/ichika'},
+		{I: 'MINI Open RISC-V 5-stage', K: 'SystemVerilog', L: '#dae1c2', N: 'minori', O: 'An RV32IM_Zicsr five-stage pipelined CPU in SystemVerilog and a learning project for HDL and the RISC-V ISA.', Y: 'https://github.com/KaitoTLex/minori'},
+		{I: 'GPGPU HDL', K: 'SystemVerilog', L: '#dae1c2', N: 'jade', O: 'A general-purpose GPU hardware design project.', Y: 'https://github.com/KaitoTLex/jade'}
 	]);
 var $author$project$Projects$viewRepository = function (repo) {
 	return A2(
@@ -6563,21 +8544,15 @@ var $author$project$Projects$viewRepository = function (repo) {
 				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$h2,
-						_List_Nil,
+						$elm$html$Html$a,
 						_List_fromArray(
 							[
-								A2(
-								$elm$html$Html$a,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$href(repo.url),
-										$elm$html$Html$Attributes$class('repo-title')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text(repo.name)
-									]))
+								$elm$html$Html$Attributes$href(repo.Y),
+								$elm$html$Html$Attributes$class('repo-title')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(repo.N)
 							])),
 						A2(
 						$elm$html$Html$div,
@@ -6595,7 +8570,7 @@ var $author$project$Projects$viewRepository = function (repo) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text(repo.description)
+										$elm$html$Html$text(repo.I)
 									])),
 								A2(
 								$elm$html$Html$div,
@@ -6609,7 +8584,7 @@ var $author$project$Projects$viewRepository = function (repo) {
 										$elm$html$Html$span,
 										_List_fromArray(
 											[
-												A2($elm$html$Html$Attributes$style, 'background-color', repo.languageColor),
+												A2($elm$html$Html$Attributes$style, 'background-color', repo.L),
 												$elm$html$Html$Attributes$class('language-dot')
 											]),
 										_List_Nil),
@@ -6621,7 +8596,7 @@ var $author$project$Projects$viewRepository = function (repo) {
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text(repo.language)
+												$elm$html$Html$text(repo.K)
 											]))
 									]))
 							]))
@@ -6639,18 +8614,18 @@ var $author$project$Projects$viewRepository = function (repo) {
 						_List_Nil,
 						_List_fromArray(
 							[
-								$elm$html$Html$text(repo.readmeExcerpt)
+								$elm$html$Html$text(repo.O)
 							])),
 						A2(
 						$elm$html$Html$a,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$href(repo.url + '/blob/main/README.md'),
+								$elm$html$Html$Attributes$href(repo.Y + '/blob/main/README.md'),
 								$elm$html$Html$Attributes$class('read-more')
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Read more →')
+								$elm$html$Html$text('read more →')
 							]))
 					]))
 			]));
@@ -6681,7 +8656,7 @@ var $author$project$Projects$viewProjects = A2(
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text('Open source repositories I\'ve created')
+					$elm$html$Html$text('Repositories I\'ve created')
 				])),
 			A2(
 			$elm$html$Html$div,
@@ -6691,27 +8666,409 @@ var $author$project$Projects$viewProjects = A2(
 				]),
 			A2($elm$core$List$map, $author$project$Projects$viewRepository, $author$project$Projects$kaitoRepositories))
 		]));
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
+var $author$project$Main$viewPage = F2(
+	function (page, model) {
+		switch (page) {
+			case 0:
+				return $author$project$Home$view;
+			case 1:
+				return $author$project$About$view;
+			case 2:
+				return $author$project$Projects$viewProjects;
+			case 3:
+				return $author$project$Gallery$view;
+			case 4:
+				return $author$project$Xiangqi$view;
+			case 5:
+				return A3($author$project$Status$view, model.aj, model.G, $author$project$Main$RefreshStatuses);
+			default:
+				return A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h1,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('404')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('page not found.')
+								]))
+						]));
 		}
 	});
-var $author$project$Main$view = function (model) {
-	return {
-		body: _List_fromArray(
+var $author$project$Main$viewPageFooter = function (commitHash) {
+	var isPlaceholder = A2($elm$core$String$startsWith, 'GITHUB', commitHash);
+	var shortHash = isPlaceholder ? 'dev' : A2($elm$core$String$left, 7, commitHash);
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
 			[
+				$elm$html$Html$Attributes$class('page-footer')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('footer-gifs')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/gif/eva.gif'),
+								$elm$html$Html$Attributes$alt('eva')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/gif/nec.gif'),
+								$elm$html$Html$Attributes$alt('nec')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/gif/linux_powered.gif'),
+								$elm$html$Html$Attributes$alt('linux')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/gif/yuri.png'),
+								$elm$html$Html$Attributes$alt('yuri')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/gif/trans.gif'),
+								$elm$html$Html$Attributes$alt('trans')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/gif/miku.gif'),
+								$elm$html$Html$Attributes$alt('miku')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/gif/latex.gif'),
+								$elm$html$Html$Attributes$alt('latex')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/gif/kaitotlex.gif'),
+								$elm$html$Html$Attributes$alt('self')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/gif/tetris.gif'),
+								$elm$html$Html$Attributes$alt('tetris')
+							]),
+						_List_Nil)
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('footer-meta')
+					]),
+				_List_fromArray(
+					[
+						isPlaceholder ? A2(
+						$elm$html$Html$span,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('footer-hash')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('src: ' + shortHash)
+							])) : A2(
+						$elm$html$Html$a,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$href('https://github.com/KaitoTLex/web/commit/' + commitHash),
+								$elm$html$Html$Attributes$class('footer-hash')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('src: ' + shortHash)
+							])),
+						A2(
+						$elm$html$Html$span,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('analytics-disclaimer')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('This site uses Simple Analytics, which does not track you or leave cookies.')
+							]))
+					]))
+			]));
+};
+var $author$project$Main$viewSidebar = F3(
+	function (colorMode, commitHash, currentPage) {
+		var navLinkItem = function (_v1) {
+			var url = _v1.a;
+			var label = _v1.b;
+			return A2(
+				$elm$html$Html$a,
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href(url),
+							$elm$html$Html$Attributes$class(
+							A2($author$project$Main$isActiveLink, currentPage, url) ? 'nav-link active' : 'nav-link')
+						]),
+					(url === '/assets/main.pdf') ? _List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$attribute, 'download', 'Ren-Lin-CV.pdf')
+						]) : _List_Nil),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(label)
+					]));
+		};
+		var isPlaceholder = A2($elm$core$String$startsWith, 'GITHUB', commitHash);
+		var shortHash = isPlaceholder ? 'dev' : A2($elm$core$String$left, 7, commitHash);
+		var commitDisplay = isPlaceholder ? A2(
+			$elm$html$Html$span,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('commit-hash')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('src: ' + shortHash)
+				])) : A2(
+			$elm$html$Html$a,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$href('https://github.com/KaitoTLex/web/commit/' + commitHash),
+					$elm$html$Html$Attributes$class('commit-hash')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('src: ' + shortHash)
+				]));
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('sidebar')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('sidebar-identity')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('sidebar-name')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Ren Lin')
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('sidebar-tagline')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('kaitotlex.systems')
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('sidebar-location')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$img,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$src('/assets/pcb.svg'),
+											$elm$html$Html$Attributes$alt('pcb traces')
+										]),
+									_List_Nil)
+								]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('sidebar-divider')
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('sidebar-section-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('dir')
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('nav-links')
+						]),
+					A2($elm$core$List$map, navLinkItem, $author$project$Main$navItems)),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('sidebar-divider')
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('sidebar-section-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('orgs')
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('org-links')
+						]),
+					A2(
+						$elm$core$List$map,
+						function (_v0) {
+							var url = _v0.a;
+							var label = _v0.b;
+							return A2(
+								$elm$html$Html$a,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$href(url),
+										$elm$html$Html$Attributes$class('nav-link')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(label)
+									]));
+						},
+						$author$project$Main$orgItems)),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('sidebar-spacer')
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('sidebar-footer')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('theme-toggle'),
+									$elm$html$Html$Events$onClick($author$project$Main$ToggleColorMode)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									(colorMode === 1) ? '[ light ]' : '[ dark ]')
+								])),
+							commitDisplay,
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('analytics-disclaimer')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('This site uses Simple Analytics, which does not track you or leave cookies.')
+								]))
+						]))
+				]));
+	});
+var $author$project$Main$view = function (model) {
+	var currentPage = $author$project$Main$parseUrl(model.Y);
+	return {
+		aV: _List_fromArray(
+			[
+				A3(
+				$elm$html$Html$node,
+				'link',
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$rel('icon'),
+						$elm$html$Html$Attributes$type_('image/png'),
+						$elm$html$Html$Attributes$href('/assets/favicon.png')
+					]),
+				_List_Nil),
 				$author$project$Main$css(
-				$author$project$Main$buildCss(model)),
+				$author$project$Main$buildCss(model.C)),
+				$author$project$Home$cssStyles,
+				$author$project$Gallery$cssStyles,
+				$author$project$Xiangqi$cssStyles,
+				$author$project$Status$cssStyles,
 				$author$project$Projects$cssStyles,
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('container')
+						$elm$html$Html$Attributes$class('layout')
 					]),
 				_List_fromArray(
 					[
@@ -6719,53 +9076,19 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('branding')
+								$elm$html$Html$Attributes$class('mobile-topbar')
 							]),
 						_List_fromArray(
 							[
 								A2(
-								$elm$html$Html$div,
+								$elm$html$Html$span,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('logo')
+										$elm$html$Html$Attributes$class('mobile-site-name')
 									]),
 								_List_fromArray(
 									[
-										A3(
-										$elm$virtual_dom$VirtualDom$node,
-										'svg',
-										_List_fromArray(
-											[
-												A2($elm$html$Html$Attributes$attribute, 'viewBox', '0 0 24 24'),
-												A2($elm$html$Html$Attributes$attribute, 'width', '32'),
-												A2($elm$html$Html$Attributes$attribute, 'height', '32'),
-												A2($elm$html$Html$Attributes$style, 'margin-right', '1rem')
-											]),
-										_List_fromArray(
-											[
-												A3(
-												$elm$virtual_dom$VirtualDom$node,
-												'path',
-												_List_fromArray(
-													[
-														A2($elm$html$Html$Attributes$attribute, 'd', 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5')
-													]),
-												_List_Nil)
-											]))
-									])),
-								A2(
-								$elm$html$Html$h1,
-								_List_Nil,
-								_List_fromArray(
-									[
 										$elm$html$Html$text('Ren Lin')
-									])),
-								A2(
-								$elm$html$Html$p,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text('kaitotlex.systems')
 									])),
 								A2(
 								$elm$html$Html$button,
@@ -6776,8 +9099,7 @@ var $author$project$Main$view = function (model) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text(
-										model.mobileMenuOpen ? '✕' : '☰'),
+										$elm$html$Html$text('☰'),
 										A2(
 										$elm$html$Html$span,
 										_List_fromArray(
@@ -6790,671 +9112,24 @@ var $author$project$Main$view = function (model) {
 											]))
 									]))
 							])),
+						A3($author$project$Main$viewSidebar, model.C, model._, currentPage),
 						A2(
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('content-wrapper')
+								$elm$html$Html$Attributes$class('main-content')
 							]),
 						_List_fromArray(
 							[
-								(!model.mobileMenuOpen) ? A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('sidebar')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$h2,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('dir')
-											])),
-										A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('nav-links')
-											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$a,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$href('/'),
-														$elm$html$Html$Events$onClick(
-														$author$project$Main$LinkClicked(
-															$elm$browser$Browser$Internal(
-																A2(
-																	$elm$core$Maybe$withDefault,
-																	model.url,
-																	$elm$url$Url$fromString('/')))))
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('home')
-													])),
-												A2(
-												$elm$html$Html$a,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$href('/about'),
-														$elm$html$Html$Events$onClick(
-														$author$project$Main$LinkClicked(
-															$elm$browser$Browser$Internal(
-																A2(
-																	$elm$core$Maybe$withDefault,
-																	model.url,
-																	$elm$url$Url$fromString('/about')))))
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('about')
-													])),
-												A2(
-												$elm$html$Html$a,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$href('/projects'),
-														$elm$html$Html$Events$onClick(
-														$author$project$Main$LinkClicked(
-															$elm$browser$Browser$Internal(
-																A2(
-																	$elm$core$Maybe$withDefault,
-																	model.url,
-																	$elm$url$Url$fromString('/projects')))))
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('projects')
-													])),
-												A2(
-												$elm$html$Html$a,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$href('https://eexiv.functor.systems/author/wlin')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('personal research')
-													])),
-												A2(
-												$elm$html$Html$a,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$href('https://yap.kaitotlex.systems')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('log')
-													])),
-												A2(
-												$elm$html$Html$a,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$href('https://cdn.example.com/resume.pdf')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('download CV')
-													]))
-											])),
-										A2(
-										$elm$html$Html$h2,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('orgs')
-											])),
-										A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('org-links')
-											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$a,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$href('https://functor.systems/')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('functor.systems')
-													])),
-												A2(
-												$elm$html$Html$a,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$href('https://inlabs.kaitotlex.systems')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('InLabs')
-													]))
-											])),
-										A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('mode-toggle-container')
-											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$button,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('mode-toggle'),
-														$elm$html$Html$Events$onClick($author$project$Main$ToggleColorMode)
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text(
-														function () {
-															var _v0 = model.explicitMode;
-															if (_v0.$ === 'Just') {
-																switch (_v0.a.$) {
-																	case 'LightMode':
-																		var _v1 = _v0.a;
-																		return 'Dark Mode (system)';
-																	case 'DarkMode':
-																		var _v2 = _v0.a;
-																		return 'Light Mode (system)';
-																	default:
-																		var _v3 = _v0.a;
-																		return 'System Mode (toggled)';
-																}
-															} else {
-																var _v4 = model.colorMode;
-																switch (_v4.$) {
-																	case 'LightMode':
-																		return 'Dark Mode (system)';
-																	case 'DarkMode':
-																		return 'Light Mode (system)';
-																	default:
-																		return 'Toggle Theme';
-																}
-															}
-														}()),
-														A2(
-														$elm$html$Html$span,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('toggle-icon')
-															]),
-														_List_fromArray(
-															[
-																_Utils_eq(
-																A2($elm$core$Maybe$withDefault, model.colorMode, model.explicitMode),
-																$author$project$Main$DarkMode) ? A3(
-																$elm$virtual_dom$VirtualDom$node,
-																'svg',
-																_List_fromArray(
-																	[
-																		A2($elm$html$Html$Attributes$attribute, 'viewBox', '0 0 24 24'),
-																		A2($elm$html$Html$Attributes$attribute, 'width', '16'),
-																		A2($elm$html$Html$Attributes$attribute, 'height', '16')
-																	]),
-																_List_fromArray(
-																	[
-																		A3(
-																		$elm$virtual_dom$VirtualDom$node,
-																		'path',
-																		_List_fromArray(
-																			[
-																				A2($elm$html$Html$Attributes$attribute, 'd', 'M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-8c-3.3 0-6 2.7-6 6 0 1.8 0.8 3.4 2.1 4.5l-.2.3-1.9 2.8h10l-1.9-2.8-.2-.3c1.3-1.1 2.1-2.6 2.1-4.5 0-3.3-2.7-6-6-6zm-8 14v2h16v-2h-16z')
-																			]),
-																		_List_Nil)
-																	])) : A3(
-																$elm$virtual_dom$VirtualDom$node,
-																'svg',
-																_List_fromArray(
-																	[
-																		A2($elm$html$Html$Attributes$attribute, 'viewBox', '0 0 24 24'),
-																		A2($elm$html$Html$Attributes$attribute, 'width', '16'),
-																		A2($elm$html$Html$Attributes$attribute, 'height', '16')
-																	]),
-																_List_fromArray(
-																	[
-																		A3(
-																		$elm$virtual_dom$VirtualDom$node,
-																		'path',
-																		_List_fromArray(
-																			[
-																				A2($elm$html$Html$Attributes$attribute, 'd', 'M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z')
-																			]),
-																		_List_Nil)
-																	]))
-															]))
-													]))
-											]))
-									])) : A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('mobile-menu-overlay'),
-										$elm$html$Html$Events$onClick($author$project$Main$ToggleMobileMenu)
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('mobile-menu'),
-												A2(
-												$elm$html$Html$Events$stopPropagationOn,
-												'click',
-												$elm$json$Json$Decode$succeed(
-													_Utils_Tuple2($author$project$Main$NoOp, true)))
-											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$div,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('mobile-menu-header')
-													]),
-												_List_fromArray(
-													[
-														A2(
-														$elm$html$Html$h2,
-														_List_Nil,
-														_List_fromArray(
-															[
-																$elm$html$Html$text('Menu')
-															])),
-														A2(
-														$elm$html$Html$button,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('close-mobile-menu'),
-																$elm$html$Html$Events$onClick($author$project$Main$ToggleMobileMenu)
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('Close')
-															]))
-													])),
-												A2(
-												$elm$html$Html$div,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('mobile-nav-links')
-													]),
-												_List_fromArray(
-													[
-														A2(
-														$elm$html$Html$a,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$href('/'),
-																$elm$html$Html$Events$onClick(
-																$author$project$Main$LinkClicked(
-																	$elm$browser$Browser$Internal(
-																		A2(
-																			$elm$core$Maybe$withDefault,
-																			model.url,
-																			$elm$url$Url$fromString('/'))))),
-																$elm$html$Html$Attributes$class('mobile-nav-item')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('home')
-															])),
-														A2(
-														$elm$html$Html$a,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$href('/about'),
-																$elm$html$Html$Events$onClick(
-																$author$project$Main$LinkClicked(
-																	$elm$browser$Browser$Internal(
-																		A2(
-																			$elm$core$Maybe$withDefault,
-																			model.url,
-																			$elm$url$Url$fromString('/about'))))),
-																$elm$html$Html$Attributes$class('mobile-nav-item')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('about')
-															])),
-														A2(
-														$elm$html$Html$a,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$href('/projects'),
-																$elm$html$Html$Events$onClick(
-																$author$project$Main$LinkClicked(
-																	$elm$browser$Browser$Internal(
-																		A2(
-																			$elm$core$Maybe$withDefault,
-																			model.url,
-																			$elm$url$Url$fromString('/projects'))))),
-																$elm$html$Html$Attributes$class('mobile-nav-item')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('projects')
-															])),
-														A2(
-														$elm$html$Html$a,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$href('https://eexiv.functor.systems/author/wlin'),
-																$elm$html$Html$Attributes$class('mobile-nav-item')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('personal research')
-															])),
-														A2(
-														$elm$html$Html$a,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$href('https://yap.kaitotlex.systems'),
-																$elm$html$Html$Attributes$class('mobile-nav-item')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('log')
-															])),
-														A2(
-														$elm$html$Html$a,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$href('https://cdn.example.com/resume.pdf'),
-																$elm$html$Html$Attributes$class('mobile-nav-item')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('download CV')
-															]))
-													])),
-												A2(
-												$elm$html$Html$h2,
-												_List_Nil,
-												_List_fromArray(
-													[
-														$elm$html$Html$text('Organizations')
-													])),
-												A2(
-												$elm$html$Html$div,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('mobile-org-links')
-													]),
-												_List_fromArray(
-													[
-														A2(
-														$elm$html$Html$a,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$href('https://functor.systems/'),
-																$elm$html$Html$Attributes$class('mobile-nav-item')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('functor.systems')
-															])),
-														A2(
-														$elm$html$Html$a,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$href('https://inlabs.kaitotlex.systems'),
-																$elm$html$Html$Attributes$class('mobile-nav-item')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('InLabs')
-															]))
-													]))
-											]))
-									])),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('main-content')
-									]),
-								_List_fromArray(
-									[
-										function () {
-										var _v5 = $author$project$Main$parseUrl(model.url);
-										switch (_v5.$) {
-											case 'Home':
-												return A2(
-													$elm$html$Html$div,
-													_List_Nil,
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$h1,
-															_List_Nil,
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('oh Hi!')
-																])),
-															A2(
-															$elm$html$Html$p,
-															_List_Nil,
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('I am Ren or Warren, I am a High School student studying Nuclear Theory and Electrical Engineering')
-																])),
-															A2(
-															$elm$html$Html$img,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$src('https://web.kaitotlex.systems/cont/bike.jpg'),
-																	$elm$html$Html$Attributes$alt('Bike'),
-																	$elm$html$Html$Attributes$class('responsive-image')
-																]),
-															_List_Nil),
-															A2(
-															$elm$html$Html$p,
-															_List_Nil,
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('I am interested in semi-conductor manufacturing, SOCs, and low power hardware. I work on projects that involves low power hardware -- anything RISC. I can\'t code. I like FOSS and FOSH, including RISC-V.')
-																])),
-															A2(
-															$elm$html$Html$p,
-															_List_Nil,
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('I like cycling and sim-racing. I watch MLB, NPB, F1, WEC, and WRC as a sport. I play the piano, bass and saxophone (Tenor && Alto). I do RE and hardware hacking in my freetime')
-																])),
-															A2(
-															$elm$html$Html$p,
-															_List_Nil,
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('I play too much rythm games')
-																])),
-															A2(
-															$elm$html$Html$p,
-															_List_Nil,
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('If you would like to learn more about me, send a Matrix message or read my logs.')
-																])),
-															A2(
-															$elm$html$Html$h2,
-															_List_Nil,
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('contact')
-																])),
-															A2(
-															$elm$html$Html$div,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$class('contact-links')
-																]),
-															_List_fromArray(
-																[
-																	A2(
-																	$elm$html$Html$a,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$href('https://web.kaitotlex.systems'),
-																			$elm$html$Html$Attributes$class('contact-item')
-																		]),
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$text('kaitotlex.systems')
-																		])),
-																	A2(
-																	$elm$html$Html$a,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$href('mailto:rlin@kaitotlex.systems'),
-																			$elm$html$Html$Attributes$class('contact-item')
-																		]),
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$text('send a email (please sign with pgp)')
-																		])),
-																	A2(
-																	$elm$html$Html$a,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$href('https://bsky.app/profile/kaitotlex.systems'),
-																			$elm$html$Html$Attributes$class('contact-item')
-																		]),
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$text('bluesky')
-																		])),
-																	A2(
-																	$elm$html$Html$a,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$href('https://x.com/Kaito_Malfoy'),
-																			$elm$html$Html$Attributes$class('contact-item')
-																		]),
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$text('X (formerly twitter)')
-																		])),
-																	A2(
-																	$elm$html$Html$a,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$href('https://github.com/kaitotlex'),
-																			$elm$html$Html$Attributes$class('contact-item')
-																		]),
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$text('github')
-																		])),
-																	A2(
-																	$elm$html$Html$a,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$href('https://osu.ppy.sh/users/26069038'),
-																			$elm$html$Html$Attributes$class('contact-item')
-																		]),
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$text('osu')
-																		])),
-																	A2(
-																	$elm$html$Html$a,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$href('https://arxiv.org/abs/2204.04549'),
-																			$elm$html$Html$Attributes$class('contact-item')
-																		]),
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$text('send ripples through the maxwell matter wave')
-																		]))
-																]))
-														]));
-											case 'ProjectsPage':
-												return $author$project$Projects$viewProjects;
-											default:
-												return A2(
-													$elm$html$Html$div,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('main-content')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$h1,
-															_List_Nil,
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('404 - Page Not Found')
-																])),
-															A2(
-															$elm$html$Html$p,
-															_List_Nil,
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('The page you\'re looking for doesn\'t exist.')
-																]))
-														]));
-										}
-									}()
-									]))
+								A2($author$project$Main$viewPage, currentPage, model),
+								$author$project$Main$viewPageFooter(model._)
 							])),
-						A2(
-						$elm$html$Html$footer,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('copyright-footer')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('2025 © KaitoTLex on Elm, all rights reserved'),
-								A2(
-								$elm$html$Html$span,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('commit-info')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text(' source: '),
-										A2(
-										$elm$html$Html$a,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$href('https://github.com/kaitotlex/web/commit/' + model.commitHash),
-												$elm$html$Html$Attributes$class('commit-link')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text(model.commitHash)
-											]))
-									]))
-							]))
+						model.M ? A2($author$project$Main$viewMobileMenu, model.C, currentPage) : $elm$html$Html$text('')
 					]))
 			]),
-		title: 'KaitoTLex.Systems'
+		bd: 'kaitotlex.systems'
 	};
 };
 var $author$project$Main$main = $elm$browser$Browser$application(
-	{init: $author$project$Main$init, onUrlChange: $author$project$Main$UrlChanged, onUrlRequest: $author$project$Main$LinkClicked, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
-_Platform_export({'Main':{'init':$author$project$Main$main(
-	A2(
-		$elm$json$Json$Decode$andThen,
-		function (prefersDark) {
-			return $elm$json$Json$Decode$succeed(
-				{prefersDark: prefersDark});
-		},
-		A2($elm$json$Json$Decode$field, 'prefersDark', $elm$json$Json$Decode$bool)))(0)}});}(this));
+	{a1: $author$project$Main$init, a3: $author$project$Main$UrlChanged, a4: $author$project$Main$LinkClicked, bb: $author$project$Main$subscriptions, be: $author$project$Main$update, bf: $author$project$Main$view});
+_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)(0)}});}(this));
