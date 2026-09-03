@@ -15,7 +15,7 @@ view =
             , attribute "fetchpriority" "high"
             ]
             []
-        , h1 [ class "home-heading" ] [ text "oh hi! I am Ren(林敬宴)" ]
+        , h1 [ class "home-heading" ] [ text "oh hi! I am Ren or Warren" ]
         , div [ class "home-divider" ] []
         , p [ class "home-para" ]
             [ text "I am an undergraduate student at SJSU studying ISE." ]
