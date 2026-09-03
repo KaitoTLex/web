@@ -470,7 +470,7 @@ view model =
     in
     { title = "kaitotlex.systems"
     , body =
-        [ node "link" [ rel "icon", type_ "image/png", href "/assets/favicon.png" ] []
+        [ node "link" [ rel "icon", type_ "image/png", href "/assets/idrewthis.jpg" ] []
         , css (buildCss model.colorMode)
         , Home.cssStyles
         , Gallery.cssStyles
