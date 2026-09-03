@@ -1,7 +1,7 @@
 module Gallery exposing (cssStyles, view)
 
 import Html exposing (Html, a, div, figcaption, figure, h1, img, p, text)
-import Html.Attributes exposing (alt, attribute, class, href, src)
+import Html.Attributes exposing (alt, attribute, class, href, rel, src, target)
 import VirtualDom
 
 
@@ -40,7 +40,12 @@ viewPhoto photo =
                 "gallery-item"
             )
         ]
-        [ a [ href ("/assets/" ++ photo.file), class "gallery-image-link" ]
+        [ a
+            [ href ("/assets/" ++ photo.file)
+            , class "gallery-image-link"
+            , target "_blank"
+            , rel "noopener noreferrer"
+            ]
             [ img
                 [ src ("/assets/" ++ photo.file)
                 , alt photo.alt
@@ -70,6 +75,11 @@ view =
     div [ class "gallery-content" ]
         [ h1 [] [ text "gallery" ]
         , p [ class "gallery-intro" ] [ text "Photographs, travels, and assorted artifacts. Select an image to view it full-size." ]
+        , p [ class "gallery-license" ]
+            [ text "Photographs are licensed under "
+            , a [ href "https://creativecommons.org/licenses/by-nc-sa/4.0/", target "_blank", rel "noopener noreferrer" ] [ text "CC BY-NC-SA 4.0" ]
+            , text "."
+            ]
         , div [ class "gallery-grid" ] (List.map viewPhoto photos)
         ]
 
@@ -83,7 +93,18 @@ css =
 
     .gallery-intro {
       color: var(--muted-color) !important;
+      margin-bottom: 0.5rem !important;
+    }
+
+    .gallery-license {
+      color: var(--muted-color) !important;
+      font-size: 0.76rem !important;
       margin-bottom: 2rem !important;
+    }
+
+    .gallery-license a {
+      color: var(--accent-color);
+      border-bottom: 1px solid var(--accent-color);
     }
 
     .gallery-grid {

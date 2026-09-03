@@ -7016,7 +7016,7 @@ var $author$project$Main$css = function (cssContent) {
 				$elm$html$Html$text(cssContent)
 			]));
 };
-var $author$project$Gallery$css = '\n    .gallery-content {\n      max-width: 1120px;\n    }\n\n    .gallery-intro {\n      color: var(--muted-color) !important;\n      margin-bottom: 2rem !important;\n    }\n\n    .gallery-grid {\n      display: grid;\n      grid-template-columns: repeat(2, minmax(0, 1fr));\n      gap: 1.25rem;\n      align-items: start;\n    }\n\n    .gallery-item {\n      margin: 0;\n      min-width: 0;\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      overflow: hidden;\n      background: var(--surface-color);\n    }\n\n    .gallery-featured {\n      grid-column: span 2;\n      display: grid;\n      grid-template-columns: minmax(0, 1.65fr) minmax(220px, 0.6fr);\n      align-items: stretch;\n    }\n\n    .gallery-image-link {\n      display: block;\n      overflow: hidden;\n      background: var(--border-color);\n    }\n\n    .gallery-item img {\n      display: block;\n      width: 100%;\n      height: 310px;\n      object-fit: cover;\n      transition: transform 0.3s ease, opacity 0.3s ease;\n    }\n\n    .gallery-featured img {\n      height: min(68vh, 660px);\n      object-position: center 62%;\n    }\n\n    .gallery-image-link:hover img {\n      transform: scale(1.012);\n      opacity: 0.92;\n    }\n\n    .gallery-item figcaption {\n      padding: 0.8rem 1rem;\n      color: var(--muted-color);\n      font-size: 0.76rem;\n      line-height: 1.6;\n    }\n\n    .gallery-featured figcaption {\n      display: flex;\n      flex-direction: column;\n      justify-content: flex-end;\n      padding: 1.5rem;\n      color: var(--text-color);\n      font-size: 0.88rem;\n      border-left: 1px solid var(--border-color);\n    }\n\n    .gallery-feature-label {\n      color: var(--accent-color);\n      font-size: 0.68rem;\n      letter-spacing: 0.1em;\n      text-transform: uppercase;\n      margin-bottom: 0.6rem;\n    }\n\n    @media (max-width: 768px) {\n      .gallery-grid {\n        grid-template-columns: 1fr;\n      }\n\n      .gallery-featured {\n        grid-column: span 1;\n        display: block;\n      }\n\n      .gallery-featured img,\n      .gallery-item img {\n        height: auto;\n        max-height: none;\n      }\n\n      .gallery-featured figcaption {\n        border-left: 0;\n        border-top: 1px solid var(--border-color);\n      }\n    }\n    ';
+var $author$project$Gallery$css = '\n    .gallery-content {\n      max-width: 1120px;\n    }\n\n    .gallery-intro {\n      color: var(--muted-color) !important;\n      margin-bottom: 0.5rem !important;\n    }\n\n    .gallery-license {\n      color: var(--muted-color) !important;\n      font-size: 0.76rem !important;\n      margin-bottom: 2rem !important;\n    }\n\n    .gallery-license a {\n      color: var(--accent-color);\n      border-bottom: 1px solid var(--accent-color);\n    }\n\n    .gallery-grid {\n      display: grid;\n      grid-template-columns: repeat(2, minmax(0, 1fr));\n      gap: 1.25rem;\n      align-items: start;\n    }\n\n    .gallery-item {\n      margin: 0;\n      min-width: 0;\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      overflow: hidden;\n      background: var(--surface-color);\n    }\n\n    .gallery-featured {\n      grid-column: span 2;\n      display: grid;\n      grid-template-columns: minmax(0, 1.65fr) minmax(220px, 0.6fr);\n      align-items: stretch;\n    }\n\n    .gallery-image-link {\n      display: block;\n      overflow: hidden;\n      background: var(--border-color);\n    }\n\n    .gallery-item img {\n      display: block;\n      width: 100%;\n      height: 310px;\n      object-fit: cover;\n      transition: transform 0.3s ease, opacity 0.3s ease;\n    }\n\n    .gallery-featured img {\n      height: min(68vh, 660px);\n      object-position: center 62%;\n    }\n\n    .gallery-image-link:hover img {\n      transform: scale(1.012);\n      opacity: 0.92;\n    }\n\n    .gallery-item figcaption {\n      padding: 0.8rem 1rem;\n      color: var(--muted-color);\n      font-size: 0.76rem;\n      line-height: 1.6;\n    }\n\n    .gallery-featured figcaption {\n      display: flex;\n      flex-direction: column;\n      justify-content: flex-end;\n      padding: 1.5rem;\n      color: var(--text-color);\n      font-size: 0.88rem;\n      border-left: 1px solid var(--border-color);\n    }\n\n    .gallery-feature-label {\n      color: var(--accent-color);\n      font-size: 0.68rem;\n      letter-spacing: 0.1em;\n      text-transform: uppercase;\n      margin-bottom: 0.6rem;\n    }\n\n    @media (max-width: 768px) {\n      .gallery-grid {\n        grid-template-columns: 1fr;\n      }\n\n      .gallery-featured {\n        grid-column: span 1;\n        display: block;\n      }\n\n      .gallery-featured img,\n      .gallery-item img {\n        height: auto;\n        max-height: none;\n      }\n\n      .gallery-featured figcaption {\n        border-left: 0;\n        border-top: 1px solid var(--border-color);\n      }\n    }\n    ';
 var $author$project$Gallery$cssStyles = A3(
 	$elm$virtual_dom$VirtualDom$node,
 	'style',
@@ -7170,8 +7170,7 @@ var $author$project$Main$navItems = _List_fromArray(
 	]);
 var $author$project$Main$orgItems = _List_fromArray(
 	[
-		_Utils_Tuple2('https://functor.systems/', 'functor.systems'),
-		_Utils_Tuple2('https://inlabs.kaitotlex.systems', 'InLabs')
+		_Utils_Tuple2('https://functor.systems/', 'functor.systems')
 	]);
 var $elm$html$Html$Attributes$src = function (url) {
 	return A2(
@@ -7262,7 +7261,7 @@ var $author$project$Main$viewMobileMenu = F2(
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text('Ren Lin')
+													$elm$html$Html$text('Ren Lin (林敬宴)')
 												])),
 											A2(
 											$elm$html$Html$div,
@@ -7555,6 +7554,7 @@ var $author$project$Gallery$photos = _List_fromArray(
 		{k: 'HackMIT hacker badge held in one hand', l: 'HackMIT 2025', h: false, j: 'IMG_0119.jpeg'},
 		{k: 'Drawing of a blue-haired character working on a laptop', l: 'I drew this', h: false, j: 'idrewthis.jpg'}
 	]);
+var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
 var $author$project$Gallery$viewPhoto = function (photo) {
 	return A2(
 		$elm$html$Html$figure,
@@ -7570,7 +7570,9 @@ var $author$project$Gallery$viewPhoto = function (photo) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$href('/assets/' + photo.j),
-						$elm$html$Html$Attributes$class('gallery-image-link')
+						$elm$html$Html$Attributes$class('gallery-image-link'),
+						$elm$html$Html$Attributes$target('_blank'),
+						$elm$html$Html$Attributes$rel('noopener noreferrer')
 					]),
 				_List_fromArray(
 					[
@@ -7632,6 +7634,29 @@ var $author$project$Gallery$view = A2(
 					$elm$html$Html$text('Photographs, travels, and assorted artifacts. Select an image to view it full-size.')
 				])),
 			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('gallery-license')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Photographs are licensed under '),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('https://creativecommons.org/licenses/by-nc-sa/4.0/'),
+							$elm$html$Html$Attributes$target('_blank'),
+							$elm$html$Html$Attributes$rel('noopener noreferrer')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('CC BY-NC-SA 4.0')
+						])),
+					$elm$html$Html$text('.')
+				])),
+			A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
@@ -7666,7 +7691,7 @@ var $author$project$Home$view = A2(
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text('oh hi! I am Ren(林敬宴)')
+					$elm$html$Html$text('oh hi! I am Ren or Warren')
 				])),
 			A2(
 			$elm$html$Html$div,
@@ -8906,7 +8931,7 @@ var $author$project$Main$viewSidebar = F3(
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text('Ren Lin')
+									$elm$html$Html$text('Ren Lin (林敬宴)')
 								])),
 							A2(
 							$elm$html$Html$div,
@@ -9054,7 +9079,7 @@ var $author$project$Main$view = function (model) {
 					[
 						$elm$html$Html$Attributes$rel('icon'),
 						$elm$html$Html$Attributes$type_('image/png'),
-						$elm$html$Html$Attributes$href('/assets/favicon.png')
+						$elm$html$Html$Attributes$href('/assets/idrewthis.jpg')
 					]),
 				_List_Nil),
 				$author$project$Main$css(
@@ -9088,7 +9113,7 @@ var $author$project$Main$view = function (model) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Ren Lin')
+										$elm$html$Html$text('Ren Lin (林敬宴)')
 									])),
 								A2(
 								$elm$html$Html$button,
