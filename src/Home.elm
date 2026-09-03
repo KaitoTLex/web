@@ -1,28 +1,34 @@
 module Home exposing (cssStyles, view)
 
-import Html exposing (Html, a, div, h1, h2, p, text)
-import Html.Attributes exposing (class, href)
+import Html exposing (Html, a, div, h1, h2, img, p, text)
+import Html.Attributes exposing (alt, attribute, class, href, src)
 import VirtualDom
 
 
 view : Html msg
 view =
     div [ class "home-content" ]
-        [ div [ class "home-eyebrow" ] [ text "// kaitotlex.systems" ]
-        , h1 [ class "home-heading" ] [ text "oh hi!" ]
+        [ img
+            [ src "/assets/DSC_3766.jpg"
+            , alt "Shinkansen arriving at a station in Japan"
+            , class "home-hero-image"
+            , attribute "fetchpriority" "high"
+            ]
+            []
+        , h1 [ class "home-heading" ] [ text "oh hi! I am Ren(林敬宴)" ]
         , div [ class "home-divider" ] []
         , p [ class "home-para" ]
-            [ text "I am Warren (or Ren), a student studying electrical engineering and physics." ]
+            [ text "I am an undergraduate student at SJSU." ]
         , p [ class "home-para" ]
-            [ text "I'm a student during the day and an electrical engineer and an amateur physicist at night" ]
+            [ text "I'm a student during the day and an electrical engineer at night. " ]
         , p [ class "home-para" ]
-            [ text "I work on projects involving low-power hardware — anything RISC. Currently interested in semiconductor manufacturing, SoCs, RISC-V, and FOSS/FOSH." ]
+            [ text "Lately, I've been working on projects relating to Computer Architecture and ASIC design." ]
         , p [ class "home-para" ]
             [ text "I am currently maintaining infra for functor.systems and working in MIT Open-Compute developing hardware, i am also currently building my own RISC-V chip with the vector extension" ]
         , p [ class "home-para" ]
-            [ text "I aspire to continue education beyond BS/BA in Physics or Electrical Engineering hopefully contributing to premier research facilities such as the National Aeronautics and Space Administration (NASA) or Organisation européenne pour la recherche nucléaire (CERN)" ]
+            [ text "I aspire to continue education beyond BS/BA in Physics or Electrical Engineering hopefully contributing to premier research facilities in a lab." ]
         , p [ class "home-para" ]
-            [ text "I am currently drowning in an information soup" ]
+            [ text "I am currently drowning in an information soup°❀⋆.ೃ࿔*:･°❀⋆.ೃ࿔*:･" ]
         , div [ class "home-para" ]
             [ p [ class "quote-text" ]
                 [ text "\"The clear-cut idea of what is meant by proof ... he perhaps did not possess at all; once he had become satisfied of a theorem's truth, he had scant interest in proving it to others.\"" ]
@@ -31,11 +37,11 @@ view =
         -- , a [ href ]
         , h2 [] [ text "contact" ]
         , div [ class "contact-links" ]
-            [ a [ href "mailto:rlin@kaitotlex.systems", class "contact-item" ] [ text "email (preferred)" ]
+            [ a [ href "mailto:renl@kaitotlex.systems", class "contact-item" ] [ text "email (preferred)" ]
             , a [ href "https://matrix.to/#/@kaitotlex26:functor.systems", class "contact-item" ] [ text "matrix" ]
             , a [ href "https://github.com/kaitotlex", class "contact-item" ] [ text "github" ]
             , a [ href "https://bsky.app/profile/kaitotlex.systems", class "contact-item" ] [ text "bluesky" ]
-            , a [ href "https://www.instagram.com/kaitotlex.ttv", class "contact-item" ] [ text "instagram" ]
+            , a [ href "https://www.instagram.com/kaitotlex_", class "contact-item" ] [ text "instagram" ]
             , a [ href "https://twitter.com/kaitotlex", class "contact-item" ] [ text "twitter / x" ]
             , a [ href "https://osu.ppy.sh/users/26069038", class "contact-item" ] [ text "osu" ]
             , a [ href "https://code.functor.system/kaitotlex", class "contact-item" ] [ text "functor.systems forge" ]
@@ -49,15 +55,18 @@ css : String
 css =
     """
     .home-content {
-      max-width: 680px;
+      max-width: 1040px;
     }
 
-    .home-eyebrow {
-      font-size: 0.72rem;
-      color: var(--accent-color);
-      letter-spacing: 0.1em;
+    .home-hero-image {
+      display: block;
+      width: 100%;
+      height: clamp(180px, 28vw, 320px);
+      object-fit: cover;
+      object-position: center;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
       margin-bottom: 2rem;
-      opacity: 0.8;
     }
 
     .home-heading {

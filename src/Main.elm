@@ -3,6 +3,7 @@ module Main exposing (main)
 import About
 import Browser
 import Browser.Navigation exposing (Key)
+import Gallery
 import Home
 import Html exposing (Html, a, button, div, h1, img, node, p, span, text)
 import Html.Attributes exposing (alt, class, href, rel, src, type_)
@@ -15,6 +16,7 @@ import Time
 import Url
 import Url.Parser as Parser exposing (Parser, oneOf, s, top)
 import VirtualDom
+import Xiangqi
 
 
 main : Program Int Model Msg
@@ -41,6 +43,8 @@ type Page
     = Home
     | AboutPage
     | ProjectsPage
+    | GalleryPage
+    | XiangqiPage
     | StatusPage
     | NotFound
 
@@ -195,6 +199,8 @@ navItems =
     [ ( "/", "home" )
     , ( "/about", "about" )
     , ( "/projects", "projects" )
+    , ( "/gallery", "gallery" )
+    , ( "/xiangqi", "象棋" )
     , ( "/status", "status" )
     , ( "https://eexiv.functor.systems/author/wlin", "personal research" )
     , ( "https://yap.kaitotlex.systems", "log" )
@@ -227,6 +233,12 @@ isActiveLink currentPage url =
             True
 
         ( ProjectsPage, "/projects" ) ->
+            True
+
+        ( GalleryPage, "/gallery" ) ->
+            True
+
+        ( XiangqiPage, "/xiangqi" ) ->
             True
 
         ( StatusPage, "/status" ) ->
@@ -409,6 +421,12 @@ viewPage page model =
         ProjectsPage ->
             Projects.viewProjects
 
+        GalleryPage ->
+            Gallery.view
+
+        XiangqiPage ->
+            Xiangqi.view
+
         StatusPage ->
             Status.view model.tzOffset model.statusState RefreshStatuses
 
@@ -433,6 +451,8 @@ view model =
         [ node "link" [ rel "icon", type_ "image/png", href "/assets/favicon.png" ] []
         , css (buildCss model.colorMode)
         , Home.cssStyles
+        , Gallery.cssStyles
+        , Xiangqi.cssStyles
         , Status.cssStyles
         , Projects.cssStyles
         , div [ class "layout" ]
@@ -477,6 +497,8 @@ routeParser =
         [ Parser.map Home top
         , Parser.map AboutPage (s "about")
         , Parser.map ProjectsPage (s "projects")
+        , Parser.map GalleryPage (s "gallery")
+        , Parser.map XiangqiPage (s "xiangqi")
         , Parser.map StatusPage (s "status")
         ]
 
@@ -790,7 +812,38 @@ buildCss colorMode =
     /* ── About page ─────────────────────────────── */
 
     .about-content {
-      max-width: 640px;
+      max-width: 1080px;
+    }
+
+    .about-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 640px) minmax(260px, 380px);
+      gap: clamp(2rem, 5vw, 5rem);
+      align-items: start;
+    }
+
+    .about-photo {
+      margin: 0;
+      position: sticky;
+      top: 3.5rem;
+      border: 1px solid """ ++ t.border ++ """;
+      border-radius: 6px;
+      overflow: hidden;
+      background-color: """ ++ t.surface ++ """;
+    }
+
+    .about-photo img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .about-photo figcaption {
+      padding: 0.85rem 1rem;
+      color: """ ++ t.muted ++ """;
+      font-size: 0.74rem;
+      line-height: 1.6;
+      border-top: 1px solid """ ++ t.border ++ """;
     }
 
     .about-para {
@@ -1034,6 +1087,16 @@ buildCss colorMode =
         margin-left: 0;
         padding: 1.75rem 1.25rem;
         max-width: 100%;
+      }
+
+      .about-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .about-photo {
+        position: static;
+        max-width: 520px;
       }
     }
 

@@ -56,6 +56,8 @@ jobs:
               <div id="root"></div>
               <script src="bundle.js"></script>
               <script>Elm.Main.init({ node: document.getElementById("root"), flags: new Date().getTimezoneOffset() });</script>
+              <!-- 100% privacy-first analytics -->
+              <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
             </body>
           </html>
           HTMLEOF

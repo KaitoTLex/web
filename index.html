@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Main</title>
   <style>body { padding: 0; margin: 0; }</style>
+  <!-- 100% privacy-first analytics -->
+  <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
 </head>
 
 <body>
@@ -6392,8 +6394,10 @@ var $elm$url$Url$Parser$parse = F2(
 					$elm$core$Basics$identity)));
 	});
 var $author$project$Main$AboutPage = {$: 'AboutPage'};
+var $author$project$Main$GalleryPage = {$: 'GalleryPage'};
 var $author$project$Main$Home = {$: 'Home'};
 var $author$project$Main$ProjectsPage = {$: 'ProjectsPage'};
+var $author$project$Main$XiangqiPage = {$: 'XiangqiPage'};
 var $elm$url$Url$Parser$Parser = function (a) {
 	return {$: 'Parser', a: a};
 };
@@ -6500,6 +6504,14 @@ var $author$project$Main$routeParser = $elm$url$Url$Parser$oneOf(
 			$elm$url$Url$Parser$map,
 			$author$project$Main$ProjectsPage,
 			$elm$url$Url$Parser$s('projects')),
+			A2(
+			$elm$url$Url$Parser$map,
+			$author$project$Main$GalleryPage,
+			$elm$url$Url$Parser$s('gallery')),
+			A2(
+			$elm$url$Url$Parser$map,
+			$author$project$Main$XiangqiPage,
+			$elm$url$Url$Parser$s('xiangqi')),
 			A2(
 			$elm$url$Url$Parser$map,
 			$author$project$Main$StatusPage,
@@ -6969,7 +6981,7 @@ var $author$project$Main$themeFor = function (colorMode) {
 };
 var $author$project$Main$buildCss = function (colorMode) {
 	var t = $author$project$Main$themeFor(colorMode);
-	return '\n    @import url(\'https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap\');\n\n    *, *::before, *::after {\n      box-sizing: border-box;\n    }\n\n    html {\n      scroll-behavior: smooth;\n    }\n\n    html, body {\n      margin: 0;\n      padding: 0;\n      height: 100%;\n    }\n\n    :root {\n      --border-color: ' + (t.border + (';\n      --surface-color: ' + (t.surface + (';\n      --accent-color: ' + (t.accent + (';\n      --muted-color: ' + (t.muted + (';\n      --text-color: ' + (t.fg + (';\n      --link-color: ' + (t.linkColor + (';\n      --link-hover-color: ' + (t.linkHover + (';\n    }\n\n    body {\n      font-family: \'Fira Code\', monospace;\n      background-color: ' + (t.bg + (';\n      color: ' + (t.fg + (';\n      font-size: 15px;\n      line-height: 1.7;\n      transition: background-color 0.25s ease, color 0.25s ease;\n    }\n\n    a {\n      color: ' + (t.linkColor + (';\n      text-decoration: none;\n      transition: color 0.15s ease;\n    }\n\n    a:hover {\n      color: ' + (t.linkHover + (';\n    }\n\n    /* ── Layout ─────────────────────────────────── */\n\n    .layout {\n      display: flex;\n      min-height: 100vh;\n      position: relative;\n    }\n\n    /* ── Sidebar ─────────────────────────────────── */\n\n    .sidebar {\n      position: fixed;\n      left: 0;\n      top: 0;\n      width: 240px;\n      height: 100vh;\n      overflow-y: auto;\n      display: flex;\n      flex-direction: column;\n      background-color: ' + (t.sidebarBg + (';\n      border-right: 1px solid ' + (t.border + (';\n      padding: 2rem 1.5rem;\n      z-index: 100;\n      transition: background-color 0.25s ease;\n    }\n\n    .sidebar-identity {\n      margin-bottom: 1rem;\n    }\n\n    .sidebar-name {\n      font-size: 1.05rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-tagline {\n      font-size: 0.78rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.25rem;\n    }\n\n    .sidebar-location {\n      font-size: 0.7rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.3rem;\n      opacity: 0.75;\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-divider {\n      height: 1px;\n      background-color: ' + (t.border + (';\n      margin: 1rem 0;\n    }\n\n    .sidebar-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-bottom: 0.4rem;\n    }\n\n    .nav-links,\n    .org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .nav-link {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.86rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .nav-link:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .nav-link.active {\n      color: ' + (t.accent + (';\n      border-left-color: ' + (t.accent + (';\n      background-color: ' + (t.surface + (';\n    }\n\n    .sidebar-spacer {\n      flex-grow: 1;\n    }\n\n    .sidebar-footer {\n      display: flex;\n      flex-direction: column;\n      gap: 0.5rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .theme-toggle {\n      background: none;\n      border: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.78rem;\n      padding: 0.3rem 0.6rem;\n      border-radius: 4px;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease, border-color 0.15s ease;\n      width: 100%;\n    }\n\n    .theme-toggle:hover {\n      color: ' + (t.fg + (';\n      border-color: ' + (t.accent + (';\n    }\n\n    .commit-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.commit-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    /* ── Main Content ────────────────────────────── */\n\n    .main-content {\n      margin-left: 240px;\n      padding: 3.5rem 4rem;\n      flex: 1;\n      min-height: 100vh;\n    }\n\n    .main-content h1 {\n      font-size: 1.8rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      margin-top: 0;\n      margin-bottom: 0.5rem;\n      letter-spacing: -0.01em;\n    }\n\n    .main-content h2 {\n      font-size: 0.82rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      margin-top: 2rem;\n      margin-bottom: 0.6rem;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .main-content p {\n      color: ' + (t.fg + (';\n      max-width: 600px;\n      margin-bottom: 1rem;\n      font-size: 0.93rem;\n    }\n\n    /* ── Page footer ────────────────────────────── */\n\n    .page-footer {\n      margin-top: 4rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .footer-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.footer-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    .footer-pcb {\n      display: block;\n      max-width: 340px;\n      height: auto;\n      margin-top: 0.5rem;\n      opacity: 0.8;\n    }\n\n    .footer-gifs {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 0.25rem;\n      margin-bottom: 0.75rem;\n    }\n\n    .footer-gifs img {\n      height: 31px;\n      image-rendering: pixelated;\n    }\n\n    /* ── About page ─────────────────────────────── */\n\n    .about-content {\n      max-width: 640px;\n    }\n\n    .about-para {\n      margin-bottom: 1rem;\n      line-height: 1.8;\n      font-size: 0.93rem;\n    }\n\n    .about-quote {\n      border-left: 2px solid ' + (t.accent + (';\n      padding: 0.75rem 1.25rem;\n      margin: 1.5rem 0;\n      background-color: ' + (t.surface + (';\n      border-radius: 0 4px 4px 0;\n    }\n\n    .quote-text {\n      font-size: 0.88rem;\n      color: ' + (t.muted + (';\n      margin: 0;\n      font-style: italic;\n      line-height: 1.7;\n      max-width: 100%;\n    }\n\n    .quote-attribution {\n      font-size: 0.75rem;\n      color: ' + (t.muted + (';\n      opacity: 0.75;\n      margin-top: 0.5rem;\n      margin-bottom: 0;\n    }\n\n    .contact-links {\n      display: flex;\n      flex-direction: column;\n      gap: 0.1rem;\n      margin-top: 0.5rem;\n    }\n\n    .contact-item {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.88rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .contact-item::before {\n      content: "→ ";\n      color: ' + (t.accent + (';\n    }\n\n    .contact-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    /* ── Mobile top bar ─────────────────────────── */\n\n    .mobile-topbar {\n      display: none;\n      position: sticky;\n      top: 0;\n      z-index: 200;\n      background-color: ' + (t.sidebarBg + (';\n      border-bottom: 1px solid ' + (t.border + (';\n      padding: 0.75rem 1.25rem;\n      align-items: center;\n      justify-content: space-between;\n      width: 100%;\n    }\n\n    .mobile-site-name {\n      font-size: 0.95rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-menu-toggle {\n      background: none;\n      border: none;\n      color: ' + (t.fg + (';\n      font-size: 1.3rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      line-height: 1;\n    }\n\n    .sr-only {\n      position: absolute;\n      width: 1px;\n      height: 1px;\n      padding: 0;\n      margin: -1px;\n      overflow: hidden;\n      clip: rect(0, 0, 0, 0);\n      white-space: nowrap;\n      border: 0;\n    }\n\n    /* ── Mobile menu ────────────────────────────── */\n\n    .mobile-menu-wrapper {\n      position: fixed;\n      inset: 0;\n      z-index: 300;\n    }\n\n    .mobile-menu-backdrop {\n      position: absolute;\n      inset: 0;\n      background-color: rgba(0, 0, 0, 0.5);\n    }\n\n    .mobile-menu-panel {\n      position: absolute;\n      top: 0;\n      right: 0;\n      width: 280px;\n      height: 100%;\n      overflow-y: auto;\n      background-color: ' + (t.sidebarBg + (';\n      border-left: 1px solid ' + (t.border + (';\n      padding: 1.5rem 1.25rem;\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-menu-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 1.25rem;\n    }\n\n    .mobile-menu-title {\n      font-size: 0.7rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .close-mobile-menu {\n      background: none;\n      border: none;\n      color: ' + (t.muted + (';\n      font-size: 1rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      transition: color 0.15s ease;\n    }\n\n    .close-mobile-menu:hover {\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-nav-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-top: 1.25rem;\n      margin-bottom: 0.4rem;\n    }\n\n    .mobile-nav-links,\n    .mobile-org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-nav-item {\n      display: block;\n      padding: 0.5rem 0.6rem;\n      font-size: 0.9rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .mobile-nav-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .mobile-mode-toggle {\n      margin-top: auto;\n      background: none;\n      border: none;\n      border-top: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.8rem;\n      padding: 0.75rem 0.6rem 0.4rem;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease;\n    }\n\n    .mobile-mode-toggle:hover {\n      color: ' + (t.fg + (';\n    }\n\n    /* ── Responsive ─────────────────────────────── */\n\n    .mobile-menu-location {\n      font-size: 0.7rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.15rem;\n      opacity: 0.75;\n    }\n\n    .mobile-nav-item.active {\n      color: ' + (t.accent + (';\n      border-left-color: ' + (t.accent + (';\n      background-color: ' + (t.surface + ';\n    }\n\n    @media (max-width: 768px) {\n      .layout {\n        flex-direction: column;\n      }\n\n      .sidebar {\n        display: none;\n      }\n\n      .mobile-topbar {\n        display: flex;\n      }\n\n      .main-content {\n        margin-left: 0;\n        padding: 1.75rem 1.25rem;\n        max-width: 100%;\n      }\n    }\n\n    @media (min-width: 769px) and (max-width: 1100px) {\n      .sidebar {\n        width: 200px;\n      }\n\n      .main-content {\n        margin-left: 200px;\n        padding: 2.5rem 2.5rem;\n      }\n    }\n    ')))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+	return '\n    @import url(\'https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap\');\n\n    *, *::before, *::after {\n      box-sizing: border-box;\n    }\n\n    html {\n      scroll-behavior: smooth;\n    }\n\n    html, body {\n      margin: 0;\n      padding: 0;\n      height: 100%;\n    }\n\n    :root {\n      --border-color: ' + (t.border + (';\n      --surface-color: ' + (t.surface + (';\n      --accent-color: ' + (t.accent + (';\n      --muted-color: ' + (t.muted + (';\n      --text-color: ' + (t.fg + (';\n      --link-color: ' + (t.linkColor + (';\n      --link-hover-color: ' + (t.linkHover + (';\n    }\n\n    body {\n      font-family: \'Fira Code\', monospace;\n      background-color: ' + (t.bg + (';\n      color: ' + (t.fg + (';\n      font-size: 15px;\n      line-height: 1.7;\n      transition: background-color 0.25s ease, color 0.25s ease;\n    }\n\n    a {\n      color: ' + (t.linkColor + (';\n      text-decoration: none;\n      transition: color 0.15s ease;\n    }\n\n    a:hover {\n      color: ' + (t.linkHover + (';\n    }\n\n    /* ── Layout ─────────────────────────────────── */\n\n    .layout {\n      display: flex;\n      min-height: 100vh;\n      position: relative;\n    }\n\n    /* ── Sidebar ─────────────────────────────────── */\n\n    .sidebar {\n      position: fixed;\n      left: 0;\n      top: 0;\n      width: 240px;\n      height: 100vh;\n      overflow-y: auto;\n      display: flex;\n      flex-direction: column;\n      background-color: ' + (t.sidebarBg + (';\n      border-right: 1px solid ' + (t.border + (';\n      padding: 2rem 1.5rem;\n      z-index: 100;\n      transition: background-color 0.25s ease;\n    }\n\n    .sidebar-identity {\n      margin-bottom: 1rem;\n    }\n\n    .sidebar-name {\n      font-size: 1.05rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-tagline {\n      font-size: 0.78rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.25rem;\n    }\n\n    .sidebar-location {\n      font-size: 0.7rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.3rem;\n      opacity: 0.75;\n      letter-spacing: 0.02em;\n    }\n\n    .sidebar-divider {\n      height: 1px;\n      background-color: ' + (t.border + (';\n      margin: 1rem 0;\n    }\n\n    .sidebar-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-bottom: 0.4rem;\n    }\n\n    .nav-links,\n    .org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .nav-link {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.86rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .nav-link:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .nav-link.active {\n      color: ' + (t.accent + (';\n      border-left-color: ' + (t.accent + (';\n      background-color: ' + (t.surface + (';\n    }\n\n    .sidebar-spacer {\n      flex-grow: 1;\n    }\n\n    .sidebar-footer {\n      display: flex;\n      flex-direction: column;\n      gap: 0.5rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .theme-toggle {\n      background: none;\n      border: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.78rem;\n      padding: 0.3rem 0.6rem;\n      border-radius: 4px;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease, border-color 0.15s ease;\n      width: 100%;\n    }\n\n    .theme-toggle:hover {\n      color: ' + (t.fg + (';\n      border-color: ' + (t.accent + (';\n    }\n\n    .commit-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.commit-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    /* ── Main Content ────────────────────────────── */\n\n    .main-content {\n      margin-left: 240px;\n      padding: 3.5rem 4rem;\n      flex: 1;\n      min-height: 100vh;\n    }\n\n    .main-content h1 {\n      font-size: 1.8rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n      margin-top: 0;\n      margin-bottom: 0.5rem;\n      letter-spacing: -0.01em;\n    }\n\n    .main-content h2 {\n      font-size: 0.82rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      margin-top: 2rem;\n      margin-bottom: 0.6rem;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .main-content p {\n      color: ' + (t.fg + (';\n      max-width: 600px;\n      margin-bottom: 1rem;\n      font-size: 0.93rem;\n    }\n\n    /* ── Page footer ────────────────────────────── */\n\n    .page-footer {\n      margin-top: 4rem;\n      padding-top: 1rem;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .footer-hash {\n      font-size: 0.72rem;\n      color: ' + (t.muted + (';\n      opacity: 0.65;\n    }\n\n    a.footer-hash:hover {\n      color: ' + (t.linkHover + (';\n      opacity: 1;\n    }\n\n    .footer-pcb {\n      display: block;\n      max-width: 340px;\n      height: auto;\n      margin-top: 0.5rem;\n      opacity: 0.8;\n    }\n\n    .footer-gifs {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 0.25rem;\n      margin-bottom: 0.75rem;\n    }\n\n    .footer-gifs img {\n      height: 31px;\n      image-rendering: pixelated;\n    }\n\n    /* ── About page ─────────────────────────────── */\n\n    .about-content {\n      max-width: 1080px;\n    }\n\n    .about-layout {\n      display: grid;\n      grid-template-columns: minmax(0, 640px) minmax(260px, 380px);\n      gap: clamp(2rem, 5vw, 5rem);\n      align-items: start;\n    }\n\n    .about-photo {\n      margin: 0;\n      position: sticky;\n      top: 3.5rem;\n      border: 1px solid ' + (t.border + (';\n      border-radius: 6px;\n      overflow: hidden;\n      background-color: ' + (t.surface + (';\n    }\n\n    .about-photo img {\n      display: block;\n      width: 100%;\n      height: auto;\n    }\n\n    .about-photo figcaption {\n      padding: 0.85rem 1rem;\n      color: ' + (t.muted + (';\n      font-size: 0.74rem;\n      line-height: 1.6;\n      border-top: 1px solid ' + (t.border + (';\n    }\n\n    .about-para {\n      margin-bottom: 1rem;\n      line-height: 1.8;\n      font-size: 0.93rem;\n    }\n\n    .about-quote {\n      border-left: 2px solid ' + (t.accent + (';\n      padding: 0.75rem 1.25rem;\n      margin: 1.5rem 0;\n      background-color: ' + (t.surface + (';\n      border-radius: 0 4px 4px 0;\n    }\n\n    .quote-text {\n      font-size: 0.88rem;\n      color: ' + (t.muted + (';\n      margin: 0;\n      font-style: italic;\n      line-height: 1.7;\n      max-width: 100%;\n    }\n\n    .quote-attribution {\n      font-size: 0.75rem;\n      color: ' + (t.muted + (';\n      opacity: 0.75;\n      margin-top: 0.5rem;\n      margin-bottom: 0;\n    }\n\n    .contact-links {\n      display: flex;\n      flex-direction: column;\n      gap: 0.1rem;\n      margin-top: 0.5rem;\n    }\n\n    .contact-item {\n      display: block;\n      padding: 0.38rem 0.6rem;\n      font-size: 0.88rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .contact-item::before {\n      content: "→ ";\n      color: ' + (t.accent + (';\n    }\n\n    .contact-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    /* ── Mobile top bar ─────────────────────────── */\n\n    .mobile-topbar {\n      display: none;\n      position: sticky;\n      top: 0;\n      z-index: 200;\n      background-color: ' + (t.sidebarBg + (';\n      border-bottom: 1px solid ' + (t.border + (';\n      padding: 0.75rem 1.25rem;\n      align-items: center;\n      justify-content: space-between;\n      width: 100%;\n    }\n\n    .mobile-site-name {\n      font-size: 0.95rem;\n      font-weight: 600;\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-menu-toggle {\n      background: none;\n      border: none;\n      color: ' + (t.fg + (';\n      font-size: 1.3rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      line-height: 1;\n    }\n\n    .sr-only {\n      position: absolute;\n      width: 1px;\n      height: 1px;\n      padding: 0;\n      margin: -1px;\n      overflow: hidden;\n      clip: rect(0, 0, 0, 0);\n      white-space: nowrap;\n      border: 0;\n    }\n\n    /* ── Mobile menu ────────────────────────────── */\n\n    .mobile-menu-wrapper {\n      position: fixed;\n      inset: 0;\n      z-index: 300;\n    }\n\n    .mobile-menu-backdrop {\n      position: absolute;\n      inset: 0;\n      background-color: rgba(0, 0, 0, 0.5);\n    }\n\n    .mobile-menu-panel {\n      position: absolute;\n      top: 0;\n      right: 0;\n      width: 280px;\n      height: 100%;\n      overflow-y: auto;\n      background-color: ' + (t.sidebarBg + (';\n      border-left: 1px solid ' + (t.border + (';\n      padding: 1.5rem 1.25rem;\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-menu-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 1.25rem;\n    }\n\n    .mobile-menu-title {\n      font-size: 0.7rem;\n      font-weight: 500;\n      color: ' + (t.muted + (';\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n    }\n\n    .close-mobile-menu {\n      background: none;\n      border: none;\n      color: ' + (t.muted + (';\n      font-size: 1rem;\n      cursor: pointer;\n      padding: 0.2rem 0.4rem;\n      transition: color 0.15s ease;\n    }\n\n    .close-mobile-menu:hover {\n      color: ' + (t.fg + (';\n    }\n\n    .mobile-nav-section-label {\n      font-size: 0.7rem;\n      font-weight: 500;\n      text-transform: uppercase;\n      letter-spacing: 0.1em;\n      color: ' + (t.muted + (';\n      margin-top: 1.25rem;\n      margin-bottom: 0.4rem;\n    }\n\n    .mobile-nav-links,\n    .mobile-org-links {\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mobile-nav-item {\n      display: block;\n      padding: 0.5rem 0.6rem;\n      font-size: 0.9rem;\n      color: ' + (t.linkColor + (';\n      border-left: 3px solid transparent;\n      border-radius: 0 4px 4px 0;\n      transition: color 0.15s ease, background-color 0.15s ease, border-left-color 0.15s ease;\n    }\n\n    .mobile-nav-item:hover {\n      color: ' + (t.linkHover + (';\n      background-color: ' + (t.surface + (';\n      border-left-color: ' + (t.accent + (';\n    }\n\n    .mobile-mode-toggle {\n      margin-top: auto;\n      background: none;\n      border: none;\n      border-top: 1px solid ' + (t.border + (';\n      color: ' + (t.muted + (';\n      font-family: \'Fira Code\', monospace;\n      font-size: 0.8rem;\n      padding: 0.75rem 0.6rem 0.4rem;\n      cursor: pointer;\n      text-align: left;\n      transition: color 0.15s ease;\n    }\n\n    .mobile-mode-toggle:hover {\n      color: ' + (t.fg + (';\n    }\n\n    /* ── Responsive ─────────────────────────────── */\n\n    .mobile-menu-location {\n      font-size: 0.7rem;\n      color: ' + (t.muted + (';\n      margin-top: 0.15rem;\n      opacity: 0.75;\n    }\n\n    .mobile-nav-item.active {\n      color: ' + (t.accent + (';\n      border-left-color: ' + (t.accent + (';\n      background-color: ' + (t.surface + ';\n    }\n\n    @media (max-width: 768px) {\n      .layout {\n        flex-direction: column;\n      }\n\n      .sidebar {\n        display: none;\n      }\n\n      .mobile-topbar {\n        display: flex;\n      }\n\n      .main-content {\n        margin-left: 0;\n        padding: 1.75rem 1.25rem;\n        max-width: 100%;\n      }\n\n      .about-layout {\n        grid-template-columns: 1fr;\n        gap: 1.5rem;\n      }\n\n      .about-photo {\n        position: static;\n        max-width: 520px;\n      }\n    }\n\n    @media (min-width: 769px) and (max-width: 1100px) {\n      .sidebar {\n        width: 200px;\n      }\n\n      .main-content {\n        margin-left: 200px;\n        padding: 2.5rem 2.5rem;\n      }\n    }\n    ')))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$json$Json$Encode$string = _Json_wrap;
@@ -6997,7 +7009,16 @@ var $author$project$Main$css = function (cssContent) {
 				$elm$html$Html$text(cssContent)
 			]));
 };
-var $author$project$Home$css = '\n    .home-content {\n      max-width: 680px;\n    }\n\n    .home-eyebrow {\n      font-size: 0.72rem;\n      color: var(--accent-color);\n      letter-spacing: 0.1em;\n      margin-bottom: 2rem;\n      opacity: 0.8;\n    }\n\n    .home-heading {\n      font-size: 4rem;\n      font-weight: 300;\n      color: var(--text-color);\n      margin: 0 0 0.25rem;\n      letter-spacing: -0.02em;\n      line-height: 1.1;\n    }\n\n    .home-divider {\n      width: 3rem;\n      height: 1px;\n      background-color: var(--accent-color);\n      margin: 2rem 0;\n      opacity: 0.6;\n    }\n\n    .home-lead {\n      font-size: 1rem;\n      line-height: 1.8;\n      color: var(--text-color);\n      margin-bottom: 1.25rem;\n      max-width: 580px;\n    }\n\n    .home-para {\n      font-size: 0.9rem;\n      line-height: 1.8;\n      color: var(--muted-color);\n      margin-bottom: 1rem;\n      max-width: 580px;\n    }\n\n    @media (max-width: 768px) {\n      .home-heading {\n        font-size: 2.8rem;\n      }\n    }\n    ';
+var $author$project$Gallery$css = '\n    .gallery-content {\n      max-width: 1120px;\n    }\n\n    .gallery-intro {\n      color: var(--muted-color) !important;\n      margin-bottom: 2rem !important;\n    }\n\n    .gallery-grid {\n      display: grid;\n      grid-template-columns: repeat(2, minmax(0, 1fr));\n      gap: 1.25rem;\n      align-items: start;\n    }\n\n    .gallery-item {\n      margin: 0;\n      min-width: 0;\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      overflow: hidden;\n      background: var(--surface-color);\n    }\n\n    .gallery-featured {\n      grid-column: span 2;\n      display: grid;\n      grid-template-columns: minmax(0, 1.65fr) minmax(220px, 0.6fr);\n      align-items: stretch;\n    }\n\n    .gallery-image-link {\n      display: block;\n      overflow: hidden;\n      background: var(--border-color);\n    }\n\n    .gallery-item img {\n      display: block;\n      width: 100%;\n      height: 310px;\n      object-fit: cover;\n      transition: transform 0.3s ease, opacity 0.3s ease;\n    }\n\n    .gallery-featured img {\n      height: min(68vh, 660px);\n      object-position: center 62%;\n    }\n\n    .gallery-image-link:hover img {\n      transform: scale(1.012);\n      opacity: 0.92;\n    }\n\n    .gallery-item figcaption {\n      padding: 0.8rem 1rem;\n      color: var(--muted-color);\n      font-size: 0.76rem;\n      line-height: 1.6;\n    }\n\n    .gallery-featured figcaption {\n      display: flex;\n      flex-direction: column;\n      justify-content: flex-end;\n      padding: 1.5rem;\n      color: var(--text-color);\n      font-size: 0.88rem;\n      border-left: 1px solid var(--border-color);\n    }\n\n    .gallery-feature-label {\n      color: var(--accent-color);\n      font-size: 0.68rem;\n      letter-spacing: 0.1em;\n      text-transform: uppercase;\n      margin-bottom: 0.6rem;\n    }\n\n    @media (max-width: 768px) {\n      .gallery-grid {\n        grid-template-columns: 1fr;\n      }\n\n      .gallery-featured {\n        grid-column: span 1;\n        display: block;\n      }\n\n      .gallery-featured img,\n      .gallery-item img {\n        height: auto;\n        max-height: none;\n      }\n\n      .gallery-featured figcaption {\n        border-left: 0;\n        border-top: 1px solid var(--border-color);\n      }\n    }\n    ';
+var $author$project$Gallery$cssStyles = A3(
+	$elm$virtual_dom$VirtualDom$node,
+	'style',
+	_List_Nil,
+	_List_fromArray(
+		[
+			$elm$html$Html$text($author$project$Gallery$css)
+		]));
+var $author$project$Home$css = '\n    .home-content {\n      max-width: 1040px;\n    }\n\n    .home-hero-image {\n      display: block;\n      width: 100%;\n      height: clamp(180px, 28vw, 320px);\n      object-fit: cover;\n      object-position: center;\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      margin-bottom: 2rem;\n    }\n\n    .home-heading {\n      font-size: 4rem;\n      font-weight: 300;\n      color: var(--text-color);\n      margin: 0 0 0.25rem;\n      letter-spacing: -0.02em;\n      line-height: 1.1;\n    }\n\n    .home-divider {\n      width: 3rem;\n      height: 1px;\n      background-color: var(--accent-color);\n      margin: 2rem 0;\n      opacity: 0.6;\n    }\n\n    .home-lead {\n      font-size: 1rem;\n      line-height: 1.8;\n      color: var(--text-color);\n      margin-bottom: 1.25rem;\n      max-width: 580px;\n    }\n\n    .home-para {\n      font-size: 0.9rem;\n      line-height: 1.8;\n      color: var(--muted-color);\n      margin-bottom: 1rem;\n      max-width: 580px;\n    }\n\n    @media (max-width: 768px) {\n      .home-heading {\n        font-size: 2.8rem;\n      }\n    }\n    ';
 var $author$project$Home$cssStyles = A3(
 	$elm$virtual_dom$VirtualDom$node,
 	'style',
@@ -7023,6 +7044,15 @@ var $author$project$Status$cssStyles = A3(
 	_List_fromArray(
 		[
 			$elm$html$Html$text($author$project$Status$css)
+		]));
+var $author$project$Xiangqi$css = '\n    .xiangqi-content {\n      max-width: 760px;\n    }\n\n    .xiangqi-intro {\n      color: var(--muted-color) !important;\n      margin-bottom: 2rem !important;\n    }\n\n    .xiangqi-board-wrap {\n      position: relative;\n      width: min(100%, 600px);\n      padding: 5.5%;\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      background: #cda66a;\n      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);\n    }\n\n    .xiangqi-board {\n      position: relative;\n      aspect-ratio: 8 / 9;\n      background-color: #d9b777;\n      background-image:\n        repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - 0.5px), #5b4128 calc(12.5% - 0.5px), #5b4128 calc(12.5% + 0.5px)),\n        repeating-linear-gradient(to bottom, transparent 0, transparent calc(11.111% - 0.5px), #5b4128 calc(11.111% - 0.5px), #5b4128 calc(11.111% + 0.5px));\n      border: 1px solid #5b4128;\n    }\n\n    .xiangqi-river {\n      position: absolute;\n      z-index: 1;\n      left: 0;\n      right: 0;\n      top: 44.45%;\n      height: 11.111%;\n      display: flex;\n      align-items: center;\n      justify-content: space-around;\n      background: #d9b777;\n      border-top: 1px solid #5b4128;\n      border-bottom: 1px solid #5b4128;\n      color: #5b4128;\n      font-family: serif;\n      font-size: clamp(0.9rem, 3vw, 1.65rem);\n      letter-spacing: 0.35em;\n    }\n\n    .xiangqi-piece {\n      position: absolute;\n      z-index: 2;\n      width: clamp(27px, 8.5%, 48px);\n      aspect-ratio: 1;\n      transform: translate(-50%, -50%);\n      display: grid;\n      place-items: center;\n      border: 2px solid currentColor;\n      border-radius: 50%;\n      background: #ead29c;\n      font-family: serif;\n      font-size: clamp(0.82rem, 2.6vw, 1.45rem);\n      font-weight: 700;\n      box-shadow: 0 2px 4px rgba(55, 35, 18, 0.42), inset 0 0 0 2px #ead29c, inset 0 0 0 3px currentColor;\n    }\n\n    .xiangqi-piece.black { color: #26211d; }\n    .xiangqi-piece.red { color: #a8322d; }\n\n    .xiangqi-development-banner {\n      position: absolute;\n      z-index: 4;\n      left: -1px;\n      right: -1px;\n      top: 50%;\n      transform: translateY(-50%) rotate(-1.5deg);\n      display: flex;\n      justify-content: center;\n      align-items: baseline;\n      gap: 0.8rem;\n      padding: 1rem;\n      background: rgba(37, 35, 52, 0.96);\n      border: 1px solid var(--accent-color);\n      color: #e8e6f0;\n      font-size: clamp(0.82rem, 2.4vw, 1.05rem);\n      text-transform: uppercase;\n      letter-spacing: 0.08em;\n      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);\n    }\n\n    .development-marker {\n      color: var(--accent-color);\n      font-size: 0.68em;\n    }\n\n    @media (max-width: 520px) {\n      .xiangqi-board-wrap { padding: 7%; }\n      .xiangqi-development-banner { flex-direction: column; align-items: center; gap: 0.15rem; }\n    }\n    ';
+var $author$project$Xiangqi$cssStyles = A3(
+	$elm$virtual_dom$VirtualDom$node,
+	'style',
+	_List_Nil,
+	_List_fromArray(
+		[
+			$elm$html$Html$text($author$project$Xiangqi$css)
 		]));
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$Attributes$href = function (url) {
@@ -7060,7 +7090,7 @@ var $elm$html$Html$img = _VirtualDom_node('img');
 var $author$project$Main$isActiveLink = F2(
 	function (currentPage, url) {
 		var _v0 = _Utils_Tuple2(currentPage, url);
-		_v0$4:
+		_v0$6:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'Home':
@@ -7068,31 +7098,45 @@ var $author$project$Main$isActiveLink = F2(
 						var _v1 = _v0.a;
 						return true;
 					} else {
-						break _v0$4;
+						break _v0$6;
 					}
 				case 'AboutPage':
 					if (_v0.b === '/about') {
 						var _v2 = _v0.a;
 						return true;
 					} else {
-						break _v0$4;
+						break _v0$6;
 					}
 				case 'ProjectsPage':
 					if (_v0.b === '/projects') {
 						var _v3 = _v0.a;
 						return true;
 					} else {
-						break _v0$4;
+						break _v0$6;
 					}
-				case 'StatusPage':
-					if (_v0.b === '/status') {
+				case 'GalleryPage':
+					if (_v0.b === '/gallery') {
 						var _v4 = _v0.a;
 						return true;
 					} else {
-						break _v0$4;
+						break _v0$6;
+					}
+				case 'XiangqiPage':
+					if (_v0.b === '/xiangqi') {
+						var _v5 = _v0.a;
+						return true;
+					} else {
+						break _v0$6;
+					}
+				case 'StatusPage':
+					if (_v0.b === '/status') {
+						var _v6 = _v0.a;
+						return true;
+					} else {
+						break _v0$6;
 					}
 				default:
-					break _v0$4;
+					break _v0$6;
 			}
 		}
 		return false;
@@ -7102,6 +7146,8 @@ var $author$project$Main$navItems = _List_fromArray(
 		_Utils_Tuple2('/', 'home'),
 		_Utils_Tuple2('/about', 'about'),
 		_Utils_Tuple2('/projects', 'projects'),
+		_Utils_Tuple2('/gallery', 'gallery'),
+		_Utils_Tuple2('/xiangqi', '象棋'),
 		_Utils_Tuple2('/status', 'status'),
 		_Utils_Tuple2('https://eexiv.functor.systems/author/wlin', 'personal research'),
 		_Utils_Tuple2('https://yap.kaitotlex.systems', 'log'),
@@ -7297,6 +7343,16 @@ var $author$project$Main$viewMobileMenu = F2(
 var $author$project$Main$RefreshStatuses = {$: 'RefreshStatuses'};
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$p = _VirtualDom_node('p');
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm$html$Html$figcaption = _VirtualDom_node('figcaption');
+var $elm$html$Html$figure = _VirtualDom_node('figure');
 var $author$project$About$view = A2(
 	$elm$html$Html$div,
 	_List_fromArray(
@@ -7306,92 +7362,230 @@ var $author$project$About$view = A2(
 	_List_fromArray(
 		[
 			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('about-layout')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('about-copy')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h1,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('more about me...')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Hello, this site is written in collaboration with Claude Code to ensure that I don\'t make spelling or grammar mistakes.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('I am currently a mediocre graduating high school student with a lot of time on my hands.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('With that time I am able to build this (and a multitude of other things) in a cave, with a scrappy ThinkPad.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('I enjoy being an otaku (watching anime, vtubers, reading manga, listening to vocaloid, etc.), reading, playing video games, wasting time on the world\'s LAN, and cycling.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Although I was born in the United States, I have lived most of my life in a suburban mountain/hot-spring area in Beitou, Taipei City. I spent most of my time wasting money in the electronics district and taking the Metro.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Besides the \"unproductive\" things I enjoy, I hack on electronic devices ranging from deprecated game consoles (like the PS3 or 3DS) to the newest hottest tech (like the Apple M1). I just so happen to be in organizations that require me to roleplay as a smart person among other actually smart people; those organizations being MIT OpenCompute Lab and functor.systems. I also have my own organizations dedicated to doing stupid stuff (like a Thrust Vector Controlled Rocket).')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('I don\'t really do software stuff because it\'s way too complex and above my knowledge/intuition; however, I just so happen to be on the winning team at HackMIT 2025.')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('about-para')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Because I have to LARP (Live-Action RolePlay) as an intelligent creature, I have found a profound interest, at a high level, in Category Theory, Modal Logic, and Set Theory.')
+								]))
+						])),
+					A2(
+					$elm$html$Html$figure,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('about-photo')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$img,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$src('/assets/DSC_4055.jpg'),
+									$elm$html$Html$Attributes$alt('Black Saab 900 Turbo S driving through Tokyo'),
+									A2($elm$html$Html$Attributes$attribute, 'loading', 'lazy')
+								]),
+							_List_Nil),
+							A2(
+							$elm$html$Html$figcaption,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Featured photo from my trip to Japan in 2026 of a Saab 900 Turbo S.')
+								]))
+						]))
+				]))
+		]));
+var $author$project$Gallery$photos = _List_fromArray(
+	[
+		{alt: 'Black Saab 900 Turbo S driving through Tokyo', caption: 'Featured photo from my trip to Japan in 2026 of a Saab 900 Turbo S.', featured: true, file: 'DSC_4055.jpg'},
+		{alt: 'Torii gates at Fushimi Inari shrine', caption: 'Fushimi Inari, Kyoto', featured: false, file: 'DSC_3666.jpg'},
+		{alt: 'Train arriving at a station in Japan', caption: 'Local service', featured: false, file: 'DSC_3689.jpg'},
+		{alt: 'Shinkansen at a station platform', caption: 'Shinkansen study', featured: false, file: 'DSC_3745.jpg'},
+		{alt: 'Shinkansen arriving at a station', caption: 'Arrival', featured: false, file: 'DSC_3765.jpg'},
+		{alt: 'Wide view of a Shinkansen station', caption: 'In transit', featured: false, file: 'DSC_3766.jpg'},
+		{alt: 'Crowds and signs in Shibuya at dusk', caption: 'Shibuya at dusk', featured: false, file: 'DSC_4007.jpg'},
+		{alt: 'Tokyo buildings silhouetted against the evening sky', caption: 'Last light', featured: false, file: 'DSC_4056.jpg'}
+	]);
+var $author$project$Gallery$viewPhoto = function (photo) {
+	return A2(
+		$elm$html$Html$figure,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class(
+				photo.featured ? 'gallery-item gallery-featured' : 'gallery-item')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$a,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$href('/assets/' + photo.file),
+						$elm$html$Html$Attributes$class('gallery-image-link')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src('/assets/' + photo.file),
+								$elm$html$Html$Attributes$alt(photo.alt),
+								A2(
+								$elm$html$Html$Attributes$attribute,
+								'loading',
+								photo.featured ? 'eager' : 'lazy')
+							]),
+						_List_Nil)
+					])),
+				A2(
+				$elm$html$Html$figcaption,
+				_List_Nil,
+				_List_fromArray(
+					[
+						photo.featured ? A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('gallery-feature-label')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('featured / japan 2026')
+							])) : $elm$html$Html$text(''),
+						$elm$html$Html$text(photo.caption)
+					]))
+			]));
+};
+var $author$project$Gallery$view = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('gallery-content')
+		]),
+	_List_fromArray(
+		[
+			A2(
 			$elm$html$Html$h1,
 			_List_Nil,
 			_List_fromArray(
 				[
-					$elm$html$Html$text('more about me...')
+					$elm$html$Html$text('gallery')
 				])),
 			A2(
 			$elm$html$Html$p,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('about-para')
+					$elm$html$Html$Attributes$class('gallery-intro')
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text('Hello, this site is written in collaboration with Claude Code to ensure that I don\'t make spelling or grammar mistakes.')
+					$elm$html$Html$text('Photographs from Japan, 2026. Select a photograph to view the full-size image.')
 				])),
 			A2(
-			$elm$html$Html$p,
+			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('about-para')
+					$elm$html$Html$Attributes$class('gallery-grid')
 				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('I am currently a mediocre graduating high school student with a lot of time on my hands.')
-				])),
-			A2(
-			$elm$html$Html$p,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('about-para')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('With that time I am able to build this (and a multitude of other things) in a cave, with a scrappy ThinkPad.')
-				])),
-			A2(
-			$elm$html$Html$p,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('about-para')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('I enjoy being an otaku (watching anime, vtubers, reading manga, listening to vocaloid, etc.), reading, playing video games, wasting time on the world\'s LAN, and cycling.')
-				])),
-			A2(
-			$elm$html$Html$p,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('about-para')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('Although I was born in the United States, I have lived most of my life in a suburban mountain/hot-spring area in Beitou, Taipei City. I spent most of my time wasting money in the electronics district and taking the Metro.')
-				])),
-			A2(
-			$elm$html$Html$p,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('about-para')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('Besides the \"unproductive\" things I enjoy, I hack on electronic devices ranging from deprecated game consoles (like the PS3 or 3DS) to the newest hottest tech (like the Apple M1). I just so happen to be in organizations that require me to roleplay as a smart person among other actually smart people; those organizations being MIT OpenCompute Lab and functor.systems. I also have my own organizations dedicated to doing stupid stuff (like a Thrust Vector Controlled Rocket).')
-				])),
-			A2(
-			$elm$html$Html$p,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('about-para')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('I don\'t really do software stuff because it\'s way too complex and above my knowledge/intuition; however, I just so happen to be on the winning team at HackMIT 2025.')
-				])),
-			A2(
-			$elm$html$Html$p,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('about-para')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('Because I have to LARP (Live-Action RolePlay) as an intelligent creature, I have found a profound interest, at a high level, in Category Theory, Modal Logic, and Set Theory.')
-				]))
+			A2($elm$core$List$map, $author$project$Gallery$viewPhoto, $author$project$Gallery$photos))
 		]));
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $author$project$Home$view = A2(
@@ -7403,15 +7597,15 @@ var $author$project$Home$view = A2(
 	_List_fromArray(
 		[
 			A2(
-			$elm$html$Html$div,
+			$elm$html$Html$img,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('home-eyebrow')
+					$elm$html$Html$Attributes$src('/assets/DSC_3766.jpg'),
+					$elm$html$Html$Attributes$alt('Shinkansen arriving at a station in Japan'),
+					$elm$html$Html$Attributes$class('home-hero-image'),
+					A2($elm$html$Html$Attributes$attribute, 'fetchpriority', 'high')
 				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('// kaitotlex.systems')
-				])),
+			_List_Nil),
 			A2(
 			$elm$html$Html$h1,
 			_List_fromArray(
@@ -8122,6 +8316,157 @@ var $author$project$Status$view = F3(
 						$author$project$Status$serviceInfoList))
 				]));
 	});
+var $author$project$Xiangqi$Piece = F4(
+	function (label, side, file, rank) {
+		return {file: file, label: label, rank: rank, side: side};
+	});
+var $author$project$Xiangqi$pieces = _List_fromArray(
+	[
+		A4($author$project$Xiangqi$Piece, '車', 'black', 0, 0),
+		A4($author$project$Xiangqi$Piece, '馬', 'black', 1, 0),
+		A4($author$project$Xiangqi$Piece, '象', 'black', 2, 0),
+		A4($author$project$Xiangqi$Piece, '士', 'black', 3, 0),
+		A4($author$project$Xiangqi$Piece, '將', 'black', 4, 0),
+		A4($author$project$Xiangqi$Piece, '士', 'black', 5, 0),
+		A4($author$project$Xiangqi$Piece, '象', 'black', 6, 0),
+		A4($author$project$Xiangqi$Piece, '馬', 'black', 7, 0),
+		A4($author$project$Xiangqi$Piece, '車', 'black', 8, 0),
+		A4($author$project$Xiangqi$Piece, '砲', 'black', 1, 2),
+		A4($author$project$Xiangqi$Piece, '砲', 'black', 7, 2),
+		A4($author$project$Xiangqi$Piece, '卒', 'black', 0, 3),
+		A4($author$project$Xiangqi$Piece, '卒', 'black', 2, 3),
+		A4($author$project$Xiangqi$Piece, '卒', 'black', 4, 3),
+		A4($author$project$Xiangqi$Piece, '卒', 'black', 6, 3),
+		A4($author$project$Xiangqi$Piece, '卒', 'black', 8, 3),
+		A4($author$project$Xiangqi$Piece, '兵', 'red', 0, 6),
+		A4($author$project$Xiangqi$Piece, '兵', 'red', 2, 6),
+		A4($author$project$Xiangqi$Piece, '兵', 'red', 4, 6),
+		A4($author$project$Xiangqi$Piece, '兵', 'red', 6, 6),
+		A4($author$project$Xiangqi$Piece, '兵', 'red', 8, 6),
+		A4($author$project$Xiangqi$Piece, '炮', 'red', 1, 7),
+		A4($author$project$Xiangqi$Piece, '炮', 'red', 7, 7),
+		A4($author$project$Xiangqi$Piece, '俥', 'red', 0, 9),
+		A4($author$project$Xiangqi$Piece, '傌', 'red', 1, 9),
+		A4($author$project$Xiangqi$Piece, '相', 'red', 2, 9),
+		A4($author$project$Xiangqi$Piece, '仕', 'red', 3, 9),
+		A4($author$project$Xiangqi$Piece, '帥', 'red', 4, 9),
+		A4($author$project$Xiangqi$Piece, '仕', 'red', 5, 9),
+		A4($author$project$Xiangqi$Piece, '相', 'red', 6, 9),
+		A4($author$project$Xiangqi$Piece, '傌', 'red', 7, 9),
+		A4($author$project$Xiangqi$Piece, '俥', 'red', 8, 9)
+	]);
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $author$project$Xiangqi$viewPiece = function (piece) {
+	return A2(
+		$elm$html$Html$span,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('xiangqi-piece ' + piece.side),
+				A2(
+				$elm$html$Html$Attributes$style,
+				'left',
+				$elm$core$String$fromFloat((piece.file / 8) * 100) + '%'),
+				A2(
+				$elm$html$Html$Attributes$style,
+				'top',
+				$elm$core$String$fromFloat((piece.rank / 9) * 100) + '%')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(piece.label)
+			]));
+};
+var $author$project$Xiangqi$view = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('xiangqi-content')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h1,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('象棋')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('xiangqi-intro')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('A small Chinese chess implementation is taking shape here.')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('xiangqi-board-wrap')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('xiangqi-board'),
+							A2($elm$html$Html$Attributes$attribute, 'role', 'img'),
+							A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Chinese chess board in the starting position')
+						]),
+					_Utils_ap(
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('xiangqi-river')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$span,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('楚河')
+											])),
+										A2(
+										$elm$html$Html$span,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('漢界')
+											]))
+									]))
+							]),
+						A2($elm$core$List$map, $author$project$Xiangqi$viewPiece, $author$project$Xiangqi$pieces))),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('xiangqi-development-banner')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('development-marker')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('// status')
+								])),
+							$elm$html$Html$text('currently being developed')
+						]))
+				]))
+		]));
 var $author$project$Projects$kaitoRepositories = _List_fromArray(
 	[
 		{description: ' KaitoTLex\'s functorOS configuration, supported for x86-64-linux and aarch64-linux ', language: 'Nix', languageColor: '#9e9ab8', name: 'ame', readmeExcerpt: 'KaitoTLex\'s EE Optimized FunctorOS (NixOS) configuration, KaitoianOS\'s spiritual successor', url: 'https://github.com/KaitoTLex/ame'}
@@ -8275,6 +8620,10 @@ var $author$project$Main$viewPage = F2(
 				return $author$project$About$view;
 			case 'ProjectsPage':
 				return $author$project$Projects$viewProjects;
+			case 'GalleryPage':
+				return $author$project$Gallery$view;
+			case 'XiangqiPage':
+				return $author$project$Xiangqi$view;
 			case 'StatusPage':
 				return A3($author$project$Status$view, model.tzOffset, model.statusState, $author$project$Main$RefreshStatuses);
 			default:
@@ -8622,6 +8971,8 @@ var $author$project$Main$view = function (model) {
 				$author$project$Main$css(
 				$author$project$Main$buildCss(model.colorMode)),
 				$author$project$Home$cssStyles,
+				$author$project$Gallery$cssStyles,
+				$author$project$Xiangqi$cssStyles,
 				$author$project$Status$cssStyles,
 				$author$project$Projects$cssStyles,
 				A2(
@@ -8694,7 +9045,7 @@ var $author$project$Main$main = $elm$browser$Browser$application(
 	{init: $author$project$Main$init, onUrlChange: $author$project$Main$UrlChanged, onUrlRequest: $author$project$Main$LinkClicked, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$int)(0)}});}(this));
 
-  var app = Elm.Main.init({ node: document.getElementById("elm") });
+  var app = Elm.Main.init({ node: document.getElementById("elm"), flags: new Date().getTimezoneOffset() });
 }
 catch (e)
 {
