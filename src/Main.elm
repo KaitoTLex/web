@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import About
 import Browser
@@ -31,6 +31,26 @@ main =
         }
 
 
+
+-- PORTS
+--
+-- The local Xiangqi engine (assets/engine/tinyfih.js, WebGPU with a plain-JS
+-- fallback) lives outside Elm entirely; these ports are the only bridge.
+-- See Xiangqi.Effect for why Xiangqi.elm itself never touches a port
+-- directly, and assets/engine/README.md (copied from web-engine/) for what
+-- the JS side of this contract expects.
+
+
+port loadEngine : () -> Cmd msg
+
+
+port requestEngineMove : { fen : String, legalMoves : List { from : Int, to : Int } } -> Cmd msg
+
+
+port engineEvent : (Decode.Value -> msg) -> Sub msg
+
+
+
 -- MODEL
 
 
@@ -57,6 +77,7 @@ type alias Model =
     , mobileMenuOpen : Bool
     , statusState : Status.StatusState
     , tzOffset : Int
+    , xiangqi : Xiangqi.Model
     }
 
 
@@ -90,9 +111,15 @@ init flags url key =
             else
                 Status.StatusIdle
       , tzOffset = tzOffset
+      , xiangqi = Xiangqi.init
       }
-    , if onStatusPage then Status.fetchApi StatusApiResult else Cmd.none
+    , if onStatusPage then
+        Status.fetchApi StatusApiResult
+
+      else
+        Cmd.none
     )
+
 
 
 -- UPDATE
@@ -107,6 +134,7 @@ type Msg
     | StatusApiResult (Result Http.Error (List Status.StatusSnapshot))
     | RefreshStatuses
     | Tick Time.Posix
+    | XiangqiMsg Xiangqi.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -143,7 +171,11 @@ update msg model =
                     else
                         model.statusState
               }
-            , if onStatusPage then Status.fetchApi StatusApiResult else Cmd.none
+            , if onStatusPage then
+                Status.fetchApi StatusApiResult
+
+              else
+                Cmd.none
             )
 
         ToggleColorMode ->
@@ -184,15 +216,38 @@ update msg model =
         Tick _ ->
             ( model, Status.fetchApi StatusApiResult )
 
+        XiangqiMsg xiangqiMsg ->
+            let
+                ( newXiangqi, effect ) =
+                    Xiangqi.update xiangqiMsg model.xiangqi
+
+                cmd =
+                    case effect of
+                        Xiangqi.NoEffect ->
+                            Cmd.none
+
+                        Xiangqi.LoadEngineEffect ->
+                            loadEngine ()
+
+                        Xiangqi.RequestMoveEffect fen legalMoves ->
+                            requestEngineMove { fen = fen, legalMoves = legalMoves }
+            in
+            ( { model | xiangqi = newXiangqi }, cmd )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case parseUrl model.url of
-        StatusPage ->
-            Time.every (60 * 1000) Tick
+    let
+        statusSub =
+            case parseUrl model.url of
+                StatusPage ->
+                    Time.every (60 * 1000) Tick
 
-        _ ->
-            Sub.none
+                _ ->
+                    Sub.none
+    in
+    Sub.batch [ statusSub, engineEvent (XiangqiMsg << Xiangqi.EngineEventReceived) ]
+
 
 
 -- NAVIGATION DATA
@@ -215,8 +270,10 @@ navItems =
 orgItems : List ( String, String )
 orgItems =
     [ ( "https://functor.systems/", "functor.systems" )
+
     -- , ( "https://inlabs.kaitotlex.systems", "InLabs" )
     ]
+
 
 
 -- VIEW HELPERS
@@ -300,7 +357,7 @@ viewSidebar colorMode commitHash currentPage =
         [ div [ class "sidebar-identity" ]
             [ div [ class "sidebar-name" ] [ text "Ren Lin (林敬宴)" ]
             , div [ class "sidebar-tagline" ] [ text "kaitotlex.systems" ]
-            , div [ class "sidebar-location" ] [ img [ src "/assets/pcb.svg", alt "pcb traces"] [] ]
+            , div [ class "sidebar-location" ] [ img [ src "/assets/pcb.svg", alt "pcb traces" ] [] ]
             ]
         , div [ class "sidebar-divider" ] []
         , div [ class "sidebar-section-label" ] [ text "dir" ]
@@ -405,16 +462,17 @@ viewPageFooter commitHash =
     in
     div [ class "page-footer" ]
         [ div [ class "footer-gifs" ]
-            [ img [ src "/assets/gif/eva.gif", alt "eva" ] []
-            , img [ src "/assets/gif/nec.gif", alt "nec" ] []
-            , img [ src "/assets/gif/linux_powered.gif", alt "linux" ] []
-            , img [ src "/assets/gif/yuri.png", alt "yuri" ] []
-            , img [ src "/assets/gif/trans.gif", alt "trans" ] []
-            , img [ src "/assets/gif/miku.gif", alt "miku" ] []
-            , img [ src "/assets/gif/latex.gif", alt "latex" ] []
-            , img [ src "/assets/gif/kaitotlex.gif", alt "self" ] []
-            , img [ src "/assets/gif/tetris.gif", alt "tetris" ] []
+            [ lazyFooterImage "/assets/gif/eva.gif" "eva"
+            , lazyFooterImage "/assets/gif/nec.gif" "nec"
+            , lazyFooterImage "/assets/gif/linux_powered.gif" "linux"
+            , lazyFooterImage "/assets/gif/yuri.png" "yuri"
+            , lazyFooterImage "/assets/gif/trans.gif" "trans"
+            , lazyFooterImage "/assets/gif/miku.gif" "miku"
+            , lazyFooterImage "/assets/gif/latex.gif" "latex"
+            , lazyFooterImage "/assets/gif/kaitotlex.gif" "self"
+            , lazyFooterImage "/assets/gif/tetris.gif" "tetris"
             ]
+
         -- , img [ src "/assets/pcb.svg", alt "pcb traces", class "footer-pcb" ] []
         , div [ class "footer-meta" ]
             [ if isPlaceholder then
@@ -447,7 +505,7 @@ viewPage page model =
             Gallery.view
 
         XiangqiPage ->
-            Xiangqi.view
+            Html.map XiangqiMsg (Xiangqi.view model.xiangqi)
 
         StatusPage ->
             Status.view model.tzOffset model.statusState RefreshStatuses
@@ -457,6 +515,7 @@ viewPage page model =
                 [ h1 [] [ text "404" ]
                 , p [] [ text "page not found." ]
                 ]
+
 
 
 -- VIEW
@@ -500,6 +559,7 @@ view model =
     }
 
 
+
 -- ROUTING
 
 
@@ -525,6 +585,20 @@ routeParser =
         , Parser.map XiangqiPage (s "xiangqi")
         , Parser.map StatusPage (s "status")
         ]
+
+
+lazyFooterImage : String -> String -> Html msg
+lazyFooterImage imageSrc imageAlt =
+    img
+        [ src imageSrc
+        , alt imageAlt
+        , attribute "loading" "lazy"
+        , attribute "decoding" "async"
+        , attribute "width" "88"
+        , attribute "height" "31"
+        ]
+        []
+
 
 
 -- THEME

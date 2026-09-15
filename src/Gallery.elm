@@ -49,13 +49,10 @@ viewPhoto photo =
             [ img
                 [ src ("/assets/" ++ photo.file)
                 , alt photo.alt
-                , attribute "loading"
-                    (if photo.featured then
-                        "eager"
-
-                     else
-                        "lazy"
-                    )
+                , attribute "loading" "lazy"
+                , attribute "decoding" "async"
+                , attribute "width" (String.fromInt (photoWidth photo.file))
+                , attribute "height" (String.fromInt (photoHeight photo.file))
                 ]
                 []
             ]
@@ -68,6 +65,80 @@ viewPhoto photo =
             , text photo.caption
             ]
         ]
+
+
+photoWidth : String -> Int
+photoWidth file =
+    case file of
+        "DSC_4055.jpg" ->
+            3398
+
+        "DSC_3666.jpg" ->
+            4000
+
+        "DSC_3689.jpg" ->
+            2879
+
+        "DSC_3745.jpg" ->
+            3682
+
+        "DSC_3765.jpg" ->
+            4016
+
+        "DSC_3766.jpg" ->
+            4000
+
+        "DSC_4007.jpg" ->
+            4016
+
+        "DSC_4056.jpg" ->
+            4000
+
+        "IMG_8976.jpeg" ->
+            4032
+
+        "IMG_0119.jpeg" ->
+            4032
+
+        _ ->
+            1600
+
+
+photoHeight : String -> Int
+photoHeight file =
+    case file of
+        "DSC_4055.jpg" ->
+            4269
+
+        "DSC_3666.jpg" ->
+            4714
+
+        "DSC_3689.jpg" ->
+            5024
+
+        "DSC_3745.jpg" ->
+            2736
+
+        "DSC_3765.jpg" ->
+            1617
+
+        "DSC_3766.jpg" ->
+            1535
+
+        "DSC_4007.jpg" ->
+            6016
+
+        "DSC_4056.jpg" ->
+            6000
+
+        "IMG_8976.jpeg" ->
+            2268
+
+        "IMG_0119.jpeg" ->
+            3024
+
+        _ ->
+            1600
 
 
 view : Html msg

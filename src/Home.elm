@@ -13,6 +13,9 @@ view =
             , alt "Shinkansen arriving at a station in Japan"
             , class "home-hero-image"
             , attribute "fetchpriority" "high"
+            , attribute "decoding" "async"
+            , attribute "width" "4000"
+            , attribute "height" "1535"
             ]
             []
         , h1 [ class "home-heading" ] [ text "oh hi! I am Ren or Warren" ]
@@ -34,6 +37,7 @@ view =
                 [ text "\"The clear-cut idea of what is meant by proof ... he perhaps did not possess at all; once he had become satisfied of a theorem's truth, he had scant interest in proving it to others.\"" ]
             , p [ class "quote-attribution" ] [ text "— John Littlewood" ]
             ]
+
         -- , a [ href ]
         , h2 [] [ text "contact" ]
         , div [ class "contact-links" ]
@@ -47,7 +51,6 @@ view =
             , a [ href "https://code.functor.system/kaitotlex", class "contact-item" ] [ text "functor.systems forge" ]
             , a [ href "https://arxiv.org/abs/2204.04549", class "contact-item" ] [ text "send through matter-wave field" ]
             ]
-
         ]
 
 

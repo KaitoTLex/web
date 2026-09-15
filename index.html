@@ -6271,6 +6271,75 @@ var $author$project$Status$fetchApi = function (toMsg) {
 			url: 'https://raw.githubusercontent.com/KaitoTLex/web/main/status.json'
 		});
 };
+var $author$project$Xiangqi$Red = {$: 'Red'};
+var $author$project$Xiangqi$Advisor = {$: 'Advisor'};
+var $author$project$Xiangqi$Black = {$: 'Black'};
+var $author$project$Xiangqi$Cannon = {$: 'Cannon'};
+var $author$project$Xiangqi$Chariot = {$: 'Chariot'};
+var $author$project$Xiangqi$Elephant = {$: 'Elephant'};
+var $author$project$Xiangqi$General = {$: 'General'};
+var $author$project$Xiangqi$Horse = {$: 'Horse'};
+var $author$project$Xiangqi$Piece = F2(
+	function (side, kind) {
+		return {kind: kind, side: side};
+	});
+var $author$project$Xiangqi$Soldier = {$: 'Soldier'};
+var $author$project$Xiangqi$initialPieces = function () {
+	var soldiers = F2(
+		function (side, rank) {
+			return A2(
+				$elm$core$List$map,
+				function (file) {
+					return _Utils_Tuple2(
+						_Utils_Tuple2(file, rank),
+						A2($author$project$Xiangqi$Piece, side, $author$project$Xiangqi$Soldier));
+				},
+				_List_fromArray(
+					[0, 2, 4, 6, 8]));
+		});
+	var backRank = F2(
+		function (side, rank) {
+			return A3(
+				$elm$core$List$map2,
+				F2(
+					function (file, kind) {
+						return _Utils_Tuple2(
+							_Utils_Tuple2(file, rank),
+							A2($author$project$Xiangqi$Piece, side, kind));
+					}),
+				A2($elm$core$List$range, 0, 8),
+				_List_fromArray(
+					[$author$project$Xiangqi$Chariot, $author$project$Xiangqi$Horse, $author$project$Xiangqi$Elephant, $author$project$Xiangqi$Advisor, $author$project$Xiangqi$General, $author$project$Xiangqi$Advisor, $author$project$Xiangqi$Elephant, $author$project$Xiangqi$Horse, $author$project$Xiangqi$Chariot]));
+		});
+	return _Utils_ap(
+		A2(backRank, $author$project$Xiangqi$Black, 0),
+		_Utils_ap(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					_Utils_Tuple2(1, 2),
+					A2($author$project$Xiangqi$Piece, $author$project$Xiangqi$Black, $author$project$Xiangqi$Cannon)),
+					_Utils_Tuple2(
+					_Utils_Tuple2(7, 2),
+					A2($author$project$Xiangqi$Piece, $author$project$Xiangqi$Black, $author$project$Xiangqi$Cannon))
+				]),
+			_Utils_ap(
+				A2(soldiers, $author$project$Xiangqi$Black, 3),
+				_Utils_ap(
+					A2(soldiers, $author$project$Xiangqi$Red, 6),
+					_Utils_ap(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								_Utils_Tuple2(1, 7),
+								A2($author$project$Xiangqi$Piece, $author$project$Xiangqi$Red, $author$project$Xiangqi$Cannon)),
+								_Utils_Tuple2(
+								_Utils_Tuple2(7, 7),
+								A2($author$project$Xiangqi$Piece, $author$project$Xiangqi$Red, $author$project$Xiangqi$Cannon))
+							]),
+						A2(backRank, $author$project$Xiangqi$Red, 9))))));
+}();
+var $author$project$Xiangqi$init = {disclaimerAccepted: false, lastMove: $elm$core$Maybe$Nothing, orientation: $author$project$Xiangqi$Red, pieces: $author$project$Xiangqi$initialPieces, selected: $elm$core$Maybe$Nothing, turn: $author$project$Xiangqi$Red};
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
@@ -6573,7 +6642,8 @@ var $author$project$Main$init = F3(
 				mobileMenuOpen: false,
 				statusState: onStatusPage ? $author$project$Status$StatusLoading : $author$project$Status$StatusIdle,
 				tzOffset: tzOffset,
-				url: url
+				url: url,
+				xiangqi: $author$project$Xiangqi$init
 			},
 			onStatusPage ? $author$project$Status$fetchApi($author$project$Main$StatusApiResult) : $elm$core$Platform$Cmd$none);
 	});
@@ -6923,6 +6993,276 @@ var $elm$url$Url$toString = function (url) {
 					_Utils_ap(http, url.host)),
 				url.path)));
 };
+var $author$project$Xiangqi$opposite = function (side) {
+	return _Utils_eq(side, $author$project$Xiangqi$Red) ? $author$project$Xiangqi$Black : $author$project$Xiangqi$Red;
+};
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
+var $elm$core$Basics$ge = _Utils_ge;
+var $author$project$Xiangqi$inPalace = F2(
+	function (side, _v0) {
+		var file = _v0.a;
+		var rank = _v0.b;
+		return (file >= 3) && ((file <= 5) && (_Utils_eq(side, $author$project$Xiangqi$Red) ? ((rank >= 7) && (rank <= 9)) : ((rank >= 0) && (rank <= 2))));
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
+var $author$project$Xiangqi$pieceAt = F2(
+	function (position, pieces) {
+		return A2(
+			$elm$core$Maybe$map,
+			$elm$core$Tuple$second,
+			$elm$core$List$head(
+				A2(
+					$elm$core$List$filter,
+					function (_v0) {
+						var candidate = _v0.a;
+						return _Utils_eq(candidate, position);
+					},
+					pieces)));
+	});
+var $author$project$Xiangqi$isEmpty = F2(
+	function (position, pieces) {
+		return _Utils_eq(
+			A2($author$project$Xiangqi$pieceAt, position, pieces),
+			$elm$core$Maybe$Nothing);
+	});
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Xiangqi$onOwnSide = F2(
+	function (side, rank) {
+		return _Utils_eq(side, $author$project$Xiangqi$Red) ? (rank >= 5) : (rank <= 4);
+	});
+var $elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
+	});
+var $author$project$Xiangqi$piecesBetween = F3(
+	function (_v0, _v1, pieces) {
+		var fromFile = _v0.a;
+		var fromRank = _v0.b;
+		var toFile = _v1.a;
+		var toRank = _v1.b;
+		var liesBetween = function (_v3) {
+			var file = _v3.a;
+			var rank = _v3.b;
+			return _Utils_eq(fromFile, toFile) ? (_Utils_eq(file, fromFile) && ((_Utils_cmp(
+				rank,
+				A2($elm$core$Basics$min, fromRank, toRank)) > 0) && (_Utils_cmp(
+				rank,
+				A2($elm$core$Basics$max, fromRank, toRank)) < 0))) : (_Utils_eq(rank, fromRank) && ((_Utils_cmp(
+				file,
+				A2($elm$core$Basics$min, fromFile, toFile)) > 0) && (_Utils_cmp(
+				file,
+				A2($elm$core$Basics$max, fromFile, toFile)) < 0)));
+		};
+		return $elm$core$List$length(
+			A2(
+				$elm$core$List$filter,
+				function (_v2) {
+					var position = _v2.a;
+					return liesBetween(position);
+				},
+				pieces));
+	});
+var $author$project$Xiangqi$soldierMove = F4(
+	function (side, fromRank, dx, dy) {
+		var forward = _Utils_eq(side, $author$project$Xiangqi$Red) ? (-1) : 1;
+		var crossedRiver = _Utils_eq(side, $author$project$Xiangqi$Red) ? (fromRank <= 4) : (fromRank >= 5);
+		return ((!dx) && _Utils_eq(dy, forward)) || (crossedRiver && (($elm$core$Basics$abs(dx) === 1) && (!dy)));
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Xiangqi$legalMove = F3(
+	function (from, to, pieces) {
+		var _v0 = A2($author$project$Xiangqi$pieceAt, from, pieces);
+		if (_v0.$ === 'Nothing') {
+			return false;
+		} else {
+			var piece = _v0.a;
+			var targetIsFriendly = A2(
+				$elm$core$Maybe$withDefault,
+				false,
+				A2(
+					$elm$core$Maybe$map,
+					function (target) {
+						return _Utils_eq(target.side, piece.side);
+					},
+					A2($author$project$Xiangqi$pieceAt, to, pieces)));
+			var _v1 = to;
+			var toFile = _v1.a;
+			var toRank = _v1.b;
+			var _v2 = from;
+			var fromFile = _v2.a;
+			var fromRank = _v2.b;
+			var dx = toFile - fromFile;
+			var dy = toRank - fromRank;
+			return (!_Utils_eq(from, to)) && ((!targetIsFriendly) && function () {
+				var _v3 = piece.kind;
+				switch (_v3.$) {
+					case 'General':
+						return (($elm$core$Basics$abs(dx) + $elm$core$Basics$abs(dy)) === 1) && A2($author$project$Xiangqi$inPalace, piece.side, to);
+					case 'Advisor':
+						return ($elm$core$Basics$abs(dx) === 1) && (($elm$core$Basics$abs(dy) === 1) && A2($author$project$Xiangqi$inPalace, piece.side, to));
+					case 'Elephant':
+						return ($elm$core$Basics$abs(dx) === 2) && (($elm$core$Basics$abs(dy) === 2) && (A2($author$project$Xiangqi$onOwnSide, piece.side, toRank) && A2(
+							$author$project$Xiangqi$isEmpty,
+							_Utils_Tuple2(fromFile + ((dx / 2) | 0), fromRank + ((dy / 2) | 0)),
+							pieces)));
+					case 'Horse':
+						return (($elm$core$Basics$abs(dx) === 2) && ($elm$core$Basics$abs(dy) === 1)) ? A2(
+							$author$project$Xiangqi$isEmpty,
+							_Utils_Tuple2(fromFile + ((dx / 2) | 0), fromRank),
+							pieces) : ((($elm$core$Basics$abs(dx) === 1) && ($elm$core$Basics$abs(dy) === 2)) ? A2(
+							$author$project$Xiangqi$isEmpty,
+							_Utils_Tuple2(fromFile, fromRank + ((dy / 2) | 0)),
+							pieces) : false);
+					case 'Chariot':
+						return ((!dx) || (!dy)) && (!A3($author$project$Xiangqi$piecesBetween, from, to, pieces));
+					case 'Cannon':
+						if ((!(!dx)) && (!(!dy))) {
+							return false;
+						} else {
+							var _v4 = A2($author$project$Xiangqi$pieceAt, to, pieces);
+							if (_v4.$ === 'Nothing') {
+								return !A3($author$project$Xiangqi$piecesBetween, from, to, pieces);
+							} else {
+								return A3($author$project$Xiangqi$piecesBetween, from, to, pieces) === 1;
+							}
+						}
+					default:
+						return A4($author$project$Xiangqi$soldierMove, piece.side, fromRank, dx, dy);
+				}
+			}());
+		}
+	});
+var $author$project$Xiangqi$movePiece = F3(
+	function (from, to, model) {
+		var _v0 = A2($author$project$Xiangqi$pieceAt, from, model.pieces);
+		if (_v0.$ === 'Nothing') {
+			return model;
+		} else {
+			var piece = _v0.a;
+			return _Utils_update(
+				model,
+				{
+					lastMove: $elm$core$Maybe$Just(
+						_Utils_Tuple2(from, to)),
+					pieces: A2(
+						$elm$core$List$cons,
+						_Utils_Tuple2(to, piece),
+						A2(
+							$elm$core$List$filter,
+							function (_v1) {
+								var position = _v1.a;
+								return (!_Utils_eq(position, from)) && (!_Utils_eq(position, to));
+							},
+							model.pieces)),
+					selected: $elm$core$Maybe$Nothing,
+					turn: $author$project$Xiangqi$opposite(model.turn)
+				});
+		}
+	});
+var $author$project$Xiangqi$selectPosition = F2(
+	function (position, model) {
+		var _v0 = _Utils_Tuple2(
+			model.selected,
+			A2($author$project$Xiangqi$pieceAt, position, model.pieces));
+		if (_v0.a.$ === 'Nothing') {
+			if (_v0.b.$ === 'Nothing') {
+				var _v1 = _v0.a;
+				var _v2 = _v0.b;
+				return model;
+			} else {
+				var _v3 = _v0.a;
+				var piece = _v0.b.a;
+				return _Utils_eq(piece.side, model.turn) ? _Utils_update(
+					model,
+					{
+						selected: $elm$core$Maybe$Just(position)
+					}) : model;
+			}
+		} else {
+			if (_v0.b.$ === 'Just') {
+				var from = _v0.a.a;
+				var piece = _v0.b.a;
+				return _Utils_eq(piece.side, model.turn) ? _Utils_update(
+					model,
+					{
+						selected: $elm$core$Maybe$Just(position)
+					}) : (A3($author$project$Xiangqi$legalMove, from, position, model.pieces) ? A3($author$project$Xiangqi$movePiece, from, position, model) : model);
+			} else {
+				var from = _v0.a.a;
+				var _v4 = _v0.b;
+				return A3($author$project$Xiangqi$legalMove, from, position, model.pieces) ? A3($author$project$Xiangqi$movePiece, from, position, model) : model;
+			}
+		}
+	});
+var $author$project$Xiangqi$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'AcceptDisclaimer':
+				return _Utils_update(
+					model,
+					{disclaimerAccepted: true});
+			case 'SwitchSide':
+				return _Utils_update(
+					model,
+					{
+						orientation: $author$project$Xiangqi$opposite(model.orientation),
+						selected: $elm$core$Maybe$Nothing
+					});
+			case 'Reset':
+				return _Utils_update(
+					$author$project$Xiangqi$init,
+					{disclaimerAccepted: true, orientation: model.orientation});
+			default:
+				var position = msg.a;
+				return A2($author$project$Xiangqi$selectPosition, position, model);
+		}
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -7000,10 +7340,19 @@ var $author$project$Main$update = F2(
 						model,
 						{statusState: $author$project$Status$StatusLoading}),
 					$author$project$Status$fetchApi($author$project$Main$StatusApiResult));
-			default:
+			case 'Tick':
 				return _Utils_Tuple2(
 					model,
 					$author$project$Status$fetchApi($author$project$Main$StatusApiResult));
+			default:
+				var xiangqiMsg = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							xiangqi: A2($author$project$Xiangqi$update, xiangqiMsg, model.xiangqi)
+						}),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $elm$json$Json$Decode$value = _Json_decodeValue;
@@ -7081,7 +7430,7 @@ var $author$project$Status$cssStyles = A3(
 		[
 			$elm$html$Html$text($author$project$Status$css)
 		]));
-var $author$project$Xiangqi$css = '\n    .xiangqi-content {\n      max-width: 760px;\n    }\n\n    .xiangqi-intro {\n      color: var(--muted-color) !important;\n      margin-bottom: 2rem !important;\n    }\n\n    .xiangqi-board-wrap {\n      position: relative;\n      width: min(100%, 600px);\n      padding: 5.5%;\n      border: 1px solid var(--border-color);\n      border-radius: 6px;\n      background: #cda66a;\n      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);\n    }\n\n    .xiangqi-board {\n      position: relative;\n      aspect-ratio: 8 / 9;\n      background-color: #d9b777;\n      background-image:\n        repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - 0.5px), #5b4128 calc(12.5% - 0.5px), #5b4128 calc(12.5% + 0.5px)),\n        repeating-linear-gradient(to bottom, transparent 0, transparent calc(11.111% - 0.5px), #5b4128 calc(11.111% - 0.5px), #5b4128 calc(11.111% + 0.5px));\n      border: 1px solid #5b4128;\n    }\n\n    .xiangqi-river {\n      position: absolute;\n      z-index: 1;\n      left: 0;\n      right: 0;\n      top: 44.45%;\n      height: 11.111%;\n      display: flex;\n      align-items: center;\n      justify-content: space-around;\n      background: #d9b777;\n      border-top: 1px solid #5b4128;\n      border-bottom: 1px solid #5b4128;\n      color: #5b4128;\n      font-family: serif;\n      font-size: clamp(0.9rem, 3vw, 1.65rem);\n      letter-spacing: 0.35em;\n    }\n\n    .xiangqi-piece {\n      position: absolute;\n      z-index: 2;\n      width: clamp(27px, 8.5%, 48px);\n      aspect-ratio: 1;\n      transform: translate(-50%, -50%);\n      display: grid;\n      place-items: center;\n      border: 2px solid currentColor;\n      border-radius: 50%;\n      background: #ead29c;\n      font-family: serif;\n      font-size: clamp(0.82rem, 2.6vw, 1.45rem);\n      font-weight: 700;\n      box-shadow: 0 2px 4px rgba(55, 35, 18, 0.42), inset 0 0 0 2px #ead29c, inset 0 0 0 3px currentColor;\n    }\n\n    .xiangqi-piece.black { color: #26211d; }\n    .xiangqi-piece.red { color: #a8322d; }\n\n    .xiangqi-development-banner {\n      position: absolute;\n      z-index: 4;\n      left: -1px;\n      right: -1px;\n      top: 50%;\n      transform: translateY(-50%) rotate(-1.5deg);\n      display: flex;\n      justify-content: center;\n      align-items: baseline;\n      gap: 0.8rem;\n      padding: 1rem;\n      background: rgba(37, 35, 52, 0.96);\n      border: 1px solid var(--accent-color);\n      color: #e8e6f0;\n      font-size: clamp(0.82rem, 2.4vw, 1.05rem);\n      text-transform: uppercase;\n      letter-spacing: 0.08em;\n      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);\n    }\n\n    .development-marker {\n      color: var(--accent-color);\n      font-size: 0.68em;\n    }\n\n    @media (max-width: 520px) {\n      .xiangqi-board-wrap { padding: 7%; }\n      .xiangqi-development-banner { flex-direction: column; align-items: center; gap: 0.15rem; }\n    }\n    ';
+var $author$project$Xiangqi$css = '\n    .xiangqi-content { max-width: 900px; }\n    .xiangqi-intro { color: var(--muted-color) !important; margin-bottom: 2rem !important; }\n    .xiangqi-disclaimer { max-width: 620px; padding: 1.5rem; border: 1px solid var(--border-color); border-left: 3px solid var(--accent-color); border-radius: 6px; background: var(--surface-color); }\n    .xiangqi-disclaimer p { color: var(--muted-color) !important; }\n    .development-marker { color: var(--accent-color); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }\n    .xiangqi-primary-button, .xiangqi-button, .agent-placeholder-button { padding: .5rem .75rem; border: 1px solid var(--border-color); border-radius: 4px; font: inherit; font-size: .74rem; cursor: pointer; }\n    .xiangqi-primary-button { background: var(--accent-color); color: #1e1c2e; }\n    .xiangqi-button { color: var(--text-color); background: var(--surface-color); }\n    .xiangqi-primary-button:hover, .xiangqi-button:hover { border-color: var(--accent-color); }\n    .xiangqi-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: min(100%, 760px); margin-bottom: .8rem; }\n    .xiangqi-turn { display: flex; align-items: center; gap: .55rem; }\n    .turn-side { padding: .12rem .5rem; border: 1px solid currentColor; border-radius: 999px; font-size: .72rem; }\n    .turn-side.red { color: #b43b36; }\n    .turn-side.black { color: var(--text-color); }\n    .xiangqi-actions { display: flex; gap: .5rem; }\n    .xiangqi-workspace { display: flex; align-items: stretch; gap: 1rem; }\n    .xiangqi-board-wrap { position: relative; width: min(100%, 600px); padding: 5.5%; border: 1px solid var(--border-color); border-radius: 6px; background: #cda66a; box-shadow: 0 12px 32px rgba(0, 0, 0, .2); }\n    .xiangqi-board { position: relative; aspect-ratio: 8 / 9; background-color: #d9b777; background-image: repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - .5px), #5b4128 calc(12.5% - .5px), #5b4128 calc(12.5% + .5px)), repeating-linear-gradient(to bottom, transparent 0, transparent calc(11.111% - .5px), #5b4128 calc(11.111% - .5px), #5b4128 calc(11.111% + .5px)); border: 1px solid #5b4128; }\n    .xiangqi-river { position: absolute; z-index: 1; left: 0; right: 0; top: 44.45%; height: 11.111%; display: flex; align-items: center; justify-content: space-around; background: #d9b777; border-top: 1px solid #5b4128; border-bottom: 1px solid #5b4128; color: #5b4128; font-family: serif; font-size: clamp(.9rem, 3vw, 1.65rem); letter-spacing: .35em; pointer-events: none; }\n    .xiangqi-square { position: absolute; z-index: 2; width: 11.5%; aspect-ratio: 1; padding: 0; transform: translate(-50%, -50%); border: 0; border-radius: 50%; background: transparent; cursor: pointer; }\n    .xiangqi-square.last-move::after, .xiangqi-square.selected::after { content: ""; position: absolute; inset: 12%; border: 2px solid rgba(42, 75, 112, .55); border-radius: 50%; }\n    .xiangqi-square.selected::after { border-color: #9d2f2a; }\n    .xiangqi-piece { position: absolute; z-index: 2; inset: 8%; display: grid; place-items: center; border: 2px solid currentColor; border-radius: 50%; background: #ead29c; font-family: serif; font-size: clamp(.82rem, 2.6vw, 1.45rem); font-weight: 700; line-height: 1; box-shadow: 0 2px 4px rgba(55, 35, 18, .42), inset 0 0 0 2px #ead29c, inset 0 0 0 3px currentColor; }\n    .xiangqi-piece.black { color: #26211d; }\n    .xiangqi-piece.red { color: #a8322d; }\n    .xiangqi-evaluation { width: 145px; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--surface-color); }\n    .evaluation-body { display: flex; gap: .55rem; height: 330px; margin: 1rem 0; }\n    .evaluation-bar { position: relative; display: flex; flex-direction: column; width: 32px; overflow: hidden; border: 1px solid var(--border-color); border-radius: 3px; }\n    .evaluation-black, .evaluation-red { flex: 1; }\n    .evaluation-black { background: #252129; }\n    .evaluation-red { background: #b2403b; }\n    .evaluation-midpoint { position: absolute; z-index: 1; top: 50%; left: 0; right: 0; height: 2px; background: #ead29c; transform: translateY(-1px); }\n    .evaluation-labels { display: flex; flex: 1; flex-direction: column; justify-content: space-between; color: var(--muted-color); font-size: .66rem; }\n    .evaluation-score { color: var(--text-color); }\n    .agent-status { margin: 0 !important; color: var(--accent-color) !important; font-size: .7rem !important; text-transform: uppercase; }\n    .agent-description { margin: .5rem 0 !important; color: var(--muted-color) !important; font-size: .66rem !important; line-height: 1.5 !important; }\n    .agent-placeholder-button { width: 100%; margin-top: .5rem; color: var(--muted-color); background: transparent; cursor: not-allowed; opacity: .6; }\n    .xiangqi-help { max-width: 760px !important; color: var(--muted-color) !important; font-size: .72rem !important; }\n    @media (max-width: 650px) {\n      .xiangqi-toolbar { align-items: flex-start; flex-direction: column; }\n      .xiangqi-workspace { flex-direction: column; }\n      .xiangqi-board-wrap { padding: 7%; }\n      .xiangqi-evaluation { width: 100%; }\n      .evaluation-body { height: 40px; }\n      .evaluation-bar { flex-direction: row; width: 100%; }\n      .evaluation-midpoint { top: 0; bottom: 0; left: 50%; right: auto; width: 2px; height: auto; transform: translateX(-1px); }\n      .evaluation-labels { display: none; }\n    }\n    ';
 var $author$project$Xiangqi$cssStyles = A3(
 	$elm$virtual_dom$VirtualDom$node,
 	'style',
@@ -7389,7 +7738,12 @@ var $author$project$Main$viewMobileMenu = F2(
 				]));
 	});
 var $author$project$Main$RefreshStatuses = {$: 'RefreshStatuses'};
+var $author$project$Main$XiangqiMsg = function (a) {
+	return {$: 'XiangqiMsg', a: a};
+};
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
+var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
 var $elm$html$Html$p = _VirtualDom_node('p');
 var $elm$html$Html$figcaption = _VirtualDom_node('figcaption');
 var $elm$html$Html$figure = _VirtualDom_node('figure');
@@ -7531,7 +7885,10 @@ var $author$project$About$view = A2(
 								[
 									$elm$html$Html$Attributes$src('/assets/DSC_4055.jpg'),
 									$elm$html$Html$Attributes$alt('Black Saab 900 Turbo S driving through Tokyo'),
-									A2($elm$html$Html$Attributes$attribute, 'loading', 'lazy')
+									A2($elm$html$Html$Attributes$attribute, 'loading', 'lazy'),
+									A2($elm$html$Html$Attributes$attribute, 'decoding', 'async'),
+									A2($elm$html$Html$Attributes$attribute, 'width', '3398'),
+									A2($elm$html$Html$Attributes$attribute, 'height', '4269')
 								]),
 							_List_Nil),
 							A2(
@@ -7557,7 +7914,10 @@ var $author$project$About$view = A2(
 						[
 							$elm$html$Html$Attributes$src('/assets/hackmit.jpeg'),
 							$elm$html$Html$Attributes$alt('Colmena Maps team holding their HackMIT 2025 grand prize check'),
-							A2($elm$html$Html$Attributes$attribute, 'loading', 'lazy')
+							A2($elm$html$Html$Attributes$attribute, 'loading', 'lazy'),
+							A2($elm$html$Html$Attributes$attribute, 'decoding', 'async'),
+							A2($elm$html$Html$Attributes$attribute, 'width', '5712'),
+							A2($elm$html$Html$Attributes$attribute, 'height', '4284')
 						]),
 					_List_Nil),
 					A2(
@@ -7584,6 +7944,58 @@ var $author$project$Gallery$photos = _List_fromArray(
 		{alt: 'Drawing of a blue-haired character working on a laptop', caption: 'I drew this', featured: false, file: 'idrewthis.jpg'}
 	]);
 var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
+var $author$project$Gallery$photoHeight = function (file) {
+	switch (file) {
+		case 'DSC_4055.jpg':
+			return 4269;
+		case 'DSC_3666.jpg':
+			return 4714;
+		case 'DSC_3689.jpg':
+			return 5024;
+		case 'DSC_3745.jpg':
+			return 2736;
+		case 'DSC_3765.jpg':
+			return 1617;
+		case 'DSC_3766.jpg':
+			return 1535;
+		case 'DSC_4007.jpg':
+			return 6016;
+		case 'DSC_4056.jpg':
+			return 6000;
+		case 'IMG_8976.jpeg':
+			return 2268;
+		case 'IMG_0119.jpeg':
+			return 3024;
+		default:
+			return 1600;
+	}
+};
+var $author$project$Gallery$photoWidth = function (file) {
+	switch (file) {
+		case 'DSC_4055.jpg':
+			return 3398;
+		case 'DSC_3666.jpg':
+			return 4000;
+		case 'DSC_3689.jpg':
+			return 2879;
+		case 'DSC_3745.jpg':
+			return 3682;
+		case 'DSC_3765.jpg':
+			return 4016;
+		case 'DSC_3766.jpg':
+			return 4000;
+		case 'DSC_4007.jpg':
+			return 4016;
+		case 'DSC_4056.jpg':
+			return 4000;
+		case 'IMG_8976.jpeg':
+			return 4032;
+		case 'IMG_0119.jpeg':
+			return 4032;
+		default:
+			return 1600;
+	}
+};
 var $author$project$Gallery$viewPhoto = function (photo) {
 	return A2(
 		$elm$html$Html$figure,
@@ -7611,10 +8023,18 @@ var $author$project$Gallery$viewPhoto = function (photo) {
 							[
 								$elm$html$Html$Attributes$src('/assets/' + photo.file),
 								$elm$html$Html$Attributes$alt(photo.alt),
+								A2($elm$html$Html$Attributes$attribute, 'loading', 'lazy'),
+								A2($elm$html$Html$Attributes$attribute, 'decoding', 'async'),
 								A2(
 								$elm$html$Html$Attributes$attribute,
-								'loading',
-								photo.featured ? 'eager' : 'lazy')
+								'width',
+								$elm$core$String$fromInt(
+									$author$project$Gallery$photoWidth(photo.file))),
+								A2(
+								$elm$html$Html$Attributes$attribute,
+								'height',
+								$elm$core$String$fromInt(
+									$author$project$Gallery$photoHeight(photo.file)))
 							]),
 						_List_Nil)
 					])),
@@ -7709,7 +8129,10 @@ var $author$project$Home$view = A2(
 					$elm$html$Html$Attributes$src('/assets/DSC_3766.jpg'),
 					$elm$html$Html$Attributes$alt('Shinkansen arriving at a station in Japan'),
 					$elm$html$Html$Attributes$class('home-hero-image'),
-					A2($elm$html$Html$Attributes$attribute, 'fetchpriority', 'high')
+					A2($elm$html$Html$Attributes$attribute, 'fetchpriority', 'high'),
+					A2($elm$html$Html$Attributes$attribute, 'decoding', 'async'),
+					A2($elm$html$Html$Attributes$attribute, 'width', '4000'),
+					A2($elm$html$Html$Attributes$attribute, 'height', '1535')
 				]),
 			_List_Nil),
 			A2(
@@ -7952,15 +8375,6 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $author$project$Status$currentStatusFor = F2(
 	function (history, name) {
 		return A2(
@@ -8024,15 +8438,6 @@ var $elm$core$List$drop = F2(
 		}
 	});
 var $elm$core$Basics$modBy = _Basics_modBy;
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$Status$hourLabel = F2(
 	function (tzOffset, ts) {
 		var utcM = A2(
@@ -8052,16 +8457,6 @@ var $author$project$Status$hourLabel = F2(
 		var m = A2($elm$core$Basics$modBy, 60, localTotal);
 		var h = (localTotal / 60) | 0;
 		return pad(h) + (':' + pad(m));
-	});
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
 	});
 var $author$project$Status$segmentBg = function (status) {
 	_v0$3:
@@ -8422,96 +8817,337 @@ var $author$project$Status$view = F3(
 						$author$project$Status$serviceInfoList))
 				]));
 	});
-var $author$project$Xiangqi$Piece = F4(
-	function (label, side, file, rank) {
-		return {file: file, label: label, rank: rank, side: side};
-	});
-var $author$project$Xiangqi$pieces = _List_fromArray(
-	[
-		A4($author$project$Xiangqi$Piece, '車', 'black', 0, 0),
-		A4($author$project$Xiangqi$Piece, '馬', 'black', 1, 0),
-		A4($author$project$Xiangqi$Piece, '象', 'black', 2, 0),
-		A4($author$project$Xiangqi$Piece, '士', 'black', 3, 0),
-		A4($author$project$Xiangqi$Piece, '將', 'black', 4, 0),
-		A4($author$project$Xiangqi$Piece, '士', 'black', 5, 0),
-		A4($author$project$Xiangqi$Piece, '象', 'black', 6, 0),
-		A4($author$project$Xiangqi$Piece, '馬', 'black', 7, 0),
-		A4($author$project$Xiangqi$Piece, '車', 'black', 8, 0),
-		A4($author$project$Xiangqi$Piece, '砲', 'black', 1, 2),
-		A4($author$project$Xiangqi$Piece, '砲', 'black', 7, 2),
-		A4($author$project$Xiangqi$Piece, '卒', 'black', 0, 3),
-		A4($author$project$Xiangqi$Piece, '卒', 'black', 2, 3),
-		A4($author$project$Xiangqi$Piece, '卒', 'black', 4, 3),
-		A4($author$project$Xiangqi$Piece, '卒', 'black', 6, 3),
-		A4($author$project$Xiangqi$Piece, '卒', 'black', 8, 3),
-		A4($author$project$Xiangqi$Piece, '兵', 'red', 0, 6),
-		A4($author$project$Xiangqi$Piece, '兵', 'red', 2, 6),
-		A4($author$project$Xiangqi$Piece, '兵', 'red', 4, 6),
-		A4($author$project$Xiangqi$Piece, '兵', 'red', 6, 6),
-		A4($author$project$Xiangqi$Piece, '兵', 'red', 8, 6),
-		A4($author$project$Xiangqi$Piece, '炮', 'red', 1, 7),
-		A4($author$project$Xiangqi$Piece, '炮', 'red', 7, 7),
-		A4($author$project$Xiangqi$Piece, '俥', 'red', 0, 9),
-		A4($author$project$Xiangqi$Piece, '傌', 'red', 1, 9),
-		A4($author$project$Xiangqi$Piece, '相', 'red', 2, 9),
-		A4($author$project$Xiangqi$Piece, '仕', 'red', 3, 9),
-		A4($author$project$Xiangqi$Piece, '帥', 'red', 4, 9),
-		A4($author$project$Xiangqi$Piece, '仕', 'red', 5, 9),
-		A4($author$project$Xiangqi$Piece, '相', 'red', 6, 9),
-		A4($author$project$Xiangqi$Piece, '傌', 'red', 7, 9),
-		A4($author$project$Xiangqi$Piece, '俥', 'red', 8, 9)
-	]);
-var $elm$core$String$fromFloat = _String_fromNumber;
-var $author$project$Xiangqi$viewPiece = function (piece) {
-	return A2(
-		$elm$html$Html$span,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('xiangqi-piece ' + piece.side),
-				A2(
-				$elm$html$Html$Attributes$style,
-				'left',
-				$elm$core$String$fromFloat((piece.file / 8) * 100) + '%'),
-				A2(
-				$elm$html$Html$Attributes$style,
-				'top',
-				$elm$core$String$fromFloat((piece.rank / 9) * 100) + '%')
-			]),
-		_List_fromArray(
-			[
-				$elm$html$Html$text(piece.label)
-			]));
-};
-var $author$project$Xiangqi$view = A2(
+var $author$project$Xiangqi$AcceptDisclaimer = {$: 'AcceptDisclaimer'};
+var $author$project$Xiangqi$viewDisclaimer = A2(
 	$elm$html$Html$div,
 	_List_fromArray(
 		[
-			$elm$html$Html$Attributes$class('xiangqi-content')
+			$elm$html$Html$Attributes$class('xiangqi-disclaimer')
 		]),
 	_List_fromArray(
 		[
 			A2(
-			$elm$html$Html$h1,
-			_List_Nil,
+			$elm$html$Html$span,
 			_List_fromArray(
 				[
-					$elm$html$Html$text('象棋')
-				])),
-			A2(
-			$elm$html$Html$p,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('xiangqi-intro')
+					$elm$html$Html$Attributes$class('development-marker')
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text('A small Chinese chess implementation is taking shape here.')
+					$elm$html$Html$text('// compute notice')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('This experiment is intended to run a Xiangqi agent locally using WebGL, with WebGPU support planned where available.')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('The future agent may use significant GPU, memory, and battery resources. This version does not load a model or start a GPU workload.')
+				])),
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$type_('button'),
+					$elm$html$Html$Attributes$class('xiangqi-primary-button'),
+					$elm$html$Html$Events$onClick($author$project$Xiangqi$AcceptDisclaimer)
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('I understand — open board')
+				]))
+		]));
+var $author$project$Xiangqi$Reset = {$: 'Reset'};
+var $author$project$Xiangqi$SwitchSide = {$: 'SwitchSide'};
+var $author$project$Xiangqi$sideName = function (side) {
+	return _Utils_eq(side, $author$project$Xiangqi$Red) ? 'red' : 'black';
+};
+var $author$project$Xiangqi$boardPositions = A2(
+	$elm$core$List$concatMap,
+	function (rank) {
+		return A2(
+			$elm$core$List$map,
+			function (file) {
+				return _Utils_Tuple2(file, rank);
+			},
+			A2($elm$core$List$range, 0, 8));
+	},
+	A2($elm$core$List$range, 0, 9));
+var $author$project$Xiangqi$Select = function (a) {
+	return {$: 'Select', a: a};
+};
+var $elm$html$Html$Attributes$classList = function (classes) {
+	return $elm$html$Html$Attributes$class(
+		A2(
+			$elm$core$String$join,
+			' ',
+			A2(
+				$elm$core$List$map,
+				$elm$core$Tuple$first,
+				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
+};
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $author$project$Xiangqi$pieceGlyph = function (piece) {
+	var _v0 = _Utils_Tuple2(piece.side, piece.kind);
+	if (_v0.a.$ === 'Red') {
+		switch (_v0.b.$) {
+			case 'General':
+				var _v1 = _v0.a;
+				var _v2 = _v0.b;
+				return '帥';
+			case 'Advisor':
+				var _v5 = _v0.a;
+				var _v6 = _v0.b;
+				return '仕';
+			case 'Elephant':
+				var _v9 = _v0.a;
+				var _v10 = _v0.b;
+				return '相';
+			case 'Horse':
+				var _v13 = _v0.a;
+				var _v14 = _v0.b;
+				return '傌';
+			case 'Chariot':
+				var _v17 = _v0.a;
+				var _v18 = _v0.b;
+				return '俥';
+			case 'Cannon':
+				var _v21 = _v0.a;
+				var _v22 = _v0.b;
+				return '炮';
+			default:
+				var _v25 = _v0.a;
+				var _v26 = _v0.b;
+				return '兵';
+		}
+	} else {
+		switch (_v0.b.$) {
+			case 'General':
+				var _v3 = _v0.a;
+				var _v4 = _v0.b;
+				return '將';
+			case 'Advisor':
+				var _v7 = _v0.a;
+				var _v8 = _v0.b;
+				return '士';
+			case 'Elephant':
+				var _v11 = _v0.a;
+				var _v12 = _v0.b;
+				return '象';
+			case 'Horse':
+				var _v15 = _v0.a;
+				var _v16 = _v0.b;
+				return '馬';
+			case 'Chariot':
+				var _v19 = _v0.a;
+				var _v20 = _v0.b;
+				return '車';
+			case 'Cannon':
+				var _v23 = _v0.a;
+				var _v24 = _v0.b;
+				return '砲';
+			default:
+				var _v27 = _v0.a;
+				var _v28 = _v0.b;
+				return '卒';
+		}
+	}
+};
+var $author$project$Xiangqi$pieceName = function (kind) {
+	switch (kind.$) {
+		case 'General':
+			return 'general';
+		case 'Advisor':
+			return 'advisor';
+		case 'Elephant':
+			return 'elephant';
+		case 'Horse':
+			return 'horse';
+		case 'Chariot':
+			return 'chariot';
+		case 'Cannon':
+			return 'cannon';
+		default:
+			return 'soldier';
+	}
+};
+var $author$project$Xiangqi$squareLabel = F2(
+	function (_v0, pieces) {
+		var file = _v0.a;
+		var rank = _v0.b;
+		var coordinate = 'file ' + ($elm$core$String$fromInt(file + 1) + (', rank ' + $elm$core$String$fromInt(10 - rank)));
+		var _v1 = A2(
+			$author$project$Xiangqi$pieceAt,
+			_Utils_Tuple2(file, rank),
+			pieces);
+		if (_v1.$ === 'Nothing') {
+			return 'Empty, ' + coordinate;
+		} else {
+			var piece = _v1.a;
+			return $author$project$Xiangqi$sideName(piece.side) + (' ' + ($author$project$Xiangqi$pieceName(piece.kind) + (', ' + coordinate)));
+		}
+	});
+var $author$project$Xiangqi$viewSquare = F2(
+	function (model, position) {
+		var lastMoveSquare = A2(
+			$elm$core$Maybe$withDefault,
+			false,
+			A2(
+				$elm$core$Maybe$map,
+				function (_v2) {
+					var from = _v2.a;
+					var to = _v2.b;
+					return _Utils_eq(position, from) || _Utils_eq(position, to);
+				},
+				model.lastMove));
+		var _v0 = position;
+		var file = _v0.a;
+		var rank = _v0.b;
+		var displayFile = _Utils_eq(model.orientation, $author$project$Xiangqi$Red) ? file : (8 - file);
+		var displayRank = _Utils_eq(model.orientation, $author$project$Xiangqi$Red) ? rank : (9 - rank);
+		return A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$type_('button'),
+					$elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('xiangqi-square', true),
+							_Utils_Tuple2(
+							'selected',
+							_Utils_eq(
+								model.selected,
+								$elm$core$Maybe$Just(position))),
+							_Utils_Tuple2('last-move', lastMoveSquare)
+						])),
+					A2(
+					$elm$html$Html$Attributes$style,
+					'left',
+					$elm$core$String$fromFloat((displayFile / 8) * 100) + '%'),
+					A2(
+					$elm$html$Html$Attributes$style,
+					'top',
+					$elm$core$String$fromFloat((displayRank / 9) * 100) + '%'),
+					A2(
+					$elm$html$Html$Attributes$attribute,
+					'aria-label',
+					A2($author$project$Xiangqi$squareLabel, position, model.pieces)),
+					$elm$html$Html$Events$onClick(
+					$author$project$Xiangqi$Select(position))
+				]),
+			_List_fromArray(
+				[
+					function () {
+					var _v1 = A2($author$project$Xiangqi$pieceAt, position, model.pieces);
+					if (_v1.$ === 'Just') {
+						var piece = _v1.a;
+						return A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(
+									'xiangqi-piece ' + $author$project$Xiangqi$sideName(piece.side))
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									$author$project$Xiangqi$pieceGlyph(piece))
+								]));
+					} else {
+						return $elm$html$Html$text('');
+					}
+				}()
+				]));
+	});
+var $author$project$Xiangqi$viewBoard = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('xiangqi-board-wrap')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('xiangqi-board'),
+						A2(
+						$elm$html$Html$Attributes$attribute,
+						'aria-label',
+						'Interactive Chinese chess board viewed from ' + $author$project$Xiangqi$sideName(model.orientation))
+					]),
+				A2(
+					$elm$core$List$cons,
+					A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('xiangqi-river')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$span,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('楚河')
+									])),
+								A2(
+								$elm$html$Html$span,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('漢界')
+									]))
+							])),
+					A2(
+						$elm$core$List$map,
+						$author$project$Xiangqi$viewSquare(model),
+						$author$project$Xiangqi$boardPositions)))
+			]));
+};
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
+var $author$project$Xiangqi$viewEvaluation = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('xiangqi-evaluation')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$span,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('development-marker')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('// blunder detector')
 				])),
 			A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('xiangqi-board-wrap')
+					$elm$html$Html$Attributes$class('evaluation-body')
 				]),
 			_List_fromArray(
 				[
@@ -8519,60 +9155,233 @@ var $author$project$Xiangqi$view = A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('xiangqi-board'),
-							A2($elm$html$Html$Attributes$attribute, 'role', 'img'),
-							A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Chinese chess board in the starting position')
+							$elm$html$Html$Attributes$class('evaluation-bar'),
+							A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Neutral evaluation; local agent unavailable')
 						]),
-					_Utils_ap(
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('xiangqi-river')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$span,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('楚河')
-											])),
-										A2(
-										$elm$html$Html$span,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('漢界')
-											]))
-									]))
-							]),
-						A2($elm$core$List$map, $author$project$Xiangqi$viewPiece, $author$project$Xiangqi$pieces))),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('evaluation-black')
+								]),
+							_List_Nil),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('evaluation-midpoint')
+								]),
+							_List_Nil),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('evaluation-red')
+								]),
+							_List_Nil)
+						])),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('xiangqi-development-banner')
+							$elm$html$Html$Attributes$class('evaluation-labels')
 						]),
 					_List_fromArray(
 						[
 							A2(
 							$elm$html$Html$span,
+							_List_Nil,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('development-marker')
+									$elm$html$Html$text('black')
+								])),
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('evaluation-score')
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text('// status')
+									$elm$html$Html$text('0.0')
 								])),
-							$elm$html$Html$text('currently being developed')
+							A2(
+							$elm$html$Html$span,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('red')
+								]))
 						]))
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('agent-status')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('agent offline')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('agent-description')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Evaluation and blunder detection are placeholders until the local RL agent is connected.')
+				])),
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$type_('button'),
+					$elm$html$Html$Attributes$class('agent-placeholder-button'),
+					$elm$html$Html$Attributes$disabled(true)
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('load local agent — soon')
 				]))
 		]));
+var $author$project$Xiangqi$viewGame = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('xiangqi-toolbar')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('xiangqi-turn')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$span,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('development-marker')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('turn')
+									])),
+								A2(
+								$elm$html$Html$span,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class(
+										'turn-side ' + $author$project$Xiangqi$sideName(model.turn))
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										$author$project$Xiangqi$sideName(model.turn))
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('xiangqi-actions')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('button'),
+										$elm$html$Html$Attributes$class('xiangqi-button'),
+										$elm$html$Html$Events$onClick($author$project$Xiangqi$SwitchSide)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										'view from ' + $author$project$Xiangqi$sideName(
+											$author$project$Xiangqi$opposite(model.orientation)))
+									])),
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('button'),
+										$elm$html$Html$Attributes$class('xiangqi-button'),
+										$elm$html$Html$Events$onClick($author$project$Xiangqi$Reset)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('reset')
+									]))
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('xiangqi-workspace')
+					]),
+				_List_fromArray(
+					[
+						$author$project$Xiangqi$viewBoard(model),
+						$author$project$Xiangqi$viewEvaluation
+					])),
+				A2(
+				$elm$html$Html$p,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('xiangqi-help')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Select a piece and then its destination. Core piece movement and captures work; check and endgame validation are not implemented yet.')
+					]))
+			]));
+};
+var $author$project$Xiangqi$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('xiangqi-content')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h1,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('象棋')
+					])),
+				A2(
+				$elm$html$Html$p,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('xiangqi-intro')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('A local Chinese chess board and future reinforcement-learning agent experiment.')
+					])),
+				model.disclaimerAccepted ? $author$project$Xiangqi$viewGame(model) : $author$project$Xiangqi$viewDisclaimer
+			]));
+};
 var $author$project$Projects$kaitoRepositories = _List_fromArray(
 	[
 		{description: ' KaitoTLex\'s functorOS configuration, supported for x86-64-linux and aarch64-linux ', language: 'Nix', languageColor: '#9e9ab8', name: 'ame', readmeExcerpt: 'KaitoTLex\'s EE Optimized FunctorOS (NixOS) configuration, KaitoianOS\'s spiritual successor', url: 'https://github.com/KaitoTLex/ame'},
@@ -8732,7 +9541,10 @@ var $author$project$Main$viewPage = F2(
 			case 'GalleryPage':
 				return $author$project$Gallery$view;
 			case 'XiangqiPage':
-				return $author$project$Xiangqi$view;
+				return A2(
+					$elm$html$Html$map,
+					$author$project$Main$XiangqiMsg,
+					$author$project$Xiangqi$view(model.xiangqi));
 			case 'StatusPage':
 				return A3($author$project$Status$view, model.tzOffset, model.statusState, $author$project$Main$RefreshStatuses);
 			default:
@@ -8758,6 +9570,21 @@ var $author$project$Main$viewPage = F2(
 						]));
 		}
 	});
+var $author$project$Main$lazyFooterImage = F2(
+	function (imageSrc, imageAlt) {
+		return A2(
+			$elm$html$Html$img,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$src(imageSrc),
+					$elm$html$Html$Attributes$alt(imageAlt),
+					A2($elm$html$Html$Attributes$attribute, 'loading', 'lazy'),
+					A2($elm$html$Html$Attributes$attribute, 'decoding', 'async'),
+					A2($elm$html$Html$Attributes$attribute, 'width', '88'),
+					A2($elm$html$Html$Attributes$attribute, 'height', '31')
+				]),
+			_List_Nil);
+	});
 var $author$project$Main$viewPageFooter = function (commitHash) {
 	var isPlaceholder = A2($elm$core$String$startsWith, 'GITHUB', commitHash);
 	var shortHash = isPlaceholder ? 'dev' : A2($elm$core$String$left, 7, commitHash);
@@ -8777,78 +9604,15 @@ var $author$project$Main$viewPageFooter = function (commitHash) {
 					]),
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$src('/assets/gif/eva.gif'),
-								$elm$html$Html$Attributes$alt('eva')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$src('/assets/gif/nec.gif'),
-								$elm$html$Html$Attributes$alt('nec')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$src('/assets/gif/linux_powered.gif'),
-								$elm$html$Html$Attributes$alt('linux')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$src('/assets/gif/yuri.png'),
-								$elm$html$Html$Attributes$alt('yuri')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$src('/assets/gif/trans.gif'),
-								$elm$html$Html$Attributes$alt('trans')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$src('/assets/gif/miku.gif'),
-								$elm$html$Html$Attributes$alt('miku')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$src('/assets/gif/latex.gif'),
-								$elm$html$Html$Attributes$alt('latex')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$src('/assets/gif/kaitotlex.gif'),
-								$elm$html$Html$Attributes$alt('self')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$src('/assets/gif/tetris.gif'),
-								$elm$html$Html$Attributes$alt('tetris')
-							]),
-						_List_Nil)
+						A2($author$project$Main$lazyFooterImage, '/assets/gif/eva.gif', 'eva'),
+						A2($author$project$Main$lazyFooterImage, '/assets/gif/nec.gif', 'nec'),
+						A2($author$project$Main$lazyFooterImage, '/assets/gif/linux_powered.gif', 'linux'),
+						A2($author$project$Main$lazyFooterImage, '/assets/gif/yuri.png', 'yuri'),
+						A2($author$project$Main$lazyFooterImage, '/assets/gif/trans.gif', 'trans'),
+						A2($author$project$Main$lazyFooterImage, '/assets/gif/miku.gif', 'miku'),
+						A2($author$project$Main$lazyFooterImage, '/assets/gif/latex.gif', 'latex'),
+						A2($author$project$Main$lazyFooterImage, '/assets/gif/kaitotlex.gif', 'self'),
+						A2($author$project$Main$lazyFooterImage, '/assets/gif/tetris.gif', 'tetris')
 					])),
 				A2(
 				$elm$html$Html$div,

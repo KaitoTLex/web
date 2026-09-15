@@ -28,6 +28,9 @@ view =
                     [ src "/assets/DSC_4055.jpg"
                     , alt "Black Saab 900 Turbo S driving through Tokyo"
                     , attribute "loading" "lazy"
+                    , attribute "decoding" "async"
+                    , attribute "width" "3398"
+                    , attribute "height" "4269"
                     ]
                     []
                 , figcaption [] [ text "Featured photo from my trip to Japan in 2026 of a Saab 900 Turbo S." ]
@@ -38,6 +41,9 @@ view =
                 [ src "/assets/hackmit.jpeg"
                 , alt "Colmena Maps team holding their HackMIT 2025 grand prize check"
                 , attribute "loading" "lazy"
+                , attribute "decoding" "async"
+                , attribute "width" "5712"
+                , attribute "height" "4284"
                 ]
                 []
             , figcaption [] [ text "Winning first place at HackMIT 2025 with the Colmena Maps team." ]

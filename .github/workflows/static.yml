@@ -55,7 +55,52 @@ jobs:
             <body>
               <div id="root"></div>
               <script src="bundle.js"></script>
-              <script>Elm.Main.init({ node: document.getElementById("root"), flags: new Date().getTimezoneOffset() });</script>
+              <script>
+                var app = Elm.Main.init({ node: document.getElementById("root"), flags: new Date().getTimezoneOffset() });
+              </script>
+              <!-- Local Xiangqi engine (WebGPU, falls back to plain JS): loaded only
+                   once the user opts in on the disclaimer + "load local agent" button
+                   on /xiangqi. See assets/engine/ (mirrors ../tinyfih/web-engine/). -->
+              <script type="module">
+                import { createEngine, Rules } from "/assets/engine/tinyfih.js";
+
+                var engine = null;
+
+                app.ports.loadEngine.subscribe(async function () {
+                  try {
+                    engine = await createEngine(
+                      "/assets/engine/model/tinyfih_final.json",
+                      "/assets/engine/model/tinyfih_final.bin"
+                    );
+                    app.ports.engineEvent.send({ type: "loaded", backend: engine.backend });
+                  } catch (err) {
+                    app.ports.engineEvent.send({ type: "error", message: String(err) });
+                  }
+                });
+
+                app.ports.requestEngineMove.subscribe(async function (payload) {
+                  if (!engine) {
+                    app.ports.engineEvent.send({ type: "error", message: "engine not loaded yet" });
+                    return;
+                  }
+                  try {
+                    var board = Rules.setFen(new Rules.Board(), payload.fen);
+                    // Elm computed legality itself (see src/Xiangqi.elm) and
+                    // sent the move list along with the FEN -- this engine
+                    // only scores the candidates it's given, it doesn't
+                    // generate them.
+                    var legalMoves = payload.legalMoves.map(function (m) { return [m.from, m.to]; });
+                    var best = await engine.bestMove(board, legalMoves);
+                    if (!best) {
+                      app.ports.engineEvent.send({ type: "error", message: "no legal moves (game over)" });
+                    } else {
+                      app.ports.engineEvent.send({ type: "move", from: best.from, to: best.to, value: best.q });
+                    }
+                  } catch (err) {
+                    app.ports.engineEvent.send({ type: "error", message: String(err) });
+                  }
+                });
+              </script>
               <!-- 100% privacy-first analytics -->
               <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
             </body>
