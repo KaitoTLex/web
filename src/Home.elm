@@ -9,7 +9,7 @@ view : Html msg
 view =
     div [ class "home-content" ]
         [ img
-            [ src "/assets/DSC_3766.jpg"
+            [ src "/assets/optimized/DSC_3766.webp"
             , alt "Shinkansen arriving at a station in Japan"
             , class "home-hero-image"
             , attribute "fetchpriority" "high"

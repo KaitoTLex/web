@@ -32,80 +32,21 @@ jobs:
         run: npm install -g elm@0.19.1
 
       - name: Get commit hash
-        run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
 
       - name: Replace commit placeholder
         run: |
           find . -name '*.elm' -type f -exec sed -i 's/"GITHUB_ACTIONS_COMMIT_HASH_PLACEHOLDER"/"${{ env.COMMIT_HASH }}"/g' {} \;
 
       - name: Build Elm application
-        run: elm make src/Main.elm --optimize --output=dist/bundle.js
+        run: |
+          elm make src/Main.elm --optimize --output=dist/bundle.js
+          npx --yes terser@5 dist/bundle.js \
+            --compress 'pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters=true,keep_fargs=false,unsafe_comps=true,unsafe=true' \
+            --mangle --output dist/bundle.js
 
       - name: Create index.html
-        run: |
-          mkdir -p dist
-          cat > dist/index.html << 'HTMLEOF'
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>KaitoTLex.Systems</title>
-            </head>
-            <body>
-              <div id="root"></div>
-              <script src="bundle.js"></script>
-              <script>
-                var app = Elm.Main.init({ node: document.getElementById("root"), flags: new Date().getTimezoneOffset() });
-              </script>
-              <!-- Local Xiangqi engine (WebGPU, falls back to plain JS): loaded only
-                   once the user opts in on the disclaimer + "load local agent" button
-                   on /xiangqi. See assets/engine/ (mirrors ../tinyfih/web-engine/). -->
-              <script type="module">
-                import { createEngine, Rules } from "/assets/engine/tinyfih.js";
-
-                var engine = null;
-
-                app.ports.loadEngine.subscribe(async function () {
-                  try {
-                    engine = await createEngine(
-                      "/assets/engine/model/tinyfih_final.json",
-                      "/assets/engine/model/tinyfih_final.bin"
-                    );
-                    app.ports.engineEvent.send({ type: "loaded", backend: engine.backend });
-                  } catch (err) {
-                    app.ports.engineEvent.send({ type: "error", message: String(err) });
-                  }
-                });
-
-                app.ports.requestEngineMove.subscribe(async function (payload) {
-                  if (!engine) {
-                    app.ports.engineEvent.send({ type: "error", message: "engine not loaded yet" });
-                    return;
-                  }
-                  try {
-                    var board = Rules.setFen(new Rules.Board(), payload.fen);
-                    // Elm computed legality itself (see src/Xiangqi.elm) and
-                    // sent the move list along with the FEN -- this engine
-                    // only scores the candidates it's given, it doesn't
-                    // generate them.
-                    var legalMoves = payload.legalMoves.map(function (m) { return [m.from, m.to]; });
-                    var best = await engine.bestMove(board, legalMoves);
-                    if (!best) {
-                      app.ports.engineEvent.send({ type: "error", message: "no legal moves (game over)" });
-                    } else {
-                      app.ports.engineEvent.send({ type: "move", from: best.from, to: best.to, value: best.q });
-                    }
-                  } catch (err) {
-                    app.ports.engineEvent.send({ type: "error", message: String(err) });
-                  }
-                });
-              </script>
-              <!-- 100% privacy-first analytics -->
-              <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
-            </body>
-          </html>
-          HTMLEOF
+        run: cp index.html dist/index.html
 
       - name: Create 404.html for SPA routing
         run: |
@@ -114,7 +55,10 @@ jobs:
           <html>
             <head>
               <meta charset="utf-8">
-              <script>sessionStorage.redirect = location.pathname; location.replace("/");</script>
+              <script>
+                sessionStorage.setItem("spa-redirect", location.pathname + location.search + location.hash);
+                location.replace("/");
+              </script>
             </head>
           </html>
           HTMLEOF

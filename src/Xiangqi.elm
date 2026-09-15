@@ -453,7 +453,16 @@ pseudoLegalMove from to pieces =
                 && not targetIsFriendly
                 && (case piece.kind of
                         General ->
-                            abs dx + abs dy == 1 && inPalace piece.side to
+                            (abs dx + abs dy == 1 && inPalace piece.side to)
+                                || (dx
+                                        == 0
+                                        && piecesBetween from to pieces
+                                        == 0
+                                        && (pieceAt to pieces
+                                                |> Maybe.map (\target -> target.side /= piece.side && target.kind == General)
+                                                |> Maybe.withDefault False
+                                           )
+                                   )
 
                         Advisor ->
                             abs dx == 1 && abs dy == 1 && inPalace piece.side to
@@ -565,7 +574,7 @@ whether checkmated or merely stalemated.
 -}
 isGameOver : Side -> List ( Position, Piece ) -> Bool
 isGameOver side pieces =
-    List.isEmpty (generateLegalMoves side pieces)
+    findGeneral side pieces == Nothing || List.isEmpty (generateLegalMoves side pieces)
 
 
 {-| Standard perft: count leaf positions reached at exactly `depth` plies.
@@ -614,7 +623,7 @@ findGeneral side pieces =
 
 
 {-| Is `target` attacked by any piece belonging to `by`? Walks outward
-*from* `target` per piece-movement pattern (an allocation-free reverse
+_from_ `target` per piece-movement pattern (an allocation-free reverse
 scan) rather than generating every attacker's full move list -- mirrors
 `../../tinyfih/web-engine/rules.js`'s `isSquareAttacked` exactly (that
 version is cross-checked against Pikafish's own perft counts; this is a
@@ -711,7 +720,7 @@ knightAttacks target by pieces =
             (\( df, dr ) ->
                 let
                     src =
-                        step target (-df) (-dr)
+                        step target -df -dr
                 in
                 inBoard src
                     && isEmpty (legSquare src df dr) pieces
@@ -762,7 +771,7 @@ advisorAttacks target by pieces =
             (\( df, dr ) ->
                 let
                     src =
-                        step target (-df) (-dr)
+                        step target -df -dr
                 in
                 inBoard src
                     && inPalace by target
@@ -897,8 +906,8 @@ viewDisclaimer : Html Msg
 viewDisclaimer =
     div [ class "xiangqi-disclaimer" ]
         [ span [ class "development-marker" ] [ text "// compute notice" ]
-        , p [] [ text "This experiment is intended to run a Xiangqi agent locally using WebGL, with WebGPU support planned where available." ]
-        , p [] [ text "The future agent may use significant GPU, memory, and battery resources. This version does not load a model or start a GPU workload." ]
+        , p [] [ text "This experiment runs a Xiangqi agent locally using WebGPU when available, with a plain-JavaScript CPU fallback." ]
+        , p [] [ text "The agent loads only when requested and may use significant GPU, memory, and battery resources." ]
         , button [ type_ "button", class "xiangqi-primary-button", onClick AcceptDisclaimer ] [ text "I understand — open board" ]
         ]
 
@@ -941,19 +950,29 @@ viewGameOverBanner model =
 
 viewBoard : Model -> Html Msg
 viewBoard model =
+    let
+        legalTargets =
+            case model.selected of
+                Nothing ->
+                    []
+
+                Just from ->
+                    boardPositions
+                        |> List.filter (\to -> isLegalMove model.turn from to model.pieces)
+    in
     div [ class "xiangqi-board-wrap" ]
         [ div
             [ class "xiangqi-board"
             , attribute "aria-label" ("Interactive Chinese chess board viewed from " ++ sideName model.orientation)
             ]
             (div [ class "xiangqi-river" ] [ span [] [ text "楚河" ], span [] [ text "漢界" ] ]
-                :: List.map (viewSquare model) boardPositions
+                :: List.map (viewSquare model legalTargets) boardPositions
             )
         ]
 
 
-viewSquare : Model -> Position -> Html Msg
-viewSquare model position =
+viewSquare : Model -> List Position -> Position -> Html Msg
+viewSquare model legalTargets position =
     let
         ( file, rank ) =
             position
@@ -987,6 +1006,7 @@ viewSquare model position =
         , classList
             [ ( "xiangqi-square", True )
             , ( "selected", model.selected == Just position )
+            , ( "legal-target", List.member position legalTargets )
             , ( "last-move", lastMoveSquare )
             , ( "suggested", suggestedSquare )
             ]
@@ -1246,6 +1266,7 @@ css =
     .xiangqi-river { position: absolute; z-index: 1; left: 0; right: 0; top: 44.45%; height: 11.111%; display: flex; align-items: center; justify-content: space-around; background: #d9b777; border-top: 1px solid #5b4128; border-bottom: 1px solid #5b4128; color: #5b4128; font-family: serif; font-size: clamp(.9rem, 3vw, 1.65rem); letter-spacing: .35em; pointer-events: none; }
     .xiangqi-square { position: absolute; z-index: 2; width: 11.5%; aspect-ratio: 1; padding: 0; transform: translate(-50%, -50%); border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
     .xiangqi-square.last-move::after, .xiangqi-square.selected::after, .xiangqi-square.suggested::after { content: ""; position: absolute; inset: 12%; border: 2px solid rgba(42, 75, 112, .55); border-radius: 50%; }
+    .xiangqi-square.legal-target::before { content: ""; position: absolute; z-index: 3; width: 18%; aspect-ratio: 1; top: 41%; left: 41%; border-radius: 50%; background: rgba(74, 140, 94, .75); pointer-events: none; }
     .xiangqi-square.selected::after { border-color: #9d2f2a; }
     .xiangqi-square.suggested::after { border-color: #4a8c5e; border-style: dashed; }
     .xiangqi-piece { position: absolute; z-index: 2; inset: 8%; display: grid; place-items: center; border: 2px solid currentColor; border-radius: 50%; background: #ead29c; font-family: serif; font-size: clamp(.82rem, 2.6vw, 1.45rem); font-weight: 700; line-height: 1; box-shadow: 0 2px 4px rgba(55, 35, 18, .42), inset 0 0 0 2px #ead29c, inset 0 0 0 3px currentColor; }

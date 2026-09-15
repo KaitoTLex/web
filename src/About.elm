@@ -25,7 +25,7 @@ view =
                 ]
             , figure [ class "about-photo" ]
                 [ img
-                    [ src "/assets/DSC_4055.jpg"
+                    [ src "/assets/optimized/DSC_4055.webp"
                     , alt "Black Saab 900 Turbo S driving through Tokyo"
                     , attribute "loading" "lazy"
                     , attribute "decoding" "async"
@@ -38,7 +38,7 @@ view =
             ]
         , figure [ class "about-hackmit-photo" ]
             [ img
-                [ src "/assets/hackmit.jpeg"
+                [ src "/assets/optimized/hackmit.webp"
                 , alt "Colmena Maps team holding their HackMIT 2025 grand prize check"
                 , attribute "loading" "lazy"
                 , attribute "decoding" "async"

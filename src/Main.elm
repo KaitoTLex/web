@@ -652,8 +652,6 @@ buildCss colorMode =
             themeFor colorMode
     in
     """
-    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap');
-
     *, *::before, *::after {
       box-sizing: border-box;
     }

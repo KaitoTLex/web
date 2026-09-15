@@ -47,7 +47,7 @@ viewPhoto photo =
             , rel "noopener noreferrer"
             ]
             [ img
-                [ src ("/assets/" ++ photo.file)
+                [ src ("/assets/optimized/" ++ optimizedFile photo.file)
                 , alt photo.alt
                 , attribute "loading" "lazy"
                 , attribute "decoding" "async"
@@ -65,6 +65,16 @@ viewPhoto photo =
             , text photo.caption
             ]
         ]
+
+
+optimizedFile : String -> String
+optimizedFile file =
+    case String.split "." file |> List.reverse of
+        _ :: baseParts ->
+            String.join "." (List.reverse baseParts) ++ ".webp"
+
+        [] ->
+            file ++ ".webp"
 
 
 photoWidth : String -> Int
