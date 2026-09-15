@@ -69,6 +69,39 @@ jobs:
       - name: Copy static assets
         run: cp -r cont dist/cont && cp -r assets dist/assets
 
+      - name: Verify required static assets
+        run: |
+          required_assets=(
+            optimized/DSC_3666.webp
+            optimized/DSC_3689.webp
+            optimized/DSC_3745.webp
+            optimized/DSC_3765.webp
+            optimized/DSC_3766.webp
+            optimized/DSC_4007.webp
+            optimized/DSC_4055.webp
+            optimized/DSC_4056.webp
+            optimized/IMG_0119.webp
+            optimized/IMG_8976.webp
+            optimized/hackmit.webp
+            optimized/idrewthis.webp
+            engine/worker.js
+            engine/tinyfih.js
+            engine/rules.js
+            engine/encode.js
+            engine/nn.js
+            engine/webgpu.js
+            engine/wgsl/ops.wgsl
+            engine/model/tinyfih_final.json
+            engine/model/tinyfih_final.bin
+          )
+
+          for asset in "${required_assets[@]}"; do
+            if [ ! -f "dist/assets/$asset" ]; then
+              echo "::error file=assets/$asset::Required deployed asset is missing"
+              exit 1
+            fi
+          done
+
       - name: Copy status data
         run: |
           [ -f status.json ] && cp status.json dist/status.json || echo '{"history":[]}' > dist/status.json
