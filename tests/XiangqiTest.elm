@@ -22,6 +22,7 @@ below uses a constructed position instead.
 -}
 
 import Expect
+import Json.Encode as Encode
 import Test exposing (Test, describe, test)
 import Xiangqi exposing (Piece, PieceKind(..), Side(..), generateLegalMoves, inCheck, initialPieces, isGameOver, isSquareAttacked, perft)
 
@@ -136,6 +137,145 @@ suite =
                         |> List.any (\( _, to ) -> List.member to (List.map Tuple.first initialPieces) && isOwnPieceAt to initialPieces Red)
                         |> Expect.equal False
             ]
+        , describe "play against the agent"
+            [ test "the player can take Red and their move requests a Black reply" <|
+                \_ ->
+                    let
+                        ( loading, startEffect ) =
+                            Xiangqi.update (Xiangqi.StartAgentGame Red) Xiangqi.init
+
+                        ( ready, loadEffect ) =
+                            Xiangqi.update (Xiangqi.EngineEventReceived (engineLoaded "cpu")) loading
+
+                        ( selected, selectEffect ) =
+                            Xiangqi.update (Xiangqi.Select ( 0, 6 )) ready
+
+                        ( afterMove, moveEffect ) =
+                            Xiangqi.update (Xiangqi.Select ( 0, 5 )) selected
+                    in
+                    case ( startEffect, loadEffect, selectEffect ) of
+                        ( Xiangqi.LoadEngineEffect, Xiangqi.NoEffect, Xiangqi.NoEffect ) ->
+                            case moveEffect of
+                                Xiangqi.RequestMoveEffect _ fen legalMoves ->
+                                    Expect.all
+                                        [ \_ -> Expect.equal Black afterMove.turn
+                                        , \_ -> Expect.equal True (String.contains " b " fen)
+                                        , \_ -> Expect.equal False (List.isEmpty legalMoves)
+                                        ]
+                                        ()
+
+                                _ ->
+                                    Expect.fail "expected the human move to request the agent's Black reply"
+
+                        _ ->
+                            Expect.fail "expected the human move to request the agent's Black reply"
+            , test "the player can take Black and the Red agent opens" <|
+                \_ ->
+                    let
+                        ( loading, startEffect ) =
+                            Xiangqi.update (Xiangqi.StartAgentGame Black) Xiangqi.init
+
+                        ( thinking, loadEffect ) =
+                            Xiangqi.update (Xiangqi.EngineEventReceived (engineLoaded "cpu")) loading
+                    in
+                    case ( startEffect, loadEffect ) of
+                        ( Xiangqi.LoadEngineEffect, Xiangqi.RequestMoveEffect _ fen legalMoves ) ->
+                            Expect.all
+                                [ \_ -> Expect.equal Red thinking.turn
+                                , \_ -> Expect.equal True (String.contains " w " fen)
+                                , \_ -> Expect.equal 44 (List.length legalMoves)
+                                ]
+                                ()
+
+                        _ ->
+                            Expect.fail "expected the Red agent to request the opening move"
+            , test "the Red agent's returned opening move is played on the board" <|
+                \_ ->
+                    let
+                        ( loading, _ ) =
+                            Xiangqi.update (Xiangqi.StartAgentGame Black) Xiangqi.init
+
+                        ( thinking, loadEffect ) =
+                            Xiangqi.update (Xiangqi.EngineEventReceived (engineLoaded "cpu")) loading
+                    in
+                    case loadEffect of
+                        Xiangqi.RequestMoveEffect requestId _ _ ->
+                            let
+                                ( afterAgentMove, responseEffect ) =
+                                    Xiangqi.update
+                                        (Xiangqi.EngineEventReceived (engineMove requestId 27 36))
+                                        thinking
+                            in
+                            Expect.all
+                                [ \_ -> Expect.equal Black afterAgentMove.turn
+                                , \_ -> Expect.equal True (hasPieceAt Red Soldier ( 0, 5 ) afterAgentMove.pieces)
+                                , \_ -> Expect.equal False (hasPieceAt Red Soldier ( 0, 6 ) afterAgentMove.pieces)
+                                , \_ -> Expect.equal Xiangqi.NoEffect responseEffect
+                                ]
+                                ()
+
+                        _ ->
+                            Expect.fail "expected an opening move request"
+            , test "the Black agent's returned reply is played on the board" <|
+                \_ ->
+                    let
+                        ( loading, _ ) =
+                            Xiangqi.update (Xiangqi.StartAgentGame Red) Xiangqi.init
+
+                        ( ready, _ ) =
+                            Xiangqi.update (Xiangqi.EngineEventReceived (engineLoaded "cpu")) loading
+
+                        ( selected, _ ) =
+                            Xiangqi.update (Xiangqi.Select ( 0, 6 )) ready
+
+                        ( thinking, moveEffect ) =
+                            Xiangqi.update (Xiangqi.Select ( 0, 5 )) selected
+                    in
+                    case moveEffect of
+                        Xiangqi.RequestMoveEffect requestId _ _ ->
+                            let
+                                ( afterAgentMove, _ ) =
+                                    Xiangqi.update
+                                        (Xiangqi.EngineEventReceived (engineMove requestId 54 45))
+                                        thinking
+                            in
+                            Expect.all
+                                [ \_ -> Expect.equal Red afterAgentMove.turn
+                                , \_ -> Expect.equal True (hasPieceAt Black Soldier ( 0, 4 ) afterAgentMove.pieces)
+                                , \_ -> Expect.equal False (hasPieceAt Black Soldier ( 0, 3 ) afterAgentMove.pieces)
+                                ]
+                                ()
+
+                        _ ->
+                            Expect.fail "expected a Black reply request"
+            , test "a stale agent response cannot move the current position" <|
+                \_ ->
+                    let
+                        ( loading, _ ) =
+                            Xiangqi.update (Xiangqi.StartAgentGame Black) Xiangqi.init
+
+                        ( thinking, loadEffect ) =
+                            Xiangqi.update (Xiangqi.EngineEventReceived (engineLoaded "cpu")) loading
+                    in
+                    case loadEffect of
+                        Xiangqi.RequestMoveEffect requestId _ _ ->
+                            let
+                                ( unchanged, responseEffect ) =
+                                    Xiangqi.update
+                                        (Xiangqi.EngineEventReceived (engineMove (requestId + 1) 27 36))
+                                        thinking
+                            in
+                            Expect.all
+                                [ \_ -> Expect.equal Red unchanged.turn
+                                , \_ -> Expect.equal True (hasPieceAt Red Soldier ( 0, 6 ) unchanged.pieces)
+                                , \_ -> Expect.equal False (hasPieceAt Red Soldier ( 0, 5 ) unchanged.pieces)
+                                , \_ -> Expect.equal Xiangqi.NoEffect responseEffect
+                                ]
+                                ()
+
+                        _ ->
+                            Expect.fail "expected an opening move request"
+            ]
         ]
 
 
@@ -143,3 +283,28 @@ isOwnPieceAt : ( Int, Int ) -> List ( ( Int, Int ), Piece ) -> Side -> Bool
 isOwnPieceAt position pieces side =
     pieces
         |> List.any (\( p, piece ) -> p == position && piece.side == side)
+
+
+hasPieceAt : Side -> PieceKind -> ( Int, Int ) -> List ( ( Int, Int ), Piece ) -> Bool
+hasPieceAt side kind position pieces =
+    pieces
+        |> List.any (\( candidate, piece ) -> candidate == position && piece.side == side && piece.kind == kind)
+
+
+engineLoaded : String -> Encode.Value
+engineLoaded backend =
+    Encode.object
+        [ ( "type", Encode.string "loaded" )
+        , ( "backend", Encode.string backend )
+        ]
+
+
+engineMove : Int -> Int -> Int -> Encode.Value
+engineMove requestId from to =
+    Encode.object
+        [ ( "type", Encode.string "move" )
+        , ( "requestId", Encode.int requestId )
+        , ( "from", Encode.int from )
+        , ( "to", Encode.int to )
+        , ( "value", Encode.float 0.25 )
+        ]

@@ -44,7 +44,7 @@ main =
 port loadEngine : () -> Cmd msg
 
 
-port requestEngineMove : { fen : String, legalMoves : List { from : Int, to : Int } } -> Cmd msg
+port requestEngineMove : { requestId : Int, fen : String, legalMoves : List { from : Int, to : Int } } -> Cmd msg
 
 
 port engineEvent : (Decode.Value -> msg) -> Sub msg
@@ -229,8 +229,8 @@ update msg model =
                         Xiangqi.LoadEngineEffect ->
                             loadEngine ()
 
-                        Xiangqi.RequestMoveEffect fen legalMoves ->
-                            requestEngineMove { fen = fen, legalMoves = legalMoves }
+                        Xiangqi.RequestMoveEffect requestId fen legalMoves ->
+                            requestEngineMove { requestId = requestId, fen = fen, legalMoves = legalMoves }
             in
             ( { model | xiangqi = newXiangqi }, cmd )
 

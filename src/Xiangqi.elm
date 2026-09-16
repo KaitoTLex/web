@@ -71,6 +71,17 @@ type alias EngineSuggestion =
     }
 
 
+type EngineRequestPurpose
+    = AnalysisRequest
+    | OpponentMoveRequest
+
+
+type alias PendingRequest =
+    { id : Int
+    , purpose : EngineRequestPurpose
+    }
+
+
 type alias Model =
     { disclaimerAccepted : Bool
     , orientation : Side
@@ -82,6 +93,9 @@ type alias Model =
     , engineStatus : EngineStatus
     , engineBackend : Maybe String
     , suggestion : Maybe EngineSuggestion
+    , agentSide : Maybe Side
+    , pendingRequest : Maybe PendingRequest
+    , nextRequestId : Int
     }
 
 
@@ -97,6 +111,9 @@ init =
     , engineStatus = EngineIdle
     , engineBackend = Nothing
     , suggestion = Nothing
+    , agentSide = Nothing
+    , pendingRequest = Nothing
+    , nextRequestId = 0
     }
 
 
@@ -107,7 +124,7 @@ and Main.elm turns that into the real `Cmd`.
 type Effect
     = NoEffect
     | LoadEngineEffect
-    | RequestMoveEffect String (List { from : Int, to : Int })
+    | RequestMoveEffect Int String (List { from : Int, to : Int })
 
 
 type Msg
@@ -117,6 +134,8 @@ type Msg
     | Reset
     | RequestEngineLoad
     | RequestBestMove
+    | StartAgentGame Side
+    | StopAgentGame
     | EngineEventReceived Decode.Value
 
 
@@ -130,10 +149,22 @@ update msg model =
             ( { model | orientation = opposite model.orientation, selected = Nothing }, NoEffect )
 
         Reset ->
-            ( { init | disclaimerAccepted = True, orientation = model.orientation }, NoEffect )
+            resetGame model
 
         Select position ->
-            ( selectPosition position model, NoEffect )
+            if canPlayerMove model then
+                let
+                    selectedModel =
+                        selectPosition position model
+                in
+                if selectedModel.turn /= model.turn then
+                    requestOpponentMove selectedModel
+
+                else
+                    ( selectedModel, NoEffect )
+
+            else
+                ( model, NoEffect )
 
         RequestEngineLoad ->
             case model.engineStatus of
@@ -147,47 +178,227 @@ update msg model =
                     ( model, NoEffect )
 
         RequestBestMove ->
-            case ( model.engineStatus, model.winner ) of
-                ( EngineReady, Nothing ) ->
-                    ( { model | engineStatus = EngineThinking, suggestion = Nothing }
-                    , RequestMoveEffect (buildFen model) (engineLegalMoves model)
-                    )
+            case model.agentSide of
+                Nothing ->
+                    beginEngineRequest AnalysisRequest model
 
                 _ ->
                     ( model, NoEffect )
 
+        StartAgentGame humanSide ->
+            startAgentGame humanSide model
+
+        StopAgentGame ->
+            ( { model
+                | agentSide = Nothing
+                , selected = Nothing
+                , engineStatus = readyAfterCancellation model.engineStatus
+                , pendingRequest = Nothing
+                , nextRequestId = model.nextRequestId + 1
+              }
+            , NoEffect
+            )
+
         EngineEventReceived value ->
-            ( handleEngineEvent value model, NoEffect )
+            handleEngineEvent value model
 
 
-handleEngineEvent : Decode.Value -> Model -> Model
+startAgentGame : Side -> Model -> ( Model, Effect )
+startAgentGame humanSide model =
+    case model.engineStatus of
+        EngineLoading ->
+            ( model, NoEffect )
+
+        EngineThinking ->
+            ( model, NoEffect )
+
+        currentStatus ->
+            let
+                game =
+                    { init
+                        | disclaimerAccepted = True
+                        , orientation = humanSide
+                        , agentSide = Just (opposite humanSide)
+                        , engineStatus = currentStatus
+                        , engineBackend = model.engineBackend
+                        , nextRequestId = model.nextRequestId + 1
+                    }
+            in
+            case currentStatus of
+                EngineReady ->
+                    requestOpponentMove game
+
+                _ ->
+                    ( { game | engineStatus = EngineLoading }, LoadEngineEffect )
+
+
+resetGame : Model -> ( Model, Effect )
+resetGame model =
+    let
+        game =
+            { init
+                | disclaimerAccepted = True
+                , orientation = model.orientation
+                , agentSide = model.agentSide
+                , engineStatus = readyAfterCancellation model.engineStatus
+                , engineBackend = model.engineBackend
+                , nextRequestId = model.nextRequestId + 1
+            }
+    in
+    requestOpponentMove game
+
+
+readyAfterCancellation : EngineStatus -> EngineStatus
+readyAfterCancellation status =
+    case status of
+        EngineThinking ->
+            EngineReady
+
+        _ ->
+            status
+
+
+canPlayerMove : Model -> Bool
+canPlayerMove model =
+    model.winner
+        == Nothing
+        && (case model.agentSide of
+                Nothing ->
+                    model.engineStatus /= EngineThinking
+
+                Just agentSide ->
+                    model.turn /= agentSide && model.engineStatus == EngineReady
+           )
+
+
+requestOpponentMove : Model -> ( Model, Effect )
+requestOpponentMove model =
+    if model.agentSide == Just model.turn then
+        beginEngineRequest OpponentMoveRequest model
+
+    else
+        ( model, NoEffect )
+
+
+beginEngineRequest : EngineRequestPurpose -> Model -> ( Model, Effect )
+beginEngineRequest purpose model =
+    case ( model.engineStatus, model.winner ) of
+        ( EngineReady, Nothing ) ->
+            let
+                requestId =
+                    model.nextRequestId
+            in
+            ( { model
+                | engineStatus = EngineThinking
+                , selected = Nothing
+                , suggestion = Nothing
+                , pendingRequest = Just { id = requestId, purpose = purpose }
+                , nextRequestId = requestId + 1
+              }
+            , RequestMoveEffect requestId (buildFen model) (engineLegalMoves model)
+            )
+
+        _ ->
+            ( model, NoEffect )
+
+
+handleEngineEvent : Decode.Value -> Model -> ( Model, Effect )
 handleEngineEvent value model =
     case Decode.decodeValue engineEventDecoder value of
         Ok (EngineLoaded backend) ->
-            { model | engineStatus = EngineReady, engineBackend = Just backend }
+            if model.engineStatus == EngineLoading then
+                requestOpponentMove
+                    { model
+                        | engineStatus = EngineReady
+                        , engineBackend = Just backend
+                        , pendingRequest = Nothing
+                    }
 
-        Ok (EngineMoveSuggested from to value_) ->
-            { model
-                | engineStatus = EngineReady
-                , suggestion =
-                    Just
-                        { from = engineSquareToPosition from
-                        , to = engineSquareToPosition to
-                        , value = value_
-                        }
-            }
+            else
+                ( model, NoEffect )
 
-        Ok (EngineErrored message) ->
-            { model | engineStatus = EngineFailed message }
+        Ok (EngineMoveSuggested requestId from to value_) ->
+            handleEngineMove requestId from to value_ model
+
+        Ok (EngineErrored requestId message) ->
+            handleEngineError requestId message model
 
         Err decodeError ->
-            { model | engineStatus = EngineFailed (Decode.errorToString decodeError) }
+            ( { model
+                | engineStatus = EngineFailed (Decode.errorToString decodeError)
+                , pendingRequest = Nothing
+              }
+            , NoEffect
+            )
+
+
+handleEngineMove : Int -> Int -> Int -> Float -> Model -> ( Model, Effect )
+handleEngineMove requestId from to value_ model =
+    case model.pendingRequest of
+        Just pending ->
+            if pending.id /= requestId then
+                ( model, NoEffect )
+
+            else
+                let
+                    fromPosition =
+                        engineSquareToPosition from
+
+                    toPosition =
+                        engineSquareToPosition to
+
+                    readyModel =
+                        { model | engineStatus = EngineReady, pendingRequest = Nothing }
+                in
+                case pending.purpose of
+                    AnalysisRequest ->
+                        ( { readyModel
+                            | suggestion =
+                                Just
+                                    { from = fromPosition
+                                    , to = toPosition
+                                    , value = value_
+                                    }
+                          }
+                        , NoEffect
+                        )
+
+                    OpponentMoveRequest ->
+                        if model.agentSide == Just model.turn && isLegalMove model.turn fromPosition toPosition model.pieces then
+                            ( movePiece fromPosition toPosition readyModel, NoEffect )
+
+                        else
+                            ( { readyModel | engineStatus = EngineFailed "agent returned an illegal move" }, NoEffect )
+
+        Nothing ->
+            ( model, NoEffect )
+
+
+handleEngineError : Maybe Int -> String -> Model -> ( Model, Effect )
+handleEngineError requestId message model =
+    let
+        appliesToCurrentRequest =
+            case ( requestId, model.pendingRequest ) of
+                ( Nothing, _ ) ->
+                    True
+
+                ( Just id, Just pending ) ->
+                    id == pending.id
+
+                _ ->
+                    False
+    in
+    if appliesToCurrentRequest then
+        ( { model | engineStatus = EngineFailed message, pendingRequest = Nothing }, NoEffect )
+
+    else
+        ( model, NoEffect )
 
 
 type EngineEvent
     = EngineLoaded String
-    | EngineMoveSuggested Int Int Float
-    | EngineErrored String
+    | EngineMoveSuggested Int Int Int Float
+    | EngineErrored (Maybe Int) String
 
 
 engineEventDecoder : Decoder EngineEvent
@@ -200,13 +411,16 @@ engineEventDecoder =
                         Decode.map EngineLoaded (Decode.field "backend" Decode.string)
 
                     "move" ->
-                        Decode.map3 EngineMoveSuggested
+                        Decode.map4 EngineMoveSuggested
+                            (Decode.field "requestId" Decode.int)
                             (Decode.field "from" Decode.int)
                             (Decode.field "to" Decode.int)
                             (Decode.field "value" Decode.float)
 
                     "error" ->
-                        Decode.map EngineErrored (Decode.field "message" Decode.string)
+                        Decode.map2 EngineErrored
+                            (Decode.maybe (Decode.field "requestId" Decode.int))
+                            (Decode.field "message" Decode.string)
 
                     _ ->
                         Decode.fail ("unknown engine event type: " ++ tag)
@@ -893,7 +1107,7 @@ view : Model -> Html Msg
 view model =
     div [ class "xiangqi-content" ]
         [ h1 [] [ text "象棋" ]
-        , p [ class "xiangqi-intro" ] [ text "A local Chinese chess board and future reinforcement-learning agent experiment." ]
+        , p [ class "xiangqi-intro" ] [ text "Play Chinese chess against a lightweight reinforcement-learning agent running entirely in your browser." ]
         , if model.disclaimerAccepted then
             viewGame model
 
@@ -919,6 +1133,7 @@ viewGame model =
             [ div [ class "xiangqi-turn" ]
                 [ span [ class "development-marker" ] [ text "turn" ]
                 , span [ class ("turn-side " ++ sideName model.turn) ] [ text (sideName model.turn) ]
+                , viewTurnOwner model
                 ]
             , div [ class "xiangqi-actions" ]
                 [ button [ type_ "button", class "xiangqi-button", onClick SwitchSide ]
@@ -931,8 +1146,35 @@ viewGame model =
             [ viewBoard model
             , viewEvaluation model
             ]
-        , p [ class "xiangqi-help" ] [ text "Select a piece and then its destination. Full legality, check, and checkmate/stalemate are enforced." ]
+        , p [ class "xiangqi-help" ]
+            [ text
+                (case model.agentSide of
+                    Nothing ->
+                        "Select a piece and then its destination. Full legality, check, and checkmate/stalemate are enforced."
+
+                    Just agentSide ->
+                        "You are " ++ sideName (opposite agentSide) ++ ". The agent is " ++ sideName agentSide ++ " and moves automatically."
+                )
+            ]
         ]
+
+
+viewTurnOwner : Model -> Html Msg
+viewTurnOwner model =
+    case model.agentSide of
+        Nothing ->
+            text ""
+
+        Just agentSide ->
+            span [ class "turn-owner" ]
+                [ text
+                    (if model.turn == agentSide then
+                        "agent"
+
+                     else
+                        "you"
+                    )
+                ]
 
 
 viewGameOverBanner : Model -> Html Msg
@@ -951,28 +1193,42 @@ viewGameOverBanner model =
 viewBoard : Model -> Html Msg
 viewBoard model =
     let
-        legalTargets =
-            case model.selected of
-                Nothing ->
-                    []
+        boardInteractive =
+            canPlayerMove model
 
-                Just from ->
-                    boardPositions
-                        |> List.filter (\to -> isLegalMove model.turn from to model.pieces)
+        legalTargets =
+            if boardInteractive then
+                case model.selected of
+                    Nothing ->
+                        []
+
+                    Just from ->
+                        boardPositions
+                            |> List.filter (\to -> isLegalMove model.turn from to model.pieces)
+
+            else
+                []
     in
     div [ class "xiangqi-board-wrap" ]
         [ div
             [ class "xiangqi-board"
             , attribute "aria-label" ("Interactive Chinese chess board viewed from " ++ sideName model.orientation)
+            , attribute "aria-busy"
+                (if model.engineStatus == EngineThinking then
+                    "true"
+
+                 else
+                    "false"
+                )
             ]
             (div [ class "xiangqi-river" ] [ span [] [ text "楚河" ], span [] [ text "漢界" ] ]
-                :: List.map (viewSquare model legalTargets) boardPositions
+                :: List.map (viewSquare model legalTargets boardInteractive) boardPositions
             )
         ]
 
 
-viewSquare : Model -> List Position -> Position -> Html Msg
-viewSquare model legalTargets position =
+viewSquare : Model -> List Position -> Bool -> Position -> Html Msg
+viewSquare model legalTargets boardInteractive position =
     let
         ( file, rank ) =
             position
@@ -1013,6 +1269,7 @@ viewSquare model legalTargets position =
         , style "left" (String.fromFloat (toFloat displayFile / 8 * 100) ++ "%")
         , style "top" (String.fromFloat (toFloat displayRank / 9 * 100) ++ "%")
         , attribute "aria-label" (squareLabel position model.pieces)
+        , disabled (not boardInteractive)
         , onClick (Select position)
         ]
         [ case pieceAt position model.pieces of
@@ -1061,7 +1318,16 @@ viewEvaluation model =
                     "agent error: " ++ message
     in
     div [ class "xiangqi-evaluation" ]
-        [ span [ class "development-marker" ] [ text "// blunder detector" ]
+        [ span [ class "development-marker" ]
+            [ text
+                (case model.agentSide of
+                    Nothing ->
+                        "// blunder detector"
+
+                    Just _ ->
+                        "// local opponent"
+                )
+            ]
         , div [ class "evaluation-body" ]
             [ div
                 [ class "evaluation-bar"
@@ -1093,6 +1359,7 @@ viewEvaluation model =
         , p [ class "agent-description" ] [ text "Runs a lightweight self-play-trained network locally (WebGPU if available, plain JS otherwise) — nothing is sent anywhere." ]
         , viewSuggestion model
         , viewEngineButton model
+        , viewOpponentControls model
         ]
 
 
@@ -1115,21 +1382,67 @@ viewSuggestion model =
 
 viewEngineButton : Model -> Html Msg
 viewEngineButton model =
-    case model.engineStatus of
-        EngineIdle ->
-            button [ type_ "button", class "agent-placeholder-button", onClick RequestEngineLoad ] [ text "load local agent" ]
+    case model.agentSide of
+        Just _ ->
+            case model.engineStatus of
+                EngineFailed _ ->
+                    button [ type_ "button", class "agent-placeholder-button", onClick RequestEngineLoad ] [ text "retry agent" ]
 
-        EngineLoading ->
-            button [ type_ "button", class "agent-placeholder-button", disabled True ] [ text "loading…" ]
+                _ ->
+                    text ""
 
-        EngineReady ->
-            button [ type_ "button", class "agent-placeholder-button", onClick RequestBestMove ] [ text "suggest a move" ]
+        Nothing ->
+            case model.engineStatus of
+                EngineIdle ->
+                    button [ type_ "button", class "agent-placeholder-button", onClick RequestEngineLoad ] [ text "load for analysis" ]
 
-        EngineThinking ->
-            button [ type_ "button", class "agent-placeholder-button", disabled True ] [ text "thinking…" ]
+                EngineLoading ->
+                    button [ type_ "button", class "agent-placeholder-button", disabled True ] [ text "loading…" ]
 
-        EngineFailed _ ->
-            button [ type_ "button", class "agent-placeholder-button", onClick RequestEngineLoad ] [ text "retry loading agent" ]
+                EngineReady ->
+                    button [ type_ "button", class "agent-placeholder-button", onClick RequestBestMove ] [ text "suggest a move" ]
+
+                EngineThinking ->
+                    button [ type_ "button", class "agent-placeholder-button", disabled True ] [ text "thinking…" ]
+
+                EngineFailed _ ->
+                    button [ type_ "button", class "agent-placeholder-button", onClick RequestEngineLoad ] [ text "retry loading agent" ]
+
+
+viewOpponentControls : Model -> Html Msg
+viewOpponentControls model =
+    case model.agentSide of
+        Nothing ->
+            let
+                canStart =
+                    model.engineStatus /= EngineLoading && model.engineStatus /= EngineThinking
+            in
+            div [ class "agent-controls" ]
+                [ span [ class "agent-controls-label" ] [ text "play against agent" ]
+                , div [ class "agent-side-buttons" ]
+                    [ button
+                        [ type_ "button"
+                        , class "agent-side-button red"
+                        , disabled (not canStart)
+                        , onClick (StartAgentGame Red)
+                        ]
+                        [ text "as red" ]
+                    , button
+                        [ type_ "button"
+                        , class "agent-side-button black"
+                        , disabled (not canStart)
+                        , onClick (StartAgentGame Black)
+                        ]
+                        [ text "as black" ]
+                    ]
+                ]
+
+        Just agentSide ->
+            div [ class "agent-controls" ]
+                [ p [ class "agent-matchup" ]
+                    [ text ("you: " ++ sideName (opposite agentSide) ++ " / agent: " ++ sideName agentSide) ]
+                , button [ type_ "button", class "agent-placeholder-button", onClick StopAgentGame ] [ text "stop match" ]
+                ]
 
 
 squareLabel : Position -> List ( Position, Piece ) -> String
@@ -1259,12 +1572,14 @@ css =
     .turn-side { padding: .12rem .5rem; border: 1px solid currentColor; border-radius: 999px; font-size: .72rem; }
     .turn-side.red { color: #b43b36; }
     .turn-side.black { color: var(--text-color); }
+    .turn-owner { color: var(--muted-color); font-size: .7rem; }
     .xiangqi-actions { display: flex; gap: .5rem; }
     .xiangqi-workspace { display: flex; align-items: stretch; gap: 1rem; }
     .xiangqi-board-wrap { position: relative; width: min(100%, 600px); padding: 5.5%; border: 1px solid var(--border-color); border-radius: 6px; background: #cda66a; box-shadow: 0 12px 32px rgba(0, 0, 0, .2); }
     .xiangqi-board { position: relative; aspect-ratio: 8 / 9; background-color: #d9b777; background-image: repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - .5px), #5b4128 calc(12.5% - .5px), #5b4128 calc(12.5% + .5px)), repeating-linear-gradient(to bottom, transparent 0, transparent calc(11.111% - .5px), #5b4128 calc(11.111% - .5px), #5b4128 calc(11.111% + .5px)); border: 1px solid #5b4128; }
     .xiangqi-river { position: absolute; z-index: 1; left: 0; right: 0; top: 44.45%; height: 11.111%; display: flex; align-items: center; justify-content: space-around; background: #d9b777; border-top: 1px solid #5b4128; border-bottom: 1px solid #5b4128; color: #5b4128; font-family: serif; font-size: clamp(.9rem, 3vw, 1.65rem); letter-spacing: .35em; pointer-events: none; }
     .xiangqi-square { position: absolute; z-index: 2; width: 11.5%; aspect-ratio: 1; padding: 0; transform: translate(-50%, -50%); border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+    .xiangqi-square:disabled { opacity: 1; cursor: default; }
     .xiangqi-square.last-move::after, .xiangqi-square.selected::after, .xiangqi-square.suggested::after { content: ""; position: absolute; inset: 12%; border: 2px solid rgba(42, 75, 112, .55); border-radius: 50%; }
     .xiangqi-square.legal-target::before { content: ""; position: absolute; z-index: 3; width: 18%; aspect-ratio: 1; top: 41%; left: 41%; border-radius: 50%; background: rgba(74, 140, 94, .75); pointer-events: none; }
     .xiangqi-square.selected::after { border-color: #9d2f2a; }
@@ -1287,6 +1602,14 @@ css =
     .agent-placeholder-button { width: 100%; margin-top: .5rem; color: var(--text-color); background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 4px; padding: .5rem; font: inherit; font-size: .74rem; cursor: pointer; }
     .agent-placeholder-button:hover:not(:disabled) { border-color: var(--accent-color); }
     .agent-placeholder-button:disabled { color: var(--muted-color); cursor: not-allowed; opacity: .6; }
+    .agent-controls { margin-top: .75rem; padding-top: .75rem; border-top: 1px solid var(--border-color); }
+    .agent-controls-label { display: block; margin-bottom: .45rem; color: var(--muted-color); font-size: .66rem; }
+    .agent-side-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; }
+    .agent-side-button { min-width: 0; padding: .45rem .25rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--surface-color); color: var(--text-color); font: inherit; font-size: .66rem; cursor: pointer; }
+    .agent-side-button.red { color: #c8544e; }
+    .agent-side-button:hover:not(:disabled) { border-color: var(--accent-color); }
+    .agent-side-button:disabled { cursor: not-allowed; opacity: .5; }
+    .agent-matchup { margin: 0 !important; color: var(--muted-color) !important; font-size: .66rem !important; line-height: 1.5 !important; }
     .xiangqi-help { max-width: 760px !important; color: var(--muted-color) !important; font-size: .72rem !important; }
     .xiangqi-game-over { display: flex; align-items: center; gap: .75rem; width: min(100%, 760px); margin: 0 0 .8rem !important; padding: .6rem .9rem; border: 1px solid var(--accent-color); border-radius: 6px; background: var(--surface-color); color: var(--text-color) !important; font-size: .8rem !important; }
     @media (max-width: 650px) {

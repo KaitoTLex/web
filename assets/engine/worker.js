@@ -35,10 +35,15 @@ self.addEventListener("message", async ({ data }) => {
       const best = await loadedEngine.bestMove(board, legalMoves);
 
       if (!best) {
-        self.postMessage({ type: "error", message: "no legal moves (game over)" });
+        self.postMessage({
+          type: "error",
+          requestId: data.payload.requestId,
+          message: "no legal moves (game over)",
+        });
       } else {
         self.postMessage({
           type: "move",
+          requestId: data.payload.requestId,
           from: best.from,
           to: best.to,
           value: best.q,
@@ -46,6 +51,10 @@ self.addEventListener("message", async ({ data }) => {
       }
     }
   } catch (error) {
-    self.postMessage({ type: "error", message: String(error) });
+    self.postMessage({
+      type: "error",
+      requestId: data.payload?.requestId,
+      message: String(error),
+    });
   }
 });
