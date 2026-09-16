@@ -1,5 +1,7 @@
 import { createEngine, Rules } from "./tinyfih.js";
 
+const PROTOCOL_VERSION = 2;
+
 let engine = null;
 let enginePromise = null;
 
@@ -24,7 +26,11 @@ self.addEventListener("message", async ({ data }) => {
   try {
     if (data.type === "load") {
       const loadedEngine = await loadEngine();
-      self.postMessage({ type: "loaded", backend: loadedEngine.backend });
+      self.postMessage({
+        type: "loaded",
+        backend: loadedEngine.backend,
+        protocol: PROTOCOL_VERSION,
+      });
       return;
     }
 

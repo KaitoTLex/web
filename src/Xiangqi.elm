@@ -124,6 +124,7 @@ and Main.elm turns that into the real `Cmd`.
 type Effect
     = NoEffect
     | LoadEngineEffect
+    | UnloadEngineEffect
     | RequestMoveEffect Int String (List { from : Int, to : Int })
 
 
@@ -136,6 +137,7 @@ type Msg
     | RequestBestMove
     | StartAgentGame Side
     | StopAgentGame
+    | SuspendEngine
     | EngineEventReceived Decode.Value
 
 
@@ -189,14 +191,44 @@ update msg model =
             startAgentGame humanSide model
 
         StopAgentGame ->
+            let
+                shouldUnload =
+                    model.engineStatus == EngineLoading || model.engineStatus == EngineThinking
+            in
             ( { model
                 | agentSide = Nothing
                 , selected = Nothing
-                , engineStatus = readyAfterCancellation model.engineStatus
+                , engineStatus =
+                    if shouldUnload then
+                        EngineIdle
+
+                    else
+                        model.engineStatus
+                , engineBackend =
+                    if shouldUnload then
+                        Nothing
+
+                    else
+                        model.engineBackend
                 , pendingRequest = Nothing
                 , nextRequestId = model.nextRequestId + 1
               }
-            , NoEffect
+            , if shouldUnload then
+                UnloadEngineEffect
+
+              else
+                NoEffect
+            )
+
+        SuspendEngine ->
+            ( { model
+                | selected = Nothing
+                , engineStatus = EngineIdle
+                , engineBackend = Nothing
+                , pendingRequest = Nothing
+                , nextRequestId = model.nextRequestId + 1
+              }
+            , UnloadEngineEffect
             )
 
         EngineEventReceived value ->
@@ -235,27 +267,34 @@ startAgentGame humanSide model =
 resetGame : Model -> ( Model, Effect )
 resetGame model =
     let
+        shouldUnload =
+            model.engineStatus == EngineLoading || model.engineStatus == EngineThinking
+
         game =
             { init
                 | disclaimerAccepted = True
                 , orientation = model.orientation
                 , agentSide = model.agentSide
-                , engineStatus = readyAfterCancellation model.engineStatus
-                , engineBackend = model.engineBackend
+                , engineStatus =
+                    if shouldUnload then
+                        EngineIdle
+
+                    else
+                        model.engineStatus
+                , engineBackend =
+                    if shouldUnload then
+                        Nothing
+
+                    else
+                        model.engineBackend
                 , nextRequestId = model.nextRequestId + 1
             }
     in
-    requestOpponentMove game
+    if shouldUnload then
+        ( game, UnloadEngineEffect )
 
-
-readyAfterCancellation : EngineStatus -> EngineStatus
-readyAfterCancellation status =
-    case status of
-        EngineThinking ->
-            EngineReady
-
-        _ ->
-            status
+    else
+        requestOpponentMove game
 
 
 canPlayerMove : Model -> Bool
@@ -305,14 +344,24 @@ beginEngineRequest purpose model =
 handleEngineEvent : Decode.Value -> Model -> ( Model, Effect )
 handleEngineEvent value model =
     case Decode.decodeValue engineEventDecoder value of
-        Ok (EngineLoaded backend) ->
+        Ok (EngineLoaded backend protocol) ->
             if model.engineStatus == EngineLoading then
-                requestOpponentMove
-                    { model
-                        | engineStatus = EngineReady
-                        , engineBackend = Just backend
+                if protocol == 2 then
+                    requestOpponentMove
+                        { model
+                            | engineStatus = EngineReady
+                            , engineBackend = Just backend
+                            , pendingRequest = Nothing
+                        }
+
+                else
+                    ( { model
+                        | engineStatus = EngineFailed "agent update required; retry or reload the page"
+                        , engineBackend = Nothing
                         , pendingRequest = Nothing
-                    }
+                      }
+                    , UnloadEngineEffect
+                    )
 
             else
                 ( model, NoEffect )
@@ -323,9 +372,9 @@ handleEngineEvent value model =
         Ok (EngineErrored requestId message) ->
             handleEngineError requestId message model
 
-        Err decodeError ->
+        Err _ ->
             ( { model
-                | engineStatus = EngineFailed (Decode.errorToString decodeError)
+                | engineStatus = EngineFailed "agent protocol error; reload the page"
                 , pendingRequest = Nothing
               }
             , NoEffect
@@ -380,7 +429,7 @@ handleEngineError requestId message model =
         appliesToCurrentRequest =
             case ( requestId, model.pendingRequest ) of
                 ( Nothing, _ ) ->
-                    True
+                    model.engineStatus == EngineLoading || model.engineStatus == EngineThinking
 
                 ( Just id, Just pending ) ->
                     id == pending.id
@@ -396,7 +445,7 @@ handleEngineError requestId message model =
 
 
 type EngineEvent
-    = EngineLoaded String
+    = EngineLoaded String Int
     | EngineMoveSuggested Int Int Int Float
     | EngineErrored (Maybe Int) String
 
@@ -408,7 +457,13 @@ engineEventDecoder =
             (\tag ->
                 case tag of
                     "loaded" ->
-                        Decode.map EngineLoaded (Decode.field "backend" Decode.string)
+                        Decode.map2 EngineLoaded
+                            (Decode.field "backend" Decode.string)
+                            (Decode.oneOf
+                                [ Decode.field "protocol" Decode.int
+                                , Decode.succeed 1
+                                ]
+                            )
 
                     "move" ->
                         Decode.map4 EngineMoveSuggested
@@ -1385,6 +1440,9 @@ viewEngineButton model =
     case model.agentSide of
         Just _ ->
             case model.engineStatus of
+                EngineIdle ->
+                    button [ type_ "button", class "agent-placeholder-button", onClick RequestEngineLoad ] [ text "resume agent" ]
+
                 EngineFailed _ ->
                     button [ type_ "button", class "agent-placeholder-button", onClick RequestEngineLoad ] [ text "retry agent" ]
 
@@ -1574,8 +1632,8 @@ css =
     .turn-side.black { color: var(--text-color); }
     .turn-owner { color: var(--muted-color); font-size: .7rem; }
     .xiangqi-actions { display: flex; gap: .5rem; }
-    .xiangqi-workspace { display: flex; align-items: stretch; gap: 1rem; }
-    .xiangqi-board-wrap { position: relative; width: min(100%, 600px); padding: 5.5%; border: 1px solid var(--border-color); border-radius: 6px; background: #cda66a; box-shadow: 0 12px 32px rgba(0, 0, 0, .2); }
+    .xiangqi-workspace { display: flex; align-items: flex-start; gap: 1rem; }
+    .xiangqi-board-wrap { position: relative; align-self: flex-start; width: min(100%, 600px); padding: 5.5%; border: 1px solid var(--border-color); border-radius: 6px; background: #cda66a; box-shadow: 0 12px 32px rgba(0, 0, 0, .2); }
     .xiangqi-board { position: relative; aspect-ratio: 8 / 9; background-color: #d9b777; background-image: repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - .5px), #5b4128 calc(12.5% - .5px), #5b4128 calc(12.5% + .5px)), repeating-linear-gradient(to bottom, transparent 0, transparent calc(11.111% - .5px), #5b4128 calc(11.111% - .5px), #5b4128 calc(11.111% + .5px)); border: 1px solid #5b4128; }
     .xiangqi-river { position: absolute; z-index: 1; left: 0; right: 0; top: 44.45%; height: 11.111%; display: flex; align-items: center; justify-content: space-around; background: #d9b777; border-top: 1px solid #5b4128; border-bottom: 1px solid #5b4128; color: #5b4128; font-family: serif; font-size: clamp(.9rem, 3vw, 1.65rem); letter-spacing: .35em; pointer-events: none; }
     .xiangqi-square { position: absolute; z-index: 2; width: 11.5%; aspect-ratio: 1; padding: 0; transform: translate(-50%, -50%); border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
@@ -1587,7 +1645,7 @@ css =
     .xiangqi-piece { position: absolute; z-index: 2; inset: 8%; display: grid; place-items: center; border: 2px solid currentColor; border-radius: 50%; background: #ead29c; font-family: serif; font-size: clamp(.82rem, 2.6vw, 1.45rem); font-weight: 700; line-height: 1; box-shadow: 0 2px 4px rgba(55, 35, 18, .42), inset 0 0 0 2px #ead29c, inset 0 0 0 3px currentColor; }
     .xiangqi-piece.black { color: #26211d; }
     .xiangqi-piece.red { color: #a8322d; }
-    .xiangqi-evaluation { width: 145px; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--surface-color); }
+    .xiangqi-evaluation { flex: 0 0 145px; width: 145px; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--surface-color); }
     .evaluation-body { display: flex; gap: .55rem; height: 330px; margin: 1rem 0; }
     .evaluation-bar { position: relative; display: flex; flex-direction: column; width: 32px; overflow: hidden; border: 1px solid var(--border-color); border-radius: 3px; }
     .evaluation-black, .evaluation-red { flex: 1; }
@@ -1596,7 +1654,7 @@ css =
     .evaluation-midpoint { position: absolute; z-index: 1; top: 50%; left: 0; right: 0; height: 2px; background: #ead29c; transform: translateY(-1px); }
     .evaluation-labels { display: flex; flex: 1; flex-direction: column; justify-content: space-between; color: var(--muted-color); font-size: .66rem; }
     .evaluation-score { color: var(--text-color); }
-    .agent-status { margin: 0 !important; color: var(--accent-color) !important; font-size: .7rem !important; text-transform: uppercase; }
+    .agent-status { margin: 0 !important; overflow-wrap: anywhere; color: var(--accent-color) !important; font-size: .7rem !important; text-transform: uppercase; }
     .agent-description { margin: .5rem 0 !important; color: var(--muted-color) !important; font-size: .66rem !important; line-height: 1.5 !important; }
     .agent-suggestion { margin: 0 0 .5rem !important; color: var(--text-color) !important; font-size: .74rem !important; }
     .agent-placeholder-button { width: 100%; margin-top: .5rem; color: var(--text-color); background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 4px; padding: .5rem; font: inherit; font-size: .74rem; cursor: pointer; }

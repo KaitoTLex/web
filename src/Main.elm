@@ -2,6 +2,7 @@ port module Main exposing (main)
 
 import About
 import Browser
+import Browser.Dom
 import Browser.Navigation exposing (Key)
 import Gallery
 import Home
@@ -13,6 +14,7 @@ import Json.Decode as Decode
 import Projects
 import Status
 import Time
+import Task
 import Url
 import Url.Parser as Parser exposing ((</>), Parser, oneOf, s, top)
 import VirtualDom
@@ -42,6 +44,9 @@ main =
 
 
 port loadEngine : () -> Cmd msg
+
+
+port unloadEngine : () -> Cmd msg
 
 
 port requestEngineMove : { requestId : Int, fen : String, legalMoves : List { from : Int, to : Int } } -> Cmd msg
@@ -150,6 +155,9 @@ update msg model =
 
         UrlChanged url ->
             let
+                previousPage =
+                    parseUrl model.url
+
                 newPage =
                     case Parser.parse routeParser url of
                         Just page ->
@@ -160,10 +168,22 @@ update msg model =
 
                 onStatusPage =
                     newPage == StatusPage
+
+                ( newXiangqi, engineCmd ) =
+                    if previousPage == XiangqiPage && newPage /= XiangqiPage then
+                        let
+                            ( suspended, effect ) =
+                                Xiangqi.update Xiangqi.SuspendEngine model.xiangqi
+                        in
+                        ( suspended, xiangqiEffectToCmd effect )
+
+                    else
+                        ( model.xiangqi, Cmd.none )
             in
             ( { model
                 | url = url
                 , mobileMenuOpen = False
+                , xiangqi = newXiangqi
                 , statusState =
                     if onStatusPage then
                         Status.StatusLoading
@@ -171,11 +191,16 @@ update msg model =
                     else
                         model.statusState
               }
-            , if onStatusPage then
-                Status.fetchApi StatusApiResult
+            , Cmd.batch
+                [ engineCmd
+                , if onStatusPage then
+                    Status.fetchApi StatusApiResult
 
-              else
-                Cmd.none
+                  else
+                    Cmd.none
+                , Browser.Dom.setViewport 0 0
+                    |> Task.attempt (\_ -> NoOp)
+                ]
             )
 
         ToggleColorMode ->
@@ -220,19 +245,24 @@ update msg model =
             let
                 ( newXiangqi, effect ) =
                     Xiangqi.update xiangqiMsg model.xiangqi
-
-                cmd =
-                    case effect of
-                        Xiangqi.NoEffect ->
-                            Cmd.none
-
-                        Xiangqi.LoadEngineEffect ->
-                            loadEngine ()
-
-                        Xiangqi.RequestMoveEffect requestId fen legalMoves ->
-                            requestEngineMove { requestId = requestId, fen = fen, legalMoves = legalMoves }
             in
-            ( { model | xiangqi = newXiangqi }, cmd )
+            ( { model | xiangqi = newXiangqi }, xiangqiEffectToCmd effect )
+
+
+xiangqiEffectToCmd : Xiangqi.Effect -> Cmd Msg
+xiangqiEffectToCmd effect =
+    case effect of
+        Xiangqi.NoEffect ->
+            Cmd.none
+
+        Xiangqi.LoadEngineEffect ->
+            loadEngine ()
+
+        Xiangqi.UnloadEngineEffect ->
+            unloadEngine ()
+
+        Xiangqi.RequestMoveEffect requestId fen legalMoves ->
+            requestEngineMove { requestId = requestId, fen = fen, legalMoves = legalMoves }
 
 
 subscriptions : Model -> Sub Msg
@@ -245,8 +275,16 @@ subscriptions model =
 
                 _ ->
                     Sub.none
+
+        engineSub =
+            case parseUrl model.url of
+                XiangqiPage ->
+                    engineEvent (XiangqiMsg << Xiangqi.EngineEventReceived)
+
+                _ ->
+                    Sub.none
     in
-    Sub.batch [ statusSub, engineEvent (XiangqiMsg << Xiangqi.EngineEventReceived) ]
+    Sub.batch [ statusSub, engineSub ]
 
 
 
@@ -654,10 +692,6 @@ buildCss colorMode =
     """
     *, *::before, *::after {
       box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
     }
 
     html, body {

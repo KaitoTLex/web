@@ -29,25 +29,35 @@
 
         let engineWorker = null;
 
+        const unloadEngine = () => {
+          if (!engineWorker) return;
+          engineWorker.terminate();
+          engineWorker = null;
+        };
+
         const worker = () => {
           if (engineWorker) return engineWorker;
 
-          engineWorker = new Worker("/assets/engine/worker.js", { type: "module" });
-          engineWorker.addEventListener("message", ({ data }) => {
+          const activeWorker = new Worker("/assets/engine/worker.js?v=2", { type: "module" });
+          engineWorker = activeWorker;
+          activeWorker.addEventListener("message", ({ data }) => {
             app.ports.engineEvent.send(data);
           });
-          engineWorker.addEventListener("error", ({ message }) => {
+          activeWorker.addEventListener("error", ({ message }) => {
             app.ports.engineEvent.send({
               type: "error",
               message: message || "local agent worker failed",
             });
+            if (engineWorker === activeWorker) unloadEngine();
           });
-          return engineWorker;
+          return activeWorker;
         };
 
         app.ports.loadEngine.subscribe(() => {
           worker().postMessage({ type: "load" });
         });
+
+        app.ports.unloadEngine.subscribe(unloadEngine);
 
         app.ports.requestEngineMove.subscribe((payload) => {
           worker().postMessage({ type: "move", payload });

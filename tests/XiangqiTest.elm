@@ -275,6 +275,43 @@ suite =
 
                         _ ->
                             Expect.fail "expected an opening move request"
+            , test "an outdated cached worker is rejected before it can move" <|
+                \_ ->
+                    let
+                        ( loading, _ ) =
+                            Xiangqi.update (Xiangqi.StartAgentGame Black) Xiangqi.init
+
+                        ( rejected, effect ) =
+                            Xiangqi.update (Xiangqi.EngineEventReceived (engineLoadedWithProtocol 1)) loading
+                    in
+                    Expect.all
+                        [ \_ -> Expect.equal Red rejected.turn
+                        , \_ -> Expect.equal initialPieces rejected.pieces
+                        , \_ -> Expect.equal Xiangqi.UnloadEngineEffect effect
+                        ]
+                        ()
+            , test "suspending the page terminates pending engine work" <|
+                \_ ->
+                    let
+                        ( loading, _ ) =
+                            Xiangqi.update (Xiangqi.StartAgentGame Black) Xiangqi.init
+
+                        ( thinking, _ ) =
+                            Xiangqi.update (Xiangqi.EngineEventReceived (engineLoaded "cpu")) loading
+
+                        ( suspended, effect ) =
+                            Xiangqi.update Xiangqi.SuspendEngine thinking
+
+                        ( afterStaleMove, staleEffect ) =
+                            Xiangqi.update (Xiangqi.EngineEventReceived (engineMove 1 27 36)) suspended
+                    in
+                    Expect.all
+                        [ \_ -> Expect.equal Xiangqi.UnloadEngineEffect effect
+                        , \_ -> Expect.equal Red afterStaleMove.turn
+                        , \_ -> Expect.equal initialPieces afterStaleMove.pieces
+                        , \_ -> Expect.equal Xiangqi.NoEffect staleEffect
+                        ]
+                        ()
             ]
         ]
 
@@ -293,9 +330,20 @@ hasPieceAt side kind position pieces =
 
 engineLoaded : String -> Encode.Value
 engineLoaded backend =
+    engineLoadedEvent backend 2
+
+
+engineLoadedWithProtocol : Int -> Encode.Value
+engineLoadedWithProtocol protocol =
+    engineLoadedEvent "cpu" protocol
+
+
+engineLoadedEvent : String -> Int -> Encode.Value
+engineLoadedEvent backend protocol =
     Encode.object
         [ ( "type", Encode.string "loaded" )
         , ( "backend", Encode.string backend )
+        , ( "protocol", Encode.int protocol )
         ]
 
 
